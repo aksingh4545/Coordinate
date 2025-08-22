@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "projects": [
+    {
+      "src": "Frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    },
+    {
+      "src": "Backend/package.json",
+      "use": "@vercel/node"
+    }
+  ]
+}
