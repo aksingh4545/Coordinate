@@ -12,9 +12,10 @@ export default function JoinRoomPage() {
 
   // Fetch room info on mount
   useEffect(() => {
+    const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
     const fetchRoomInfo = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/rooms/${roomId}`);
+        const response = await fetch(`${API_URL}/api/rooms/${roomId}`);
         const data = await response.json();
         if (data.success) {
           setRoomInfo(data.room);
