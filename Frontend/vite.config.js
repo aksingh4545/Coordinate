@@ -6,7 +6,8 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   build: {
-    // specify the output folder for your build
-    outDir: '../dist', // example: puts build files outside Frontend folder
+    // Keep the output INSIDE the Frontend folder so Vercel can find it
+    outDir: 'dist', 
+    emptyOutDir: true,
   },
 })
