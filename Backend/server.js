@@ -6,6 +6,7 @@ import cors from 'cors';
 import QRCode from 'qrcode';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
+import { connectDB, getRoomsCollection, isDBConnected } from './db.js';
 
 dotenv.config();
 
@@ -31,8 +32,8 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 
-// In-memory storage (no database)
-const rooms = new Map(); // roomId -> room data
+// Hybrid storage: MongoDB + in-memory cache for real-time Socket.IO operations
+const rooms = new Map(); // roomId -> room data (cache)
 const userSockets = new Map(); // userId -> socketId
 const userRooms = new Map(); // userId -> roomId
 
@@ -50,6 +51,20 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
   return R * c; // Distance in meters
+}
+
+// Helper: Safely execute MongoDB operation with fallback
+async function safeMongoOperation(operation, fallback) {
+  if (!isDBConnected()) {
+    return fallback();
+  }
+  
+  try {
+    return await operation();
+  } catch (err) {
+    console.warn('⚠️  MongoDB operation failed, using fallback:', err.message);
+    return fallback();
+  }
 }
 
 // API Routes
@@ -71,6 +86,19 @@ app.post('/api/rooms/create', async (req, res) => {
       createdAt: Date.now(),
       isActive: true,
     };
+
+    // Save to MongoDB (with safe fallback)
+    await safeMongoOperation(
+      async () => {
+        const roomsCollection = getRoomsCollection();
+        await roomsCollection.insertOne(room);
+      },
+      () => {
+        console.log('💾 Saving room to in-memory storage');
+      }
+    );
+    
+    // Add to cache
     rooms.set(roomId, room);
 
     // Generate QR code with join URL
@@ -97,7 +125,23 @@ app.post('/api/rooms/join', async (req, res) => {
       return res.status(400).json({ error: 'roomId, userId, and userName are required' });
     }
 
-    const room = rooms.get(roomId);
+    let room = rooms.get(roomId);
+    
+    // If not in cache, try MongoDB
+    if (!room) {
+      room = await safeMongoOperation(
+        async () => {
+          const roomsCollection = getRoomsCollection();
+          const foundRoom = await roomsCollection.findOne({ roomId });
+          if (foundRoom) {
+            rooms.set(roomId, foundRoom);
+          }
+          return foundRoom;
+        },
+        () => null
+      );
+    }
+    
     if (!room) {
       return res.status(404).json({ error: 'Room not found' });
     }
@@ -107,10 +151,10 @@ app.post('/api/rooms/join', async (req, res) => {
     }
 
     // Check if user already in room
-    let member = room.members.find(m => m.userId === userId);
-    if (member) {
-      member.name = userName;
-      member.lastUpdate = Date.now();
+    let memberIndex = room.members.findIndex(m => m.userId === userId);
+    if (memberIndex !== -1) {
+      room.members[memberIndex].name = userName;
+      room.members[memberIndex].lastUpdate = Date.now();
     } else {
       room.members.push({
         userId,
@@ -119,6 +163,21 @@ app.post('/api/rooms/join', async (req, res) => {
         lastUpdate: Date.now(),
       });
     }
+
+    // Update MongoDB (with safe fallback)
+    await safeMongoOperation(
+      async () => {
+        const roomsCollection = getRoomsCollection();
+        await roomsCollection.updateOne(
+          { roomId },
+          { $set: { members: room.members } }
+        );
+      },
+      () => console.log('💾 Updated room in in-memory storage')
+    );
+
+    // Update cache
+    rooms.set(roomId, room);
 
     res.json({
       success: true,
@@ -138,7 +197,22 @@ app.post('/api/rooms/join', async (req, res) => {
 app.get('/api/rooms/:roomId', async (req, res) => {
   try {
     const { roomId } = req.params;
-    const room = rooms.get(roomId);
+    let room = rooms.get(roomId);
+    
+    // If not in cache, try MongoDB
+    if (!room) {
+      room = await safeMongoOperation(
+        async () => {
+          const roomsCollection = getRoomsCollection();
+          const foundRoom = await roomsCollection.findOne({ roomId });
+          if (foundRoom) {
+            rooms.set(roomId, foundRoom);
+          }
+          return foundRoom;
+        },
+        () => null
+      );
+    }
 
     if (!room) {
       return res.status(404).json({ error: 'Room not found' });
@@ -172,16 +246,38 @@ app.post('/api/rooms/:roomId/leave', async (req, res) => {
     const { roomId } = req.params;
     const { userId } = req.body;
 
-    const room = rooms.get(roomId);
+    let room = rooms.get(roomId);
+    
     if (!room) {
       return res.status(404).json({ error: 'Room not found' });
     }
 
     room.members = room.members.filter(m => m.userId !== userId);
     
-    // Delete room if empty and not host
+    // Delete room if empty
     if (room.members.length === 0) {
+      await safeMongoOperation(
+        async () => {
+          const roomsCollection = getRoomsCollection();
+          await roomsCollection.deleteOne({ roomId });
+        },
+        () => console.log('💾 Deleted room from in-memory storage')
+      );
       rooms.delete(roomId);
+    } else {
+      // Update in MongoDB (with safe fallback)
+      await safeMongoOperation(
+        async () => {
+          const roomsCollection = getRoomsCollection();
+          await roomsCollection.updateOne(
+            { roomId },
+            { $set: { members: room.members } }
+          );
+        },
+        () => console.log('💾 Updated room in in-memory storage')
+      );
+      // Update cache
+      rooms.set(roomId, room);
     }
 
     res.json({ success: true });
@@ -204,10 +300,10 @@ io.on('connection', (socket) => {
   });
 
   // Update user location
-  socket.on('location:update', ({ userId, roomId, lat, lng, name }) => {
-    const room = rooms.get(roomId);
+  socket.on('location:update', async ({ userId, roomId, lat, lng, name }) => {
+    let room = rooms.get(roomId);
     if (room) {
-      // Update in memory
+      // Update in cache
       let member = room.members.find(m => m.userId === userId);
       if (member) {
         member.location = { lat, lng };
@@ -222,6 +318,18 @@ io.on('connection', (socket) => {
         });
       }
 
+      // Update MongoDB asynchronously (don't wait)
+      if (isDBConnected()) {
+        const roomsCollection = getRoomsCollection();
+        roomsCollection.updateOne(
+          { roomId },
+          { $set: { members: room.members } }
+        ).catch(err => console.error('Error updating location in DB:', err.message));
+      }
+
+      // Update cache
+      rooms.set(roomId, room);
+
       // Broadcast to all in room
       io.to(roomId).emit('location:updated', {
         userId,
@@ -234,8 +342,24 @@ io.on('connection', (socket) => {
   });
 
   // Get all current locations in room
-  socket.on('room:sync', ({ roomId }, callback) => {
-    const room = rooms.get(roomId);
+  socket.on('room:sync', async ({ roomId }, callback) => {
+    let room = rooms.get(roomId);
+    
+    // If not in cache, fetch from MongoDB
+    if (!room) {
+      room = await safeMongoOperation(
+        async () => {
+          const roomsCollection = getRoomsCollection();
+          const foundRoom = await roomsCollection.findOne({ roomId });
+          if (foundRoom) {
+            rooms.set(roomId, foundRoom);
+          }
+          return foundRoom;
+        },
+        () => null
+      );
+    }
+    
     if (!room) {
       callback({ error: 'Room not found' });
       return;
@@ -254,6 +378,79 @@ io.on('connection', (socket) => {
     callback({ success: true, locations, hostId: room.hostId });
   });
 
+  // ===== LIVE CHAT & VOICE MESSAGE HANDLERS =====
+
+  // Send text message in room
+  socket.on('chat:message', async ({ roomId, message, userId, userName }) => {
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    const chatMessage = {
+      id: Date.now().toString(),
+      userId: userId,
+      userName: userName,
+      text: message.text,
+      type: 'text',
+      timestamp: Date.now(),
+    };
+
+    // Store in room chat history
+    if (!room.chatHistory) room.chatHistory = [];
+    room.chatHistory.push(chatMessage);
+
+    // Keep only last 100 messages in memory
+    if (room.chatHistory.length > 100) {
+      room.chatHistory = room.chatHistory.slice(-100);
+    }
+
+    // Broadcast to all in room
+    io.to(roomId).emit('chat:message', chatMessage);
+    console.log(`💬 Chat message from ${chatMessage.userName} in room ${roomId}`);
+  });
+
+  // Send voice message in room
+  socket.on('chat:voice', async ({ roomId, audioBlob, duration, userId, userName }) => {
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    const voiceMessage = {
+      id: Date.now().toString(),
+      userId: userId,
+      userName: userName,
+      type: 'voice',
+      audioUrl: audioBlob, // Base64 audio data
+      duration: duration || 0,
+      timestamp: Date.now(),
+    };
+
+    // Store in room chat history
+    if (!room.chatHistory) room.chatHistory = [];
+    room.chatHistory.push(voiceMessage);
+
+    // Keep only last 100 messages
+    if (room.chatHistory.length > 100) {
+      room.chatHistory = room.chatHistory.slice(-100);
+    }
+
+    // Broadcast to all in room
+    io.to(roomId).emit('chat:voice', voiceMessage);
+    console.log(`🎤 Voice message from ${voiceMessage.userName} in room ${roomId}`);
+  });
+
+  // Request chat history
+  socket.on('chat:history', async ({ roomId }, callback) => {
+    const room = rooms.get(roomId);
+    if (!room) {
+      callback({ error: 'Room not found' });
+      return;
+    }
+
+    callback({ 
+      success: true, 
+      messages: room.chatHistory || [] 
+    });
+  });
+
   socket.on('disconnect', async () => {
     console.log('User disconnected:', socket.id);
 
@@ -263,18 +460,38 @@ io.on('connection', (socket) => {
         const roomId = userRooms.get(userId);
 
         if (roomId) {
-          const room = rooms.get(roomId);
+          let room = rooms.get(roomId);
+          
           if (room) {
-            // Remove member from room
+            // Remove member from cache
             room.members = room.members.filter(m => m.userId !== userId);
+            
+            // Update MongoDB (with safe fallback)
+            if (room.members.length === 0) {
+              await safeMongoOperation(
+                async () => {
+                  const roomsCollection = getRoomsCollection();
+                  await roomsCollection.deleteOne({ roomId });
+                },
+                () => console.log('💾 Deleted room from in-memory storage')
+              );
+              rooms.delete(roomId);
+            } else {
+              await safeMongoOperation(
+                async () => {
+                  const roomsCollection = getRoomsCollection();
+                  await roomsCollection.updateOne(
+                    { roomId },
+                    { $set: { members: room.members } }
+                  );
+                },
+                () => console.log('💾 Updated room in in-memory storage')
+              );
+              rooms.set(roomId, room);
+            }
             
             // Notify others
             io.to(roomId).emit('user:left', { userId });
-            
-            // Clean up empty room
-            if (room.members.length === 0) {
-              rooms.delete(roomId);
-            }
           }
         }
 
@@ -287,8 +504,25 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📍 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
-  console.log(`💾 Using in-memory storage (data lost on restart)`);
-});
+
+// Start server with MongoDB connection
+async function startServer() {
+  try {
+    await connectDB();
+    
+    server.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📍 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
+      if (isDBConnected()) {
+        console.log(`💾 Using MongoDB for persistent storage`);
+      } else {
+        console.log(`⚠️  Using in-memory storage (data lost on restart)`);
+      }
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
+}
+
+startServer();

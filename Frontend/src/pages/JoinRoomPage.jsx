@@ -46,66 +46,82 @@ export default function JoinRoomPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-6">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Join Group
-          </h1>
-          {roomInfo && (
-            <p className="text-gray-600 mt-2">
-              Host: <span className="font-semibold">{roomInfo.hostName}</span>
-            </p>
-          )}
-          <div className="mt-3 bg-purple-50 inline-block px-4 py-2 rounded-lg">
-            <p className="text-sm text-gray-500">Group Code</p>
-            <p className="text-2xl font-mono font-bold text-purple-600">{roomId}</p>
-          </div>
+    <div className="home-page">
+      <div className="earth-bg"></div>
+      
+      <header className="top-glass-bar">
+        <div className="brand-small">Coordinator</div>
+        <div className="tagline-top">Find your group in crowded places</div>
+        <div className="menu-icon">
+          <span></span>
+          <span></span>
+          <span></span>
         </div>
+      </header>
 
-        <form onSubmit={handleJoin}>
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-2 font-medium">
-              Your Name
-            </label>
-            <input
-              type="text"
-              value={memberName}
-              onChange={(e) => setMemberName(e.target.value)}
-              placeholder="Enter your name"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              autoFocus
-            />
-          </div>
-
-          {(localError || error) && (
-            <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg text-center text-sm">
-              {localError || error}
+      <main className="home-content">
+        <div className="custom-modal" style={{ maxWidth: '420px' }}>
+          <div className="modal-head">
+            <div className="modal-icon">👥</div>
+            <h2>Join Group</h2>
+            {roomInfo && (
+              <p>
+                Host: <span style={{ fontWeight: '600' }}>{roomInfo.hostName}</span>
+              </p>
+            )}
+            <div style={{ 
+              marginTop: '12px', 
+              padding: '8px 16px', 
+              background: 'rgba(139, 92, 246, 0.2)', 
+              borderRadius: '12px',
+              display: 'inline-block'
+            }}>
+              <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '4px' }}>Group Code</p>
+              <p style={{ fontSize: '1.5rem', fontFamily: 'monospace', fontWeight: '700', color: '#8b5cf6' }}>{roomId}</p>
             </div>
-          )}
-
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition font-medium"
-            >
-              Back
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:shadow-lg disabled:opacity-50 transition font-medium"
-            >
-              {isLoading ? "Joining..." : "Join Group"}
-            </button>
           </div>
-        </form>
 
-        <div className="mt-6 text-center text-sm text-gray-500">
-          <p>📍 Your location will be shared with the group</p>
+          <form onSubmit={handleJoin}>
+            <div className="input-group">
+              <label>Your Name</label>
+              <input
+                type="text"
+                value={memberName}
+                onChange={(e) => setMemberName(e.target.value)}
+                placeholder="Enter your name"
+                autoFocus
+              />
+            </div>
+
+            {(localError || error) && (
+              <div className="home-error" style={{ marginBottom: '16px' }}>
+                {localError || error}
+              </div>
+            )}
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                className="modal-btn secondary"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="modal-btn primary"
+              >
+                {isLoading ? "Joining..." : "Join Group"}
+              </button>
+            </div>
+          </form>
+
+          <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+            <p>📍 Your location will be shared with the group</p>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
