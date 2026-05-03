@@ -15,6 +15,12 @@ export function MapProvider({ children }) {
   const [locations, setLocations] = useState([]);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [roomSettings, setRoomSettings] = useState({
+    mode: "crowd",
+    trackingRange: 30,
+    targetLocation: null,
+  });
+  const [roomWarning, setRoomWarning] = useState(null);
 
   // Initialize socket connection
   useEffect(() => {
@@ -46,6 +52,14 @@ export function MapProvider({ children }) {
 
     newSocket.on("user:left", ({ userId }) => {
       setLocations((prev) => prev.filter((loc) => loc.userId !== userId));
+    });
+
+    newSocket.on("room:settings", (settings) => {
+      setRoomSettings(settings);
+    });
+
+    newSocket.on("room:warning", (warning) => {
+      setRoomWarning(warning);
     });
 
     setSocket(newSocket);
@@ -107,6 +121,10 @@ export function MapProvider({ children }) {
         isHost: true,
       });
 
+      if (data.settings) {
+        setRoomSettings(data.settings);
+      }
+
       // Join socket room
       if (socket) {
         socket.emit("user:join", {
@@ -158,6 +176,10 @@ export function MapProvider({ children }) {
         isHost: false,
       });
 
+      if (data.room.settings) {
+        setRoomSettings(data.room.settings);
+      }
+
       // Join socket room
       if (socket) {
         socket.emit("user:join", {
@@ -204,6 +226,9 @@ export function MapProvider({ children }) {
       socket.emit("room:sync", { roomId: currentRoom.roomId }, (response) => {
         if (response.success) {
           setLocations(response.locations);
+          if (response.settings) {
+            setRoomSettings(response.settings);
+          }
           resolve(response.locations);
         } else {
           resolve([]);
@@ -228,7 +253,31 @@ export function MapProvider({ children }) {
 
     setCurrentRoom(null);
     setLocations([]);
+    setRoomSettings({
+      mode: "crowd",
+      trackingRange: 30,
+      targetLocation: null,
+    });
+    setRoomWarning(null);
   }, [currentRoom, user]);
+
+  const updateRoomSettings = useCallback((partial) => {
+    if (!socket || !currentRoom || !user) return;
+    const nextSettings = {
+      ...roomSettings,
+      ...partial,
+    };
+    setRoomSettings(nextSettings);
+    socket.emit("room:settings:update", {
+      roomId: currentRoom.roomId,
+      userId: user.userId,
+      settings: partial,
+    });
+  }, [socket, currentRoom, user, roomSettings]);
+
+  const clearWarning = useCallback(() => {
+    setRoomWarning(null);
+  }, []);
 
   // Calculate distance between two points (Haversine formula)
   const calculateDistance = useCallback((lat1, lng1, lat2, lng2) => {
@@ -244,6 +293,30 @@ export function MapProvider({ children }) {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return R * c; // Distance in meters
+  }, []);
+
+  const calculateBearing = useCallback((lat1, lng1, lat2, lng2) => {
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const λ1 = (lng1 * Math.PI) / 180;
+    const λ2 = (lng2 * Math.PI) / 180;
+
+    const y = Math.sin(λ2 - λ1) * Math.cos(φ2);
+    const x = Math.cos(φ1) * Math.sin(φ2) -
+      Math.sin(φ1) * Math.cos(φ2) * Math.cos(λ2 - λ1);
+    const θ = Math.atan2(y, x);
+    return (θ * 180 / Math.PI + 360) % 360;
+  }, []);
+
+  const formatBearing = useCallback((degrees) => {
+    const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+    const index = Math.round(degrees / 45) % 8;
+    return `${directions[index]} (${Math.round(degrees)}°)`;
+  }, []);
+
+  const estimateEtaMinutes = useCallback((meters, speedMps = 1.4) => {
+    if (!meters || meters <= 0) return 0;
+    return Math.max(1, Math.round((meters / speedMps) / 60));
   }, []);
 
   // Format distance for display
@@ -263,6 +336,7 @@ export function MapProvider({ children }) {
     locations,
     setLocations,
     error,
+    setError,
     isLoading,
     createRoom,
     joinRoom,
@@ -270,8 +344,15 @@ export function MapProvider({ children }) {
     syncRoomLocations,
     leaveRoom,
     calculateDistance,
+    calculateBearing,
+    formatBearing,
+    estimateEtaMinutes,
     formatDistance,
     getOrCreateUser,
+    roomSettings,
+    updateRoomSettings,
+    roomWarning,
+    clearWarning,
   };
 
   return <MapContext.Provider value={value}>{children}</MapContext.Provider>;

@@ -1,11 +1,11 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker, useMap as useLeafletMap } from "react-leaflet";
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker, Circle, useMap as useLeafletMap, useMapEvents } from "react-leaflet";
 import { DivIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useMap } from "../context/MapContext";
 
 // Component to update map view when locations change
-function MapUpdater({ locations, centerOnUsers }) {
+function MapUpdater({ locations, centerOnUsers, allowAutoFollow }) {
   const map = useLeafletMap();
 
   useEffect(() => {
@@ -13,7 +13,7 @@ function MapUpdater({ locations, centerOnUsers }) {
       (loc) => loc.lat !== 0 && loc.lng !== 0 && loc.lat !== null && loc.lng !== null
     );
 
-    if (centerOnUsers && validLocations.length > 0) {
+    if (centerOnUsers && allowAutoFollow && validLocations.length > 0) {
       const sumLat = validLocations.reduce((sum, loc) => sum + loc.lat, 0);
       const sumLng = validLocations.reduce((sum, loc) => sum + loc.lng, 0);
       const center = [sumLat / validLocations.length, sumLng / validLocations.length];
@@ -23,7 +23,29 @@ function MapUpdater({ locations, centerOnUsers }) {
         duration: 1.5,
       });
     }
-  }, [locations, centerOnUsers, map]);
+  }, [locations, centerOnUsers, allowAutoFollow, map]);
+
+  return null;
+}
+
+function MapClickHandler({ onMapClick }) {
+  useMapEvents({
+    click: (event) => {
+      if (onMapClick) {
+        onMapClick(event.latlng);
+      }
+    },
+  });
+
+  return null;
+}
+
+function MapInteractionTracker({ onUserInteracted }) {
+  useMapEvents({
+    zoomstart: () => onUserInteracted?.(),
+    dragstart: () => onUserInteracted?.(),
+    movestart: () => onUserInteracted?.(),
+  });
 
   return null;
 }
@@ -56,9 +78,45 @@ const createMarkerIcon = (isHost, isCurrentUser) => {
   });
 };
 
-const MapView = forwardRef(({ locations, currentUserId, showLines = true, centerOnUsers = true }, ref) => {
+const createTargetIcon = () => new DivIcon({
+  html: `
+    <div style="
+      background: #f59e0b;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px 10px 18px 18px;
+      border: 3px solid white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transform: translateY(-4px) rotate(45deg);
+    ">
+      <span style="transform: rotate(-45deg);">📌</span>
+    </div>
+  `,
+  className: "custom-marker",
+  iconSize: [36, 36],
+  iconAnchor: [18, 30],
+  popupAnchor: [0, -24],
+});
+
+const MapView = forwardRef(({
+  locations,
+  currentUserId,
+  showLines = true,
+  centerOnUsers = true,
+  targetLocation = null,
+  onMapClick = null,
+  isTargeting = false,
+  roomSettings = null,
+}, ref) => {
   const { calculateDistance, formatDistance } = useMap();
   const mapRef = useRef(null);
+  const targetLines = [];
+  const rangeCircles = [];
+  const [allowAutoFollow, setAllowAutoFollow] = useState(true);
 
   // Debug logging
   console.log('🗺️ MapView received locations:', locations);
@@ -80,10 +138,108 @@ const MapView = forwardRef(({ locations, currentUserId, showLines = true, center
     const member = locations.find((l) => l.userId === loc.userId);
     return member?.isHost;
   });
+  const activeUserLocation = validLocations.find((loc) => loc.userId === currentUserId) || hostLocation;
 
   const polylines = [];
   
-  if (showLines && hostLocation && validLocations.length > 1) {
+  if (targetLocation) {
+    if (roomSettings?.mode === "tracking" && activeUserLocation) {
+      const directDistance = calculateDistance(
+        activeUserLocation.lat,
+        activeUserLocation.lng,
+        targetLocation.lat,
+        targetLocation.lng
+      );
+
+      polylines.push(
+        <Polyline
+          key="tracking-direct-path"
+          positions={[
+            [activeUserLocation.lat, activeUserLocation.lng],
+            [targetLocation.lat, targetLocation.lng],
+          ]}
+          color="#22c55e"
+          weight={5}
+          opacity={0.9}
+          dashArray="10, 8"
+        />
+      );
+
+      const midLat = (activeUserLocation.lat + targetLocation.lat) / 2;
+      const midLng = (activeUserLocation.lng + targetLocation.lng) / 2;
+
+      polylines.push(
+        <Marker
+          key="tracking-direct-distance"
+          position={[midLat, midLng]}
+          icon={new DivIcon({
+            html: `<div style="
+              background: rgba(17, 24, 39, 0.88);
+              border: 2px solid #22c55e;
+              border-radius: 12px;
+              padding: 4px 8px;
+              font-size: 11px;
+              font-weight: bold;
+              white-space: nowrap;
+              color: #ffffff;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            ">${formatDistance(directDistance)}</div>`,
+            className: "distance-label",
+            iconSize: [60, 30],
+            iconAnchor: [30, 15],
+          })}
+        />
+      );
+    }
+
+    validLocations.forEach((loc) => {
+      const distance = calculateDistance(
+        targetLocation.lat,
+        targetLocation.lng,
+        loc.lat,
+        loc.lng
+      );
+
+      polylines.push(
+        <Polyline
+          key={`target-line-${loc.userId}`}
+          positions={[
+            [targetLocation.lat, targetLocation.lng],
+            [loc.lat, loc.lng],
+          ]}
+          color="#f59e0b"
+          weight={loc.userId === currentUserId ? 4 : 2}
+          dashArray="8, 8"
+          opacity={0.75}
+        />
+      );
+
+      const midLat = (targetLocation.lat + loc.lat) / 2;
+      const midLng = (targetLocation.lng + loc.lng) / 2;
+
+      polylines.push(
+        <Marker
+          key={`target-dist-${loc.userId}`}
+          position={[midLat, midLng]}
+          icon={new DivIcon({
+            html: `<div style="
+              background: rgba(255, 255, 255, 0.96);
+              border: 2px solid #f59e0b;
+              border-radius: 12px;
+              padding: 4px 8px;
+              font-size: 11px;
+              font-weight: bold;
+              white-space: nowrap;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            ">${formatDistance(distance)}</div>`,
+            className: "distance-label",
+            iconSize: [60, 30],
+            iconAnchor: [30, 15],
+          })}
+        />
+      );
+    });
+  } else if (showLines && hostLocation && validLocations.length > 1) {
     validLocations.forEach((loc) => {
       if (loc.userId !== hostLocation.userId) {
         const distance = calculateDistance(
@@ -150,6 +306,35 @@ const MapView = forwardRef(({ locations, currentUserId, showLines = true, center
     });
   }
 
+  if (targetLocation && validLocations.length > 0) {
+    targetLines.push(
+      <CircleMarker
+        key="target-anchor"
+        center={[targetLocation.lat, targetLocation.lng]}
+        radius={12}
+        pathOptions={{ color: "#f59e0b", fillColor: "#f59e0b", fillOpacity: 0.2, weight: 2 }}
+      />
+    );
+  }
+
+  if (centerOnUsers && roomSettings?.mode === "tracking") {
+    validLocations.forEach((loc) => {
+      rangeCircles.push(
+        <Circle
+          key={`range-${loc.userId}`}
+          center={[loc.lat, loc.lng]}
+          radius={roomSettings?.trackingRange ?? 30}
+          pathOptions={{
+            color: loc.userId === currentUserId ? "#10b981" : "#f59e0b",
+            fillColor: loc.userId === currentUserId ? "#10b981" : "#f59e0b",
+            fillOpacity: 0.08,
+            weight: 1,
+          }}
+        />
+      );
+    });
+  }
+
   // Handle location permission and tracking
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -194,7 +379,14 @@ const MapView = forwardRef(({ locations, currentUserId, showLines = true, center
         />
 
         {/* Auto-center map on locations */}
-        <MapUpdater locations={locations} centerOnUsers={centerOnUsers} />
+        <MapInteractionTracker onUserInteracted={() => setAllowAutoFollow(false)} />
+        <MapUpdater locations={locations} centerOnUsers={centerOnUsers} allowAutoFollow={allowAutoFollow} />
+
+        <MapClickHandler onMapClick={onMapClick ? (latlng) => {
+          if (isTargeting) {
+            onMapClick(latlng);
+          }
+        } : null} />
 
         {/* Location markers */}
         {validLocations.map((loc) => {
@@ -218,8 +410,25 @@ const MapView = forwardRef(({ locations, currentUserId, showLines = true, center
           );
         })}
 
+        {targetLocation && (
+          <Marker
+            position={[targetLocation.lat, targetLocation.lng]}
+            icon={createTargetIcon()}
+          >
+            <Popup>
+              <div className="text-center">
+                <p className="font-bold text-gray-800">Target Location</p>
+                <p className="text-xs text-amber-600 font-semibold">📌 Destination</p>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+
+        {rangeCircles}
+
         {/* Connection lines */}
         {polylines}
+        {targetLines}
       </MapContainer>
 
       {/* Custom styles */}

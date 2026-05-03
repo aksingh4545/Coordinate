@@ -23,6 +23,7 @@ const io = new Server(server, {
       process.env.FRONTEND_URL,
       /https:\/\/.*\.vercel\.app$/,
       /https:\/\/.*\.onrender\.com$/,
+      /https:\/\/.*\.ngrok-free\.dev$/,
     ].filter(Boolean),
     methods: ['GET', 'POST'],
     credentials: true,
@@ -36,6 +37,14 @@ app.use(express.json());
 const rooms = new Map(); // roomId -> room data (cache)
 const userSockets = new Map(); // userId -> socketId
 const userRooms = new Map(); // userId -> roomId
+
+function getDefaultRoomSettings() {
+  return {
+    mode: "crowd",
+    trackingRange: 30,
+    targetLocation: null,
+  };
+}
 
 // Helper: Calculate distance between two coordinates (Haversine formula)
 function calculateDistance(lat1, lng1, lat2, lng2) {
@@ -85,6 +94,7 @@ app.post('/api/rooms/create', async (req, res) => {
       members: [],
       createdAt: Date.now(),
       isActive: true,
+      settings: getDefaultRoomSettings(),
     };
 
     // Save to MongoDB (with safe fallback)
@@ -109,7 +119,8 @@ app.post('/api/rooms/create', async (req, res) => {
       success: true,
       roomId,
       qrCode,
-      joinUrl
+      joinUrl,
+      settings: room.settings,
     });
   } catch (err) {
     console.error('Error creating room:', err);
@@ -185,6 +196,7 @@ app.post('/api/rooms/join', async (req, res) => {
         roomId: room.roomId,
         hostId: room.hostId,
         hostName: room.hostName,
+        settings: room.settings || getDefaultRoomSettings(),
       }
     });
   } catch (err) {
@@ -232,6 +244,7 @@ app.get('/api/rooms/:roomId', async (req, res) => {
         hostId: room.hostId,
         hostName: room.hostName,
         members: membersWithLocation,
+        settings: room.settings || getDefaultRoomSettings(),
       }
     });
   } catch (err) {
@@ -375,7 +388,45 @@ io.on('connection', (socket) => {
         isHost: m.userId === room.hostId,
       }));
 
-    callback({ success: true, locations, hostId: room.hostId });
+    callback({
+      success: true,
+      locations,
+      hostId: room.hostId,
+      settings: room.settings || getDefaultRoomSettings(),
+    });
+  });
+
+  socket.on('room:settings:update', async ({ roomId, userId, settings }) => {
+    let room = rooms.get(roomId);
+    if (!room) return;
+    if (userId !== room.hostId) return;
+
+    const nextSettings = {
+      ...(room.settings || getDefaultRoomSettings()),
+      ...settings,
+    };
+
+    if (typeof nextSettings.trackingRange === 'number' && nextSettings.trackingRange < 5) {
+      nextSettings.trackingRange = 5;
+    }
+
+    room.settings = nextSettings;
+    rooms.set(roomId, room);
+
+    if (isDBConnected()) {
+      const roomsCollection = getRoomsCollection();
+      roomsCollection.updateOne(
+        { roomId },
+        { $set: { settings: room.settings } }
+      ).catch(err => console.error('Error updating settings in DB:', err.message));
+    }
+
+    io.to(roomId).emit('room:settings', room.settings);
+  });
+
+  socket.on('room:warning', ({ roomId, warning }) => {
+    if (!rooms.get(roomId)) return;
+    io.to(roomId).emit('room:warning', warning);
   });
 
   // ===== LIVE CHAT & VOICE MESSAGE HANDLERS =====
