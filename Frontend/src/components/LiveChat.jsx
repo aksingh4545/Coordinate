@@ -3,7 +3,7 @@ import { useMap } from "../context/MapContext";
 import "./LiveChat.css";
 
 export default function LiveChat({ roomId, members, currentUserId, onClose }) {
-  const { socket } = useMap();
+  const { socket, currentRoom } = useMap();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -21,7 +21,7 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
   const recordingTimeRef = useRef(0);
   const prevMessageCountRef = useRef(0);
   const touchStartYRef = useRef(null);
-  const normalizedRoomId = (roomId || "").toUpperCase();
+  const normalizedRoomId = (currentRoom?.roomId || roomId || "").toUpperCase();
   const pendingVoiceQueueRef = useRef([]);
   const audioUnlockedRef = useRef(false);
 
