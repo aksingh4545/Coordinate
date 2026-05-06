@@ -17,9 +17,13 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const recordingTimerRef = useRef(null);
+  const recordingStartRef = useRef(null);
+  const recordingTimeRef = useRef(0);
   const prevMessageCountRef = useRef(0);
   const touchStartYRef = useRef(null);
   const normalizedRoomId = (roomId || "").toUpperCase();
+  const pendingVoiceQueueRef = useRef([]);
+  const audioUnlockedRef = useRef(false);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -131,6 +135,9 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
 
       mediaRecorderRef.current.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const durationSeconds = recordingStartRef.current
+          ? Math.max(1, Math.round((Date.now() - recordingStartRef.current) / 1000))
+          : Math.max(1, recordingTimeRef.current || 0);
         
         // Convert blob to base64
         const reader = new FileReader();
@@ -143,7 +150,7 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
             userName: currentUserName,
             type: "voice",
             audioUrl: base64Audio,
-            duration: recordingTime,
+            duration: durationSeconds,
             timestamp: Date.now(),
           };
 
@@ -153,7 +160,7 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
             socket.emit("chat:voice", {
               roomId: normalizedRoomId,
               audioBlob: base64Audio,
-              duration: recordingTime,
+              duration: durationSeconds,
               userId: currentUserId,
               userName: currentUserName,
             });
@@ -165,19 +172,25 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
         
         setIsRecording(false);
         setRecordingTime(0);
+        recordingTimeRef.current = 0;
+        recordingStartRef.current = null;
         if (recordingTimerRef.current) {
           clearInterval(recordingTimerRef.current);
+          recordingTimerRef.current = null;
         }
       };
 
       mediaRecorderRef.current.start();
       setIsRecording(true);
       setRecordingTime(0);
+      recordingTimeRef.current = 0;
+      recordingStartRef.current = Date.now();
 
       // Start recording timer
       recordingTimerRef.current = setInterval(() => {
         setRecordingTime((prev) => {
           const nextValue = prev + 1;
+          recordingTimeRef.current = nextValue;
           if (nextValue >= MAX_RECORDING_SECONDS) {
             stopRecording();
           }
@@ -192,15 +205,36 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
 
   // Stop voice recording
   const stopRecording = () => {
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
     }
   };
 
   // Play voice message
-  const playVoiceMessage = (audioUrl) => {
+  const playVoiceMessage = (audioUrl, { queueOnFail = true } = {}) => {
     const audio = new Audio(audioUrl);
-    audio.play();
+    const playPromise = audio.play();
+    if (playPromise && queueOnFail) {
+      playPromise.catch(() => {
+        pendingVoiceQueueRef.current.push(audioUrl);
+      });
+    }
+  };
+
+  const handleUserGesture = () => {
+    if (!audioUnlockedRef.current) {
+      audioUnlockedRef.current = true;
+    }
+
+    if (pendingVoiceQueueRef.current.length > 0) {
+      const queued = [...pendingVoiceQueueRef.current];
+      pendingVoiceQueueRef.current = [];
+      queued.forEach((audioUrl) => playVoiceMessage(audioUrl, { queueOnFail: false }));
+    }
   };
 
   const playPopSound = () => {
@@ -271,6 +305,8 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
   return (
     <div
       className={`live-chat-container bottom-sheet ${isExpanded ? "is-expanded" : "is-collapsed"}`}
+      onClick={handleUserGesture}
+      onTouchStart={handleUserGesture}
     >
       <div
         className="chat-sheet-header"
