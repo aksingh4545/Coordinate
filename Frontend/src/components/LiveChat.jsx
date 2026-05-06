@@ -20,10 +20,13 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
   const recordingStartRef = useRef(null);
   const recordingTimeRef = useRef(0);
   const prevMessageCountRef = useRef(0);
+  const seenMessageIdsRef = useRef(new Set());
+  const recentMessageKeysRef = useRef(new Map());
   const touchStartYRef = useRef(null);
   const normalizedRoomId = (currentRoom?.roomId || roomId || "").toUpperCase();
   const pendingVoiceQueueRef = useRef([]);
   const audioUnlockedRef = useRef(false);
+  const DEDUPE_WINDOW_MS = 5000;
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -43,25 +46,83 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
     socket.emit("chat:history", { roomId: normalizedRoomId }, (response) => {
       if (response.success) {
         const historyMessages = response.messages || [];
+        const nextIds = new Set(historyMessages.map((msg) => msg.id).filter(Boolean));
+        seenMessageIdsRef.current = nextIds;
+        const now = Date.now();
+        const nextKeys = new Map();
+        historyMessages.forEach((msg) => {
+          const key = getMessageKey(msg);
+          if (key) {
+            nextKeys.set(key, now);
+          }
+        });
+        recentMessageKeysRef.current = nextKeys;
         prevMessageCountRef.current = historyMessages.length;
         setMessages(historyMessages);
       }
     });
 
     // Listen for new messages
-    socket.on("chat:message", (message) => {
+    const handleChatMessage = (message) => {
+      if (shouldIgnoreMessage(message)) return;
       setMessages((prev) => [...prev, message]);
-    });
+    };
 
-    socket.on("chat:voice", (voiceMessage) => {
+    const handleChatVoice = (voiceMessage) => {
+      if (shouldIgnoreMessage(voiceMessage)) return;
       setMessages((prev) => [...prev, voiceMessage]);
-    });
+    };
+
+    socket.off("chat:message", handleChatMessage);
+    socket.off("chat:voice", handleChatVoice);
+    socket.on("chat:message", handleChatMessage);
+    socket.on("chat:voice", handleChatVoice);
 
     return () => {
-      socket.off("chat:message");
-      socket.off("chat:voice");
+      socket.off("chat:message", handleChatMessage);
+      socket.off("chat:voice", handleChatVoice);
     };
   }, [socket, normalizedRoomId, currentUserId]);
+
+  const getMessageKey = (msg) => {
+    if (!msg) return "";
+    const text = msg.type === "text" ? msg.text || "" : "";
+    const audio = msg.type === "voice" ? (msg.audioUrl || msg.audioBlob || "") : "";
+    const audioLength = typeof audio === "string" ? audio.length : 0;
+    const duration = msg.type === "voice" ? Math.round(msg.duration || 0) : 0;
+    const userPart = msg.userId || "unknown";
+    return `${userPart}|${msg.type || "text"}|${text}|${duration}|${audioLength}`;
+  };
+
+  const shouldIgnoreMessage = (msg) => {
+    if (!msg) return true;
+    if (msg.id && seenMessageIdsRef.current.has(msg.id)) {
+      return true;
+    }
+
+    const key = getMessageKey(msg);
+    if (key) {
+      const lastSeen = recentMessageKeysRef.current.get(key);
+      const now = Date.now();
+      if (lastSeen && now - lastSeen < DEDUPE_WINDOW_MS) {
+        return true;
+      }
+      recentMessageKeysRef.current.set(key, now);
+    }
+
+    if (msg.id) {
+      seenMessageIdsRef.current.add(msg.id);
+    }
+
+    const cutoff = Date.now() - DEDUPE_WINDOW_MS;
+    for (const [entryKey, entryTime] of recentMessageKeysRef.current.entries()) {
+      if (entryTime < cutoff) {
+        recentMessageKeysRef.current.delete(entryKey);
+      }
+    }
+
+    return false;
+  };
 
   // Notification sound and auto-play for incoming messages
   useEffect(() => {
@@ -97,8 +158,9 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
       text: newMessage.trim(),
     };
 
+    const messageId = `${Date.now()}-${currentUserId}`;
     const optimisticMessage = {
-      id: `${Date.now()}-${currentUserId}`,
+      id: messageId,
       userId: currentUserId,
       userName: currentUserName,
       text: message.text,
@@ -106,13 +168,16 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
       timestamp: Date.now(),
     };
 
-    setMessages((prev) => [...prev, optimisticMessage]);
+    if (!shouldIgnoreMessage(optimisticMessage)) {
+      setMessages((prev) => [...prev, optimisticMessage]);
+    }
 
     socket.emit("chat:message", { 
       roomId: normalizedRoomId, 
       message,
       userId: currentUserId,
       userName: currentUserName,
+      messageId,
     });
     setNewMessage("");
   };
@@ -144,8 +209,9 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
         reader.readAsDataURL(audioBlob);
         reader.onloadend = () => {
           const base64Audio = reader.result;
+          const messageId = `${Date.now()}-${currentUserId}`;
           const voiceMessage = {
-            id: `${Date.now()}-${currentUserId}`,
+            id: messageId,
             userId: currentUserId,
             userName: currentUserName,
             type: "voice",
@@ -154,7 +220,9 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
             timestamp: Date.now(),
           };
 
-          setMessages((prev) => [...prev, voiceMessage]);
+          if (!shouldIgnoreMessage(voiceMessage)) {
+            setMessages((prev) => [...prev, voiceMessage]);
+          }
 
           if (socket && normalizedRoomId && currentUserId) {
             socket.emit("chat:voice", {
@@ -163,6 +231,7 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
               duration: durationSeconds,
               userId: currentUserId,
               userName: currentUserName,
+              messageId,
             });
           }
         };

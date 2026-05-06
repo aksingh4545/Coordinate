@@ -45,6 +45,7 @@ function getDefaultRoomSettings() {
     mode: "crowd",
     trackingRange: 30,
     targetLocation: null,
+    mapStyle: "osm",
   };
 }
 
@@ -76,6 +77,25 @@ async function safeMongoOperation(operation, fallback) {
     console.warn('⚠️  MongoDB operation failed, using fallback:', err.message);
     return fallback();
   }
+}
+
+async function getRoomFromCacheOrDb(roomId) {
+  let room = rooms.get(roomId);
+  if (room) return room;
+
+  room = await safeMongoOperation(
+    async () => {
+      const roomsCollection = getRoomsCollection();
+      const foundRoom = await roomsCollection.findOne({ roomId });
+      if (foundRoom) {
+        rooms.set(roomId, foundRoom);
+      }
+      return foundRoom;
+    },
+    () => null
+  );
+
+  return room;
 }
 
 // API Routes
@@ -435,12 +455,12 @@ io.on('connection', (socket) => {
   // ===== LIVE CHAT & VOICE MESSAGE HANDLERS =====
 
   // Send text message in room
-  socket.on('chat:message', async ({ roomId, message, userId, userName }) => {
+  socket.on('chat:message', async ({ roomId, message, userId, userName, messageId }) => {
     const normalizedRoomId = (roomId || "").toUpperCase();
     const room = await getRoomFromCacheOrDb(normalizedRoomId);
 
     const chatMessage = {
-      id: Date.now().toString(),
+      id: messageId || Date.now().toString(),
       userId: userId,
       userName: userName,
       text: message.text,
@@ -465,12 +485,12 @@ io.on('connection', (socket) => {
   });
 
   // Send voice message in room
-  socket.on('chat:voice', async ({ roomId, audioBlob, duration, userId, userName }) => {
+  socket.on('chat:voice', async ({ roomId, audioBlob, duration, userId, userName, messageId }) => {
     const normalizedRoomId = (roomId || "").toUpperCase();
     const room = await getRoomFromCacheOrDb(normalizedRoomId);
 
     const voiceMessage = {
-      id: Date.now().toString(),
+      id: messageId || Date.now().toString(),
       userId: userId,
       userName: userName,
       type: 'voice',

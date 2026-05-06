@@ -11,7 +11,10 @@ export function MapProvider({ children }) {
     const saved = localStorage.getItem("coordinator_user");
     return saved ? JSON.parse(saved) : null;
   });
-  const [currentRoom, setCurrentRoom] = useState(null);
+  const [currentRoom, setCurrentRoom] = useState(() => {
+    const saved = localStorage.getItem("coordinator_current_room");
+    return saved ? JSON.parse(saved) : null;
+  });
   const [locations, setLocations] = useState([]);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -19,6 +22,7 @@ export function MapProvider({ children }) {
     mode: "crowd",
     trackingRange: 30,
     targetLocation: null,
+    mapStyle: "osm",
   });
   const [roomWarning, setRoomWarning] = useState(null);
 
@@ -68,6 +72,35 @@ export function MapProvider({ children }) {
       newSocket.close();
     };
   }, []);
+
+  useEffect(() => {
+    if (!currentRoom) {
+      localStorage.removeItem("coordinator_current_room");
+      return;
+    }
+    localStorage.setItem("coordinator_current_room", JSON.stringify(currentRoom));
+  }, [currentRoom]);
+
+  useEffect(() => {
+    if (!socket || !currentRoom || !user) return;
+
+    const joinSocketRoom = () => {
+      socket.emit("user:join", {
+        userId: user.userId,
+        roomId: currentRoom.roomId,
+      });
+    };
+
+    if (socket.connected) {
+      joinSocketRoom();
+    }
+
+    socket.on("connect", joinSocketRoom);
+
+    return () => {
+      socket.off("connect", joinSocketRoom);
+    };
+  }, [socket, currentRoom, user]);
 
   // Generate or get user ID
   const getOrCreateUser = useCallback(() => {
@@ -257,6 +290,7 @@ export function MapProvider({ children }) {
       mode: "crowd",
       trackingRange: 30,
       targetLocation: null,
+      mapStyle: "osm",
     });
     setRoomWarning(null);
   }, [currentRoom, user]);

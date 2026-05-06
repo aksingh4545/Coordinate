@@ -16,6 +16,7 @@ export default function MemberRoomPage() {
     setLocations,
     socket,
     syncRoomLocations,
+    joinRoom,
     leaveRoom,
     calculateDistance,
     calculateBearing,
@@ -33,6 +34,15 @@ export default function MemberRoomPage() {
   const [locationStatus, setLocationStatus] = useState("idle");
   const [locationError, setLocationError] = useState("");
   const watchIdRef = useRef(null);
+
+  useEffect(() => {
+    if (!roomId || currentRoom) return;
+    if (!user) return;
+
+    joinRoom(roomId.toUpperCase(), user.name || "User").catch((err) => {
+      console.error("Failed to rejoin room:", err);
+    });
+  }, [roomId, currentRoom, user, joinRoom]);
 
   const targetInfo = (() => {
     if (!roomSettings?.targetLocation) return null;

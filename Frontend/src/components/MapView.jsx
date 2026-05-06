@@ -335,6 +335,19 @@ const MapView = forwardRef(({
     });
   }
 
+  const mapStyle = roomSettings?.mapStyle || "osm";
+  const tileLayers = {
+    osm: {
+      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    },
+    satellite: {
+      url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics',
+    },
+  };
+  const activeTile = tileLayers[mapStyle] || tileLayers.osm;
+
   return (
     <div className="h-full w-full">
       <MapContainer
@@ -345,10 +358,7 @@ const MapView = forwardRef(({
         className="h-full w-full z-0"
         zoomControl={true}
       >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
+        <TileLayer url={activeTile.url} attribution={activeTile.attribution} />
 
         {/* Auto-center map on locations */}
         <MapInteractionTracker onUserInteracted={() => setAllowAutoFollow(false)} />

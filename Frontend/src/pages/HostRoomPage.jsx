@@ -24,6 +24,7 @@ export default function HostRoomPage() {
     estimateEtaMinutes,
     formatDistance,
     setError,
+    setCurrentRoom,
     roomSettings,
     updateRoomSettings,
     roomWarning,
@@ -64,6 +65,36 @@ export default function HostRoomPage() {
   })();
 
   const joinUrl = `${window.location.origin}/join/${roomId}`;
+
+  useEffect(() => {
+    if (!roomId || currentRoom) return;
+    if (!user) return;
+
+    const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+
+    const restoreRoom = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/rooms/${roomId.toUpperCase()}`);
+        const data = await response.json();
+        if (!data.success) return;
+
+        setCurrentRoom({
+          roomId: data.room.roomId,
+          hostId: data.room.hostId,
+          hostName: data.room.hostName,
+          isHost: data.room.hostId === user.userId,
+        });
+
+        if (data.room.settings) {
+          updateRoomSettings(data.room.settings);
+        }
+      } catch (err) {
+        console.error("Failed to restore room:", err);
+      }
+    };
+
+    restoreRoom();
+  }, [roomId, currentRoom, user, setCurrentRoom, updateRoomSettings]);
 
   useEffect(() => {
     // Generate QR code
@@ -310,6 +341,10 @@ export default function HostRoomPage() {
     updateRoomSettings({ trackingRange: Math.max(5, nextValue) });
   };
 
+  const handleMapStyleChange = (event) => {
+    updateRoomSettings({ mapStyle: event.target.value });
+  };
+
   const handleSetTarget = () => {
     setIsTargeting(true);
   };
@@ -409,6 +444,19 @@ export default function HostRoomPage() {
             >
               Crowd
             </button>
+          </div>
+
+          <div className="control-row">
+            <label className="control-label" htmlFor="mapStyle">Map</label>
+            <select
+              id="mapStyle"
+              className="control-input"
+              value={roomSettings?.mapStyle || "osm"}
+              onChange={handleMapStyleChange}
+            >
+              <option value="osm">OSM Standard</option>
+              <option value="satellite">Satellite</option>
+            </select>
           </div>
 
           {roomSettings?.mode === "tracking" && (
