@@ -65,13 +65,15 @@ export default function MemberRoomPage() {
 
   // Start location tracking when member enters room
   useEffect(() => {
-    if (!currentRoom || !user || !socket) return;
+    if (!currentRoom || !user) return;
 
     // Join socket room
-    socket.emit("user:join", {
-      userId: user.userId,
-      roomId: currentRoom.roomId,
-    });
+    if (socket) {
+      socket.emit("user:join", {
+        userId: user.userId,
+        roomId: currentRoom.roomId,
+      });
+    }
 
     // Geolocation watch for continuous location updates
     if (!navigator.geolocation) {
@@ -84,13 +86,15 @@ export default function MemberRoomPage() {
         const { latitude, longitude } = position.coords;
         
         // Emit location to socket
-        socket.emit("location:update", {
-          userId: user.userId,
-          roomId: currentRoom.roomId,
-          lat: latitude,
-          lng: longitude,
-          name: user.name,
-        });
+        if (socket) {
+          socket.emit("location:update", {
+            userId: user.userId,
+            roomId: currentRoom.roomId,
+            lat: latitude,
+            lng: longitude,
+            name: user.name,
+          });
+        }
 
         // Update local locations state
         setLocations((prev) => {

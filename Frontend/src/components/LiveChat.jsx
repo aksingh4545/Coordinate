@@ -12,7 +12,6 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
   const [showMembers, setShowMembers] = useState(true);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
   const [isExpanded, setIsExpanded] = useState(!isMobile);
-  const [floatingMessages, setFloatingMessages] = useState([]);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -20,7 +19,6 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
   const recordingTimerRef = useRef(null);
   const prevMessageCountRef = useRef(0);
   const touchStartYRef = useRef(null);
-  const floatingTimeoutsRef = useRef(new Map());
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -78,33 +76,8 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
       }
     });
 
-    if (isMobile && newMessages.length > 0) {
-      const newFloating = newMessages.map((msg, index) => ({
-        ...msg,
-        _floatId: msg.id || `${Date.now()}-${index}`,
-      }));
-
-      setFloatingMessages((prev) => [...prev, ...newFloating].slice(-5));
-
-      newFloating.forEach((msg) => {
-        if (floatingTimeoutsRef.current.has(msg._floatId)) return;
-        const timeoutId = setTimeout(() => {
-          setFloatingMessages((prev) => prev.filter((item) => item._floatId !== msg._floatId));
-          floatingTimeoutsRef.current.delete(msg._floatId);
-        }, 4800);
-        floatingTimeoutsRef.current.set(msg._floatId, timeoutId);
-      });
-    }
-
     prevMessageCountRef.current = messages.length;
   }, [messages, currentUserId]);
-
-  useEffect(() => {
-    return () => {
-      floatingTimeoutsRef.current.forEach((timeoutId) => clearTimeout(timeoutId));
-      floatingTimeoutsRef.current.clear();
-    };
-  }, []);
 
   // Send text message
   const sendTextMessage = (e) => {
@@ -266,63 +239,6 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
       setIsExpanded(false);
     }
   };
-
-  const getAuthorColor = (name = "") => {
-    const colors = ["#f472b6", "#a855f7", "#3b82f6", "#22c55e"];
-    let hash = 0;
-    for (let i = 0; i < name.length; i += 1) {
-      hash = (hash * 31 + name.charCodeAt(i)) % 997;
-    }
-    return colors[hash % colors.length];
-  };
-
-  if (isMobile) {
-    return (
-      <div className="live-chat-container mobile-overlay">
-        <div className="chat-floating-messages">
-          {floatingMessages.map((msg, index) => (
-            <div
-              key={msg._floatId || msg.id}
-              className="chat-float-bubble"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <span
-                className="chat-floating-author"
-                style={{ color: getAuthorColor(msg.userName || "") }}
-              >
-                {msg.userName || "Unknown"}:
-              </span>{" "}
-              {msg.type === "voice" ? "Voice message" : msg.text}
-            </div>
-          ))}
-        </div>
-
-        <form className="chat-input-bar" onSubmit={sendTextMessage}>
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="hi guys"
-            className="chat-input-field"
-          />
-          <button
-            type="button"
-            className="chat-mic-btn"
-            onClick={isRecording ? stopRecording : startRecording}
-          >
-            🎤
-          </button>
-          <button
-            type="submit"
-            className="chat-send-btn"
-            disabled={!newMessage.trim()}
-          >
-            ➤
-          </button>
-        </form>
-      </div>
-    );
-  }
 
   return (
     <div

@@ -80,7 +80,7 @@ export default function HostRoomPage() {
 
   // Start location tracking when host enters room
   useEffect(() => {
-    if (!currentRoom || !user || !socket) {
+    if (!currentRoom || !user) {
       console.log('Waiting for dependencies:', { hasRoom: !!currentRoom, hasUser: !!user, hasSocket: !!socket });
       return;
     }
@@ -88,10 +88,12 @@ export default function HostRoomPage() {
     console.log('📍 Starting location tracking for host:', user.userId, 'in room:', currentRoom.roomId);
 
     // Join socket room
-    socket.emit("user:join", {
-      userId: user.userId,
-      roomId: currentRoom.roomId,
-    });
+    if (socket) {
+      socket.emit("user:join", {
+        userId: user.userId,
+        roomId: currentRoom.roomId,
+      });
+    }
 
     // Geolocation watch for continuous location updates
     if (!navigator.geolocation) {
@@ -120,13 +122,15 @@ export default function HostRoomPage() {
         });
 
         // Emit location to socket for broadcasting to others
-        socket.emit("location:update", {
-          userId: user.userId,
-          roomId: currentRoom.roomId,
-          lat: latitude,
-          lng: longitude,
-          name: user.name,
-        });
+        if (socket) {
+          socket.emit("location:update", {
+            userId: user.userId,
+            roomId: currentRoom.roomId,
+            lat: latitude,
+            lng: longitude,
+            name: user.name,
+          });
+        }
       },
       (error) => {
         console.error("Location error:", error);
