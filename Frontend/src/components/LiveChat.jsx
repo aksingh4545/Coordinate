@@ -8,6 +8,7 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
   const [newMessage, setNewMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const MAX_RECORDING_SECONDS = 20;
   const [showMembers, setShowMembers] = useState(true);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
   const [isExpanded, setIsExpanded] = useState(!isMobile);
@@ -126,6 +127,11 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
   // Start voice recording
   const startRecording = async () => {
     try {
+      if (!navigator.mediaDevices || !window.MediaRecorder) {
+        alert("Voice recording is not supported in this browser.");
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorderRef.current = new MediaRecorder(stream);
       audioChunksRef.current = [];
@@ -142,13 +148,15 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
         reader.readAsDataURL(audioBlob);
         reader.onloadend = () => {
           const base64Audio = reader.result;
-          socket.emit("chat:voice", {
-            roomId,
-            audioBlob: base64Audio,
-            duration: recordingTime,
-            userId: currentUserId,
-            userName: currentUserName,
-          });
+          if (socket && roomId && currentUserId) {
+            socket.emit("chat:voice", {
+              roomId,
+              audioBlob: base64Audio,
+              duration: recordingTime,
+              userId: currentUserId,
+              userName: currentUserName,
+            });
+          }
         };
 
         // Stop all tracks
@@ -167,7 +175,13 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
 
       // Start recording timer
       recordingTimerRef.current = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
+        setRecordingTime((prev) => {
+          const nextValue = prev + 1;
+          if (nextValue >= MAX_RECORDING_SECONDS) {
+            stopRecording();
+          }
+          return nextValue;
+        });
       }, 1000);
     } catch (err) {
       console.error("Error accessing microphone:", err);

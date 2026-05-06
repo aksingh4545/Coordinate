@@ -28,6 +28,7 @@ const io = new Server(server, {
     methods: ['GET', 'POST'],
     credentials: true,
   },
+  maxHttpBufferSize: 10e6,
 });
 
 app.use(cors());
