@@ -9,13 +9,19 @@ export default function JoinRoomPage() {
   const [memberName, setMemberName] = useState("");
   const [roomInfo, setRoomInfo] = useState(null);
   const [localError, setLocalError] = useState("");
+  const normalizedRoomId = (roomId || "").toUpperCase();
 
   // Fetch room info on mount
   useEffect(() => {
+    if (roomId && roomId !== normalizedRoomId) {
+      navigate(`/join/${normalizedRoomId}`, { replace: true });
+      return;
+    }
+
     const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
     const fetchRoomInfo = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/rooms/${roomId}`);
+        const response = await fetch(`${API_URL}/api/rooms/${normalizedRoomId}`);
         const data = await response.json();
         if (data.success) {
           setRoomInfo(data.room);
@@ -28,7 +34,7 @@ export default function JoinRoomPage() {
     };
 
     fetchRoomInfo();
-  }, [roomId]);
+  }, [roomId, normalizedRoomId, navigate]);
 
   const handleJoin = async (e) => {
     e.preventDefault();
@@ -38,8 +44,8 @@ export default function JoinRoomPage() {
     }
 
     try {
-      await joinRoom(roomId, memberName.trim());
-      navigate(`/room/${roomId}`);
+      await joinRoom(normalizedRoomId, memberName.trim());
+      navigate(`/room/${normalizedRoomId}`);
     } catch (err) {
       setLocalError(err.message || "Failed to join room");
     }
@@ -77,7 +83,7 @@ export default function JoinRoomPage() {
               display: 'inline-block'
             }}>
               <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '4px' }}>Group Code</p>
-              <p style={{ fontSize: '1.5rem', fontFamily: 'monospace', fontWeight: '700', color: '#8b5cf6' }}>{roomId}</p>
+              <p style={{ fontSize: '1.5rem', fontFamily: 'monospace', fontWeight: '700', color: '#8b5cf6' }}>{normalizedRoomId}</p>
             </div>
           </div>
 

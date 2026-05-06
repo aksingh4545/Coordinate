@@ -131,7 +131,8 @@ app.post('/api/rooms/create', async (req, res) => {
 // Join a room (Mobile users)
 app.post('/api/rooms/join', async (req, res) => {
   try {
-    const { roomId, userId, userName } = req.body;
+    const { userId, userName } = req.body;
+    const roomId = (req.body.roomId || "").toUpperCase();
     if (!roomId || !userId || !userName) {
       return res.status(400).json({ error: 'roomId, userId, and userName are required' });
     }
@@ -208,7 +209,7 @@ app.post('/api/rooms/join', async (req, res) => {
 // Get room details
 app.get('/api/rooms/:roomId', async (req, res) => {
   try {
-    const { roomId } = req.params;
+    const roomId = (req.params.roomId || "").toUpperCase();
     let room = rooms.get(roomId);
     
     // If not in cache, try MongoDB
