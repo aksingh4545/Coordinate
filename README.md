@@ -259,14 +259,3 @@ For best mobile experience:
 - [ ] Offline mode with cached locations
 - [ ] Battery optimization settings
 
-## 📄 License
-
-MIT License - feel free to use for personal or commercial projects!
-
-## 👥 Contributing
-
-Contributions welcome! Please feel free to submit a Pull Request.
-
----
-
-**Built with ❤️ for better group coordination**
