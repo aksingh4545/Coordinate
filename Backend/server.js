@@ -435,7 +435,8 @@ io.on('connection', (socket) => {
 
   // Send text message in room
   socket.on('chat:message', async ({ roomId, message, userId, userName }) => {
-    const room = rooms.get(roomId);
+    const normalizedRoomId = (roomId || "").toUpperCase();
+    const room = await getRoomFromCacheOrDb(normalizedRoomId);
     if (!room) return;
 
     const chatMessage = {
@@ -457,13 +458,14 @@ io.on('connection', (socket) => {
     }
 
     // Broadcast to all in room
-    io.to(roomId).emit('chat:message', chatMessage);
-    console.log(`💬 Chat message from ${chatMessage.userName} in room ${roomId}`);
+    io.to(normalizedRoomId).emit('chat:message', chatMessage);
+    console.log(`💬 Chat message from ${chatMessage.userName} in room ${normalizedRoomId}`);
   });
 
   // Send voice message in room
   socket.on('chat:voice', async ({ roomId, audioBlob, duration, userId, userName }) => {
-    const room = rooms.get(roomId);
+    const normalizedRoomId = (roomId || "").toUpperCase();
+    const room = await getRoomFromCacheOrDb(normalizedRoomId);
     if (!room) return;
 
     const voiceMessage = {
@@ -486,13 +488,14 @@ io.on('connection', (socket) => {
     }
 
     // Broadcast to all in room
-    io.to(roomId).emit('chat:voice', voiceMessage);
-    console.log(`🎤 Voice message from ${voiceMessage.userName} in room ${roomId}`);
+    io.to(normalizedRoomId).emit('chat:voice', voiceMessage);
+    console.log(`🎤 Voice message from ${voiceMessage.userName} in room ${normalizedRoomId}`);
   });
 
   // Request chat history
   socket.on('chat:history', async ({ roomId }, callback) => {
-    const room = rooms.get(roomId);
+    const normalizedRoomId = (roomId || "").toUpperCase();
+    const room = await getRoomFromCacheOrDb(normalizedRoomId);
     if (!room) {
       callback({ error: 'Room not found' });
       return;

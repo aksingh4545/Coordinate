@@ -335,34 +335,6 @@ const MapView = forwardRef(({
     });
   }
 
-  // Handle location permission and tracking
-  useEffect(() => {
-    if (!navigator.geolocation) {
-      console.warn("Geolocation is not supported by this browser");
-      return;
-    }
-
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        // Location is handled by parent component
-        console.log("Location updated:", latitude, longitude);
-      },
-      (error) => {
-        console.error("Location error:", error);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      }
-    );
-
-    return () => {
-      navigator.geolocation.clearWatch(watchId);
-    };
-  }, []);
-
   return (
     <div className="h-full w-full">
       <MapContainer

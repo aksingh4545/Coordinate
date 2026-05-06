@@ -30,6 +30,9 @@ export default function MemberRoomPage() {
   const [memberList, setMemberList] = useState([]);
   const [showChat, setShowChat] = useState(true);
   const mapRef = useRef(null);
+  const [locationStatus, setLocationStatus] = useState("idle");
+  const [locationError, setLocationError] = useState("");
+  const watchIdRef = useRef(null);
 
   const targetInfo = (() => {
     if (!roomSettings?.targetLocation) return null;
@@ -64,10 +67,96 @@ export default function MemberRoomPage() {
   }, [syncRoomLocations]);
 
   // Start location tracking when member enters room
+  const handleLocationUpdate = (latitude, longitude) => {
+    if (socket) {
+      socket.emit("location:update", {
+        userId: user.userId,
+        roomId: currentRoom.roomId,
+        lat: latitude,
+        lng: longitude,
+        name: user.name,
+      });
+    }
+
+    setLocations((prev) => {
+      const filtered = prev.filter((loc) => loc.userId !== user.userId);
+      return [
+        ...filtered,
+        {
+          userId: user.userId,
+          name: user.name,
+          lat: latitude,
+          lng: longitude,
+          isHost: false,
+        },
+      ];
+    });
+  };
+
+  const startLocationTracking = async () => {
+    if (!currentRoom || !user || watchIdRef.current !== null) return;
+
+    if (!navigator.geolocation) {
+      setLocationStatus("error");
+      setLocationError("Geolocation is not supported by your browser.");
+      setError("Geolocation is not supported by your browser");
+      return;
+    }
+
+    try {
+      if (navigator.permissions?.query) {
+        const status = await navigator.permissions.query({ name: "geolocation" });
+        if (status.state === "denied") {
+          setLocationStatus("error");
+          setLocationError("Location permission denied. Enable location in browser settings.");
+          setError("Location permission denied. Please enable location access.");
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Unable to query geolocation permissions:", err);
+    }
+
+    setLocationStatus("prompt");
+    setLocationError("");
+
+    const onSuccess = (position) => {
+      const { latitude, longitude } = position.coords;
+      handleLocationUpdate(latitude, longitude);
+      setLocationStatus("active");
+      setLocationError("");
+    };
+
+    const onError = (error) => {
+      let errorMsg = "Unable to get your location.";
+      if (error.code === 1) {
+        errorMsg = "Location permission denied. Please enable location access.";
+      } else if (error.code === 2) {
+        errorMsg = "Location unavailable. Please enable GPS.";
+      } else if (error.code === 3) {
+        errorMsg = "Location request timed out. Try again.";
+      }
+      setLocationStatus("error");
+      setLocationError(errorMsg);
+      setError(errorMsg);
+    };
+
+    navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0,
+    });
+
+    watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0,
+    });
+  };
+
   useEffect(() => {
     if (!currentRoom || !user) return;
 
-    // Join socket room
     if (socket) {
       socket.emit("user:join", {
         userId: user.userId,
@@ -75,54 +164,15 @@ export default function MemberRoomPage() {
       });
     }
 
-    // Geolocation watch for continuous location updates
-    if (!navigator.geolocation) {
-      console.warn("Geolocation is not supported by this browser");
-      return;
-    }
-
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        
-        // Emit location to socket
-        if (socket) {
-          socket.emit("location:update", {
-            userId: user.userId,
-            roomId: currentRoom.roomId,
-            lat: latitude,
-            lng: longitude,
-            name: user.name,
-          });
-        }
-
-        // Update local locations state
-        setLocations((prev) => {
-          const filtered = prev.filter((loc) => loc.userId !== user.userId);
-          return [...filtered, { 
-            userId: user.userId, 
-            name: user.name, 
-            lat: latitude, 
-            lng: longitude,
-            isHost: false,
-          }];
-        });
-      },
-      (error) => {
-        console.error("Location error:", error);
-        setError("Unable to get your location. Please enable location permissions.");
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      }
-    );
+    startLocationTracking();
 
     return () => {
-      navigator.geolocation.clearWatch(watchId);
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
     };
-  }, [currentRoom, user, socket, setLocations, setError]);
+  }, [currentRoom, user, socket, setError]);
 
   useEffect(() => {
     // Update member list with distances
@@ -207,6 +257,20 @@ export default function MemberRoomPage() {
             <button className="soft-pill-btn leave" onClick={handleLeaveRoom}>LEAVE</button>
           </div>
         </div>
+
+        {locationStatus !== "active" && (
+          <div className="location-banner">
+            <span className="location-banner-text">
+              {locationStatus === "prompt"
+                ? "Waiting for location permission..."
+                : "Location is off. Enable to share your position."}
+            </span>
+            <button type="button" className="location-banner-btn" onClick={startLocationTracking}>
+              Enable location
+            </button>
+            {locationError && <span className="location-banner-error">{locationError}</span>}
+          </div>
+        )}
 
         {isMobile && roomSettings?.mode && (
           <div className="room-mobile-mode">

@@ -942,6 +942,48 @@ body {
   cursor: pointer;
 }
 
+.location-banner {
+  position: absolute;
+  top: 88px;
+  left: 18px;
+  right: 18px;
+  z-index: 475;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(10px);
+}
+
+.location-banner-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.location-banner-btn {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border: none;
+  color: #ffffff;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.location-banner-error {
+  font-size: 0.75rem;
+  color: #fca5a5;
+}
+
 .target-nav-panel {
   position: absolute;
   top: 88px;

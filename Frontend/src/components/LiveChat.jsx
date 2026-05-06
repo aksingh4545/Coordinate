@@ -19,6 +19,7 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
   const recordingTimerRef = useRef(null);
   const prevMessageCountRef = useRef(0);
   const touchStartYRef = useRef(null);
+  const normalizedRoomId = (roomId || "").toUpperCase();
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -29,9 +30,13 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
 
   // Request chat history on mount
   useEffect(() => {
-    if (!socket || !roomId) return;
+    if (!socket || !normalizedRoomId) return;
 
-    socket.emit("chat:history", { roomId }, (response) => {
+    if (currentUserId) {
+      socket.emit("user:join", { userId: currentUserId, roomId: normalizedRoomId });
+    }
+
+    socket.emit("chat:history", { roomId: normalizedRoomId }, (response) => {
       if (response.success) {
         const historyMessages = response.messages || [];
         prevMessageCountRef.current = historyMessages.length;
@@ -52,7 +57,7 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
       socket.off("chat:message");
       socket.off("chat:voice");
     };
-  }, [socket, roomId]);
+  }, [socket, normalizedRoomId, currentUserId]);
 
   // Notification sound and auto-play for incoming messages
   useEffect(() => {
@@ -82,14 +87,25 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
   // Send text message
   const sendTextMessage = (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !socket || !roomId || !currentUserId) return;
+    if (!newMessage.trim() || !socket || !normalizedRoomId || !currentUserId) return;
 
     const message = {
       text: newMessage.trim(),
     };
 
+    const optimisticMessage = {
+      id: `${Date.now()}-${currentUserId}`,
+      userId: currentUserId,
+      userName: currentUserName,
+      text: message.text,
+      type: "text",
+      timestamp: Date.now(),
+    };
+
+    setMessages((prev) => [...prev, optimisticMessage]);
+
     socket.emit("chat:message", { 
-      roomId, 
+      roomId: normalizedRoomId, 
       message,
       userId: currentUserId,
       userName: currentUserName,
@@ -121,9 +137,21 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
         reader.readAsDataURL(audioBlob);
         reader.onloadend = () => {
           const base64Audio = reader.result;
-          if (socket && roomId && currentUserId) {
+          const voiceMessage = {
+            id: `${Date.now()}-${currentUserId}`,
+            userId: currentUserId,
+            userName: currentUserName,
+            type: "voice",
+            audioUrl: base64Audio,
+            duration: recordingTime,
+            timestamp: Date.now(),
+          };
+
+          setMessages((prev) => [...prev, voiceMessage]);
+
+          if (socket && normalizedRoomId && currentUserId) {
             socket.emit("chat:voice", {
-              roomId,
+              roomId: normalizedRoomId,
               audioBlob: base64Audio,
               duration: recordingTime,
               userId: currentUserId,
