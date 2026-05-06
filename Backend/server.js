@@ -38,6 +38,7 @@ app.use(express.json());
 const rooms = new Map(); // roomId -> room data (cache)
 const userSockets = new Map(); // userId -> socketId
 const userRooms = new Map(); // userId -> roomId
+const chatHistories = new Map(); // roomId -> chat messages
 
 function getDefaultRoomSettings() {
   return {
@@ -437,7 +438,6 @@ io.on('connection', (socket) => {
   socket.on('chat:message', async ({ roomId, message, userId, userName }) => {
     const normalizedRoomId = (roomId || "").toUpperCase();
     const room = await getRoomFromCacheOrDb(normalizedRoomId);
-    if (!room) return;
 
     const chatMessage = {
       id: Date.now().toString(),
@@ -448,13 +448,15 @@ io.on('connection', (socket) => {
       timestamp: Date.now(),
     };
 
-    // Store in room chat history
-    if (!room.chatHistory) room.chatHistory = [];
-    room.chatHistory.push(chatMessage);
-
-    // Keep only last 100 messages in memory
-    if (room.chatHistory.length > 100) {
-      room.chatHistory = room.chatHistory.slice(-100);
+    const history = room?.chatHistory || chatHistories.get(normalizedRoomId) || [];
+    history.push(chatMessage);
+    if (history.length > 100) {
+      history.splice(0, history.length - 100);
+    }
+    chatHistories.set(normalizedRoomId, history);
+    if (room) {
+      room.chatHistory = history;
+      rooms.set(normalizedRoomId, room);
     }
 
     // Broadcast to all in room
@@ -466,7 +468,6 @@ io.on('connection', (socket) => {
   socket.on('chat:voice', async ({ roomId, audioBlob, duration, userId, userName }) => {
     const normalizedRoomId = (roomId || "").toUpperCase();
     const room = await getRoomFromCacheOrDb(normalizedRoomId);
-    if (!room) return;
 
     const voiceMessage = {
       id: Date.now().toString(),
@@ -478,13 +479,15 @@ io.on('connection', (socket) => {
       timestamp: Date.now(),
     };
 
-    // Store in room chat history
-    if (!room.chatHistory) room.chatHistory = [];
-    room.chatHistory.push(voiceMessage);
-
-    // Keep only last 100 messages
-    if (room.chatHistory.length > 100) {
-      room.chatHistory = room.chatHistory.slice(-100);
+    const history = room?.chatHistory || chatHistories.get(normalizedRoomId) || [];
+    history.push(voiceMessage);
+    if (history.length > 100) {
+      history.splice(0, history.length - 100);
+    }
+    chatHistories.set(normalizedRoomId, history);
+    if (room) {
+      room.chatHistory = history;
+      rooms.set(normalizedRoomId, room);
     }
 
     // Broadcast to all in room
@@ -496,15 +499,8 @@ io.on('connection', (socket) => {
   socket.on('chat:history', async ({ roomId }, callback) => {
     const normalizedRoomId = (roomId || "").toUpperCase();
     const room = await getRoomFromCacheOrDb(normalizedRoomId);
-    if (!room) {
-      callback({ error: 'Room not found' });
-      return;
-    }
-
-    callback({ 
-      success: true, 
-      messages: room.chatHistory || [] 
-    });
+    const messages = room?.chatHistory || chatHistories.get(normalizedRoomId) || [];
+    callback({ success: true, messages });
   });
 
   socket.on('disconnect', async () => {
