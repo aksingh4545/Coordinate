@@ -1299,6 +1299,7 @@ body {
 
   .room-shell {
     min-height: 100vh;
+    height: 100vh;
     border-radius: 0;
     border: none;
     box-shadow: none;
