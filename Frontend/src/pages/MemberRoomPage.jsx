@@ -29,7 +29,6 @@ export default function MemberRoomPage() {
     clearWarning,
   } = useMap();
   const [memberList, setMemberList] = useState([]);
-  const [showChat, setShowChat] = useState(true);
   const [showOptions, setShowOptions] = useState(false);
   const [showTargetNav, setShowTargetNav] = useState(false);
   const mapRef = useRef(null);
@@ -405,21 +404,13 @@ export default function MemberRoomPage() {
           />
         </div>
 
-        {/* Live Chat */}
-        {showChat && currentRoom && user && (
+        {/* Walkie Talkie */}
+        {currentRoom && user && (
           <LiveChat
             roomId={roomId}
             members={memberList}
             currentUserId={user?.userId}
-            onClose={() => setShowChat(false)}
           />
-        )}
-
-        {/* FAB to open chat - only when chat is closed */}
-        {!showChat && (
-          <button className="chat-fab" onClick={() => setShowChat(true)}>
-            💬
-          </button>
         )}
       </div>
     </div>

@@ -1537,19 +1537,25 @@ body {
     top: 8px;
     height: 44px;
     padding: 0 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: rgba(30, 30, 63, 0.85);
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: rgba(30, 30, 63, 0.85) !important;
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.15);
     z-index: 100;
   }
 
+  .room-topbar.mobile-compact > * {
+    flex-shrink: 0;
+  }
+
   .mobile-top-left {
-    display: flex;
+    display: flex !important;
     align-items: center;
     gap: 10px;
+    margin-right: auto;
   }
 
   .room-id-display {
@@ -1557,6 +1563,8 @@ body {
     font-size: 0.9rem;
     color: #ffffff;
     letter-spacing: 1px;
+    margin: 0;
+    padding: 0;
   }
 
   .member-count {
@@ -1566,12 +1574,14 @@ body {
     border-radius: 999px;
     font-size: 0.7rem;
     font-weight: 700;
+    flex-shrink: 0;
   }
 
   .mobile-top-right {
-    display: flex;
+    display: flex !important;
     align-items: center;
     gap: 8px;
+    margin-left: auto;
   }
 
   .mode-badge {

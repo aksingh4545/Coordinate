@@ -729,3 +729,314 @@
     color: #111827;
   }
 }
+
+/* ===== Walkie-Talkie Styles ===== */
+
+.walkie-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px;
+}
+
+.walkie-status {
+  text-align: center;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.speaker-active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #22c55e;
+  font-weight: 700;
+  animation: speakerPulse 1s ease-in-out infinite;
+}
+
+.pulse-ring {
+  width: 12px;
+  height: 12px;
+  background: #22c55e;
+  border-radius: 50%;
+  animation: ringPulse 1s ease-in-out infinite;
+}
+
+@keyframes ringPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0; }
+}
+
+@keyframes speakerPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.idle-status {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+}
+
+.walkie-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: auto;
+  padding-bottom: 16px;
+}
+
+.walkie-instructions {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.8rem;
+}
+
+.ptt-button {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  background: linear-gradient(145deg, #374151, #1f2937);
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.ptt-button:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.02);
+}
+
+.ptt-button:active,
+.ptt-button.active {
+  background: linear-gradient(145deg, #22c55e, #16a34a);
+  border-color: #22c55e;
+  transform: scale(0.98);
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.6);
+}
+
+.ptt-icon {
+  width: 48px;
+  height: 48px;
+}
+
+.ptt-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.ptt-icon .mic-active {
+  animation: micPulse 0.8s ease-in-out infinite;
+}
+
+@keyframes micPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.ptt-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.ptt-waves {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.ptt-waves span {
+  width: 4px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 2px;
+  animation: waveAnimation 0.5s ease-in-out infinite;
+}
+
+.ptt-waves span:nth-child(1) { animation-delay: 0s; }
+.ptt-waves span:nth-child(2) { animation-delay: 0.1s; }
+.ptt-waves span:nth-child(3) { animation-delay: 0.2s; }
+
+@keyframes waveAnimation {
+  0%, 100% { height: 10px; opacity: 0.5; }
+  50% { height: 30px; opacity: 1; }
+}
+
+.walkie-info {
+  text-align: center;
+}
+
+.channel-info {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+/* Member speaking indicator */
+.member-item.speaking {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.4);
+  animation: memberSpeaking 0.6s ease-in-out infinite;
+}
+
+@keyframes memberSpeaking {
+  0%, 100% { background: rgba(34, 197, 94, 0.15); }
+  50% { background: rgba(34, 197, 94, 0.25); }
+}
+
+.member-avatar {
+  position: relative;
+}
+
+.speaking-indicator {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-size: 0.7rem;
+  animation: speakingIcon 0.8s ease-in-out infinite;
+}
+
+@keyframes speakingIcon {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+/* ===== Simple Walkie FAB Only ===== */
+
+.walkie-fab-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 440;
+}
+
+.walkie-speaking-badge {
+  background: rgba(34, 197, 94, 0.9);
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  animation: badgePop 0.3s ease;
+}
+
+@keyframes badgePop {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.ptt-button-fab {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  background: linear-gradient(145deg, #374151, #1f2937);
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.ptt-button-fab:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.05);
+}
+
+.ptt-button-fab:active,
+.ptt-button-fab.active {
+  background: linear-gradient(145deg, #22c55e, #16a34a);
+  border-color: #22c55e;
+  transform: scale(0.95);
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.6);
+}
+
+.ptt-icon-fab {
+  width: 28px;
+  height: 28px;
+}
+
+.ptt-icon-fab svg {
+  width: 100%;
+  height: 100%;
+}
+
+.ptt-icon-fab .mic-active-fab {
+  animation: micPulse 0.8s ease-in-out infinite;
+}
+
+@keyframes micPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.ptt-label-fab {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ptt-waves-fab {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  pointer-events: none;
+}
+
+.ptt-waves-fab span {
+  width: 3px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 2px;
+  animation: waveAnimation 0.5s ease-in-out infinite;
+}
+
+.ptt-waves-fab span:nth-child(1) { animation-delay: 0s; }
+.ptt-waves-fab span:nth-child(2) { animation-delay: 0.1s; }
+.ptt-waves-fab span:nth-child(3) { animation-delay: 0.2s; }
+
+@keyframes waveAnimation {
+  0%, 100% { height: 8px; opacity: 0.4; }
+  50% { height: 20px; opacity: 1; }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .walkie-fab-container {
+    bottom: 100px;
+    right: 16px;
+  }
+  
+  .ptt-button-fab {
+    width: 70px;
+    height: 70px;
+  }
+}

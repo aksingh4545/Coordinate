@@ -1,261 +1,243 @@
-# 🎯 Coordinator - Real-Time Map Location Sharing
+# Coordinator
 
-A robust real-time location sharing system that helps groups navigate crowded places together. The Host creates a room and shares a QR code, and members can scan to join and see everyone's location on a map with distance indicators.
+A real-time location sharing and group coordination application that helps people find each other in crowded places. Built with the MERN stack (MongoDB, Express, React, Node.js) and Socket.io for real-time communication.
 
-## ✨ Features
+---
 
-- **🏠 Create/Join Groups**: Host creates a room, members join via QR code or room ID
-- **📍 Real-Time Location Tracking**: Live location updates using WebSocket
-- **📏 Distance Calculation**: See exact distances between all members
-- **🔗 Visual Connections**: Lines on map showing connections between members and host
-- **📱 Mobile-Friendly**: Responsive design works on all devices
-- **🎨 Beautiful UI**: Modern gradient design with smooth animations
-- **🔄 Auto-Sync**: Locations update automatically every 3 seconds
+## Features
 
-## 🏗️ Architecture
+### 1. Room Management
+- **Create Room**: Host can create a group room with a unique 8-character room ID
+- **Join Room**: Members can join using room ID or by scanning a QR code
+- **QR Code Sharing**: Auto-generated QR codes for easy room sharing
+- **Leave Room**: Members can leave at any time; room closes when host leaves
+
+### 2. Real-Time Location Tracking
+- **Live GPS Tracking**: Real-time location updates using browser Geolocation API
+- **Map Visualization**: Interactive map showing all member locations
+- **Distance Calculation**: Shows distance between each member and the host
+- **Auto-Center**: Map automatically centers on all group members
+
+### 3. Two Operating Modes
+- **Crowd Mode**: Basic location sharing with connection lines between members
+- **Tracking Mode**: Advanced mode with:
+  - Configurable tracking range (5-200 meters)
+  - Automatic alerts when members fall behind the group
+  - Range visualization circles on the map
+
+### 4. Target Navigation
+- **Set Target Location**: Host can set a destination on the map
+- **Live Navigation**: Shows distance, bearing (direction), and estimated time of arrival
+- **Visual Path**: Dashed lines connecting all members to the target
+
+### 5. Live Chat
+- **Text Messaging**: Real-time text chat between all room members
+- **Voice Messages**: Record and send voice messages (up to 20 seconds)
+- **Member List**: Shows all online members with their distances
+- **Notification Sounds**: Audio alerts for incoming messages
+
+### 6. Map Features
+- **Multiple Map Styles**: Switch between OpenStreetMap (standard) and Satellite views
+- **Custom Markers**: Distinct markers for host, current user, and other members
+- **Connection Lines**: Visual lines showing relationships between members
+- **Distance Labels**: Real-time distance display on map
+
+### 7. Responsive Design
+- **Mobile-First**: Optimized for mobile devices
+- **Desktop Features**: Full feature set on desktop browsers
+- **Touch Gestures**: Swipe to expand/collapse chat on mobile
+
+---
+
+## Tech Stack
+
+### Frontend
+- **React 19** - UI framework
+- **Vite** - Build tool and dev server
+- **Tailwind CSS 4** - Styling
+- **React Leaflet** - Interactive maps (OpenStreetMap)
+- **Socket.io Client** - Real-time communication
+- **React Router** - Client-side routing
+
+### Backend
+- **Node.js** - Runtime environment
+- **Express** - Web framework
+- **Socket.io** - Real-time WebSocket server
+- **MongoDB** - Database (with in-memory fallback)
+- **QRCode** - QR code generation
+
+---
+
+## Project Structure
 
 ```
-┌─────────────────┐
-│     HOST        │  ← Creates room, gets QR code
-│  (Group Leader) │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐      WebSocket      ┌──────────────────┐
-│    SERVER       │◄──────────────────► │   MongoDB        │
-│  - Express API  │                     │  - Rooms         │
-│  - Socket.IO    │                     │  - Members       │
-│  - QR Generation│                     │  - Locations     │
-└────────┬────────┘                     └──────────────────┘
-         │
-         ▼
-┌─────────────────┐
-│   MOBILE USERS  │  ← Scan QR, share location
-│   (Members)     │
-└─────────────────┘
+Coordinate/
+├── Backend/
+│   ├── server.js          # Main server entry point
+│   ├── db.js              # MongoDB connection & operations
+│   ├── package.json
+│   └── Routes/
+│       └── group.js       # Group-related API routes
+│
+├── Frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── MapView.jsx      # Interactive map component
+│   │   │   └── LiveChat.jsx    # Chat component with voice
+│   │   ├── pages/
+│   │   │   ├── HomePage.jsx    # Landing page
+│   │   │   ├── HostRoomPage.jsx # Host room management
+│   │   │   ├── MemberRoomPage.jsx # Member room view
+│   │   │   └── JoinRoomPage.jsx # Join room page
+│   │   ├── context/
+│   │   │   └── MapContext.jsx  # Global state management
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   └── index.css
+│   ├── package.json
+│   └── index.html
+│
+└── README.md
 ```
 
-## 🚀 Getting Started
+---
+
+## Installation & Setup
 
 ### Prerequisites
+- Node.js (v18 or higher)
+- MongoDB (optional - app works without it)
 
-- **Node.js** (v16 or higher)
-- **MongoDB** (local or cloud instance)
-- **npm** or **yarn**
-
-### Installation
-
-#### 1. Clone and Navigate
-
-```bash
-cd Coordinate
-```
-
-#### 2. Setup Backend
+### Backend Setup
 
 ```bash
 cd Backend
 npm install
-
-# Create .env file
-echo PORT=5000 > .env
-echo MONGODB_URI=mongodb://localhost:27017/coordinator >> .env
-echo FRONTEND_URL=http://localhost:5173 >> .env
-
-# Start the server
-npm start
 ```
 
-#### 3. Setup Frontend (New Terminal)
+Create a `.env` file in Backend directory:
+```env
+PORT=5000
+MONGODB_URI=your_mongodb_connection_string
+FRONTEND_URL=http://localhost:5173
+```
 
+Start the backend server:
 ```bash
-cd Coordinate/Frontend
-npm install
-
-# Create .env file
-echo VITE_SOCKET_URL=http://localhost:5000 > .env
-
-# Start the dev server
+npm start
+# or for development
 npm run dev
 ```
 
-#### 4. Start MongoDB (if running locally)
+### Frontend Setup
 
 ```bash
-# Windows (if MongoDB is installed as service)
-net start MongoDB
-
-# Or run mongod manually
-mongod --dbpath C:\data\db
+cd Frontend
+npm install
 ```
 
-### Access the Application
-
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:5000
-
-## 📖 How to Use
-
-### As a Host
-
-1. Open the app on your device
-2. Click **"Create New Group"**
-3. Enter your name
-4. A unique room ID and QR code will be generated
-5. Share the QR code or room code with your group
-6. View all members on the map with real-time locations
-7. See distances between all members
-
-### As a Member
-
-1. Scan the QR code shared by the host OR enter the room code manually
-2. Enter your name
-3. Click **"Join Group"**
-4. Your location will be automatically shared
-5. See the host and other members on the map
-6. View your distance from the host
-
-## 🛠️ Tech Stack
-
-### Backend
-- **Node.js** + **Express** - Server framework
-- **Socket.IO** - Real-time bidirectional communication
-- **MongoDB** + **Mongoose** - Database and ODM
-- **QRCode** - QR code generation
-
-### Frontend
-- **React 19** - UI library
-- **React Router** - Navigation
-- **Leaflet** + **React-Leaflet** - Interactive maps
-- **Socket.IO Client** - Real-time communication
-- **Tailwind CSS** - Styling
-
-## 📡 API Endpoints
-
-### Create Room (Host)
-```http
-POST /api/rooms/create
-Content-Type: application/json
-
-{
-  "hostId": "user_abc123",
-  "hostName": "John Doe"
-}
-```
-
-### Join Room (Member)
-```http
-POST /api/rooms/join
-Content-Type: application/json
-
-{
-  "roomId": "ABC12345",
-  "userId": "user_xyz789",
-  "userName": "Jane Smith"
-}
-```
-
-### Get Room Details
-```http
-GET /api/rooms/:roomId
-```
-
-### Leave Room
-```http
-POST /api/rooms/:roomId/leave
-Content-Type: application/json
-
-{
-  "userId": "user_xyz789"
-}
-```
-
-## 🔌 Socket.IO Events
-
-### Client → Server
-- `user:join` - Join a room with userId and roomId
-- `location:update` - Send location update (lat, lng)
-- `room:sync` - Request current room locations
-
-### Server → Client
-- `location:updated` - Broadcast location changes
-- `user:left` - Notify when user leaves
-
-## 🎨 UI Components
-
-- **HomePage** - Landing page with create/join options
-- **HostRoomPage** - Host view with QR sharing and member list
-- **JoinRoomPage** - Join page for scanning QR/manual entry
-- **MemberRoomPage** - Member view with map and locations
-- **MapView** - Interactive map with markers and distance lines
-
-## 🔧 Configuration
-
-### Environment Variables
-
-**Backend (.env)**
-```env
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/coordinator
-FRONTEND_URL=http://localhost:5173
-NODE_ENV=development
-```
-
-**Frontend (.env)**
+Create a `.env` file in Frontend directory:
 ```env
 VITE_SOCKET_URL=http://localhost:5000
 ```
 
-### Production Deployment
+Start the development server:
+```bash
+npm run dev
+```
 
-1. **Backend (e.g., Vercel, Heroku, Railway)**
-   - Set `MONGODB_URI` to cloud MongoDB (MongoDB Atlas)
-   - Set `FRONTEND_URL` to your frontend domain
-   - Enable CORS for your frontend domain
+The app will be available at `http://localhost:5173`
 
-2. **Frontend (e.g., Vercel, Netlify)**
-   - Set `VITE_SOCKET_URL` to your backend URL
-   - Build: `npm run build`
+---
 
-## 🐛 Troubleshooting
+## API Endpoints
 
-### Location Not Working
-- Ensure location permissions are granted in browser
-- Use HTTPS in production (required for geolocation)
-- Check browser console for errors
+### Room Management
 
-### Socket Connection Failed
-- Verify backend server is running
-- Check CORS settings in server.js
-- Ensure correct SOCKET_URL in frontend .env
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/rooms/create` | Create a new room |
+| POST | `/api/rooms/join` | Join an existing room |
+| GET | `/api/rooms/:roomId` | Get room details |
+| POST | `/api/rooms/:roomId/leave` | Leave a room |
 
-### MongoDB Connection Error
-- Start MongoDB service
-- Check MONGODB_URI in .env
-- For cloud MongoDB, whitelist your IP address
+### Socket Events
 
-## 📱 Mobile Usage
+#### Client Emits:
+- `user:join` - User joins a room
+- `location:update` - Update user location
+- `room:sync` - Request current room state
+- `room:settings:update` - Update room settings (host only)
+- `chat:message` - Send text message
+- `chat:voice` - Send voice message
+- `chat:history` - Request chat history
 
-For best mobile experience:
-1. Deploy to a public URL
-2. Use HTTPS (required for location services)
-3. Add to home screen for app-like experience
+#### Server Emits:
+- `location:updated` - Location update broadcast
+- `room:settings` - Room settings changed
+- `room:warning` - Out-of-range warning
+- `chat:message` - New text message
+- `chat:voice` - New voice message
+- `user:left` - User left notification
 
-## 🔒 Security Considerations
+---
 
-- Room IDs are random and hard to guess
-- No authentication required (public rooms)
-- Location data stored temporarily
-- Consider adding room passwords for private groups
+## Configuration Options
 
-## 🚀 Future Enhancements
+### Room Settings
+- **mode**: `"crowd"` or `"tracking"`
+- **trackingRange**: Distance in meters (5-200)
+- **targetLocation**: `{ lat: number, lng: number }`
+- **mapStyle**: `"osm"` or `"satellite"`
 
-- [ ] End-to-end encryption for location data
-- [ ] Room passwords/PIN codes
-- [ ] Chat functionality
-- [ ] Location history/trail
-- [ ] Geofencing alerts
-- [ ] Multiple map providers (Google Maps, Mapbox)
-- [ ] Offline mode with cached locations
-- [ ] Battery optimization settings
+---
 
+## Deployment
+
+### Backend (Render/Railway/DigitalOcean)
+1. Set environment variables (`MONGODB_URI`, `FRONTEND_URL`)
+2. Deploy from the Backend folder
+3. Note: Works with in-memory storage if MongoDB unavailable
+
+### Frontend (Vercel/Netlify)
+1. Build: `npm run build`
+2. Deploy the `dist` folder
+3. Configure environment variable `VITE_SOCKET_URL` to your backend URL
+
+---
+
+## How It Works
+
+### Creating a Room
+1. User enters their name on the home page
+2. Clicks "Create Room"
+3. Backend generates a unique 8-character room ID
+4. Room is saved to MongoDB (or memory fallback)
+5. QR code is generated for easy sharing
+
+### Joining a Room
+1. User enters room ID or scans QR code
+2. Enters their name
+3. Backend validates room exists and is active
+4. User is added to room members
+5. Redirected to room page
+
+### Location Sharing
+1. User grants browser location permission
+2. Geolocation API provides coordinates
+3. Location is sent via Socket.io to server
+4. Server broadcasts to all room members
+5. Map updates in real-time
+
+### Chat System
+1. Text messages sent via Socket.io
+2. Voice messages recorded as WebM audio
+3. Audio converted to base64 for transmission
+4. Messages stored in memory/map
+5. Recent 100 messages kept per room
+
+---
+
+## License
+
+ISC

@@ -4,514 +4,155 @@ import "./LiveChat.css";
 
 export default function LiveChat({ roomId, members, currentUserId, onClose }) {
   const { socket, currentRoom } = useMap();
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const MAX_RECORDING_SECONDS = 20;
-  const [showMembers, setShowMembers] = useState(true);
-  const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
-  const [isExpanded, setIsExpanded] = useState(!isMobile);
-  const messagesEndRef = useRef(null);
-  const messagesContainerRef = useRef(null);
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
-  const recordingTimerRef = useRef(null);
-  const recordingStartRef = useRef(null);
-  const recordingTimeRef = useRef(0);
-  const prevMessageCountRef = useRef(0);
-  const seenMessageIdsRef = useRef(new Set());
-  const recentMessageKeysRef = useRef(new Map());
-  const touchStartYRef = useRef(null);
+  const [isTalking, setIsTalking] = useState(false);
+  const [activeSpeaker, setActiveSpeaker] = useState(null);
   const normalizedRoomId = (currentRoom?.roomId || roomId || "").toUpperCase();
-  const pendingVoiceQueueRef = useRef([]);
-  const audioUnlockedRef = useRef(false);
-  const DEDUPE_WINDOW_MS = 5000;
+  const mediaStreamRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  const touchStartYRef = useRef(null);
 
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
+  const currentUserName = members.find(m => m.userId === currentUserId)?.name || "You";
 
-  // Request chat history on mount
   useEffect(() => {
     if (!socket || !normalizedRoomId) return;
 
-    if (currentUserId) {
-      socket.emit("user:join", { userId: currentUserId, roomId: normalizedRoomId });
-    }
-
-    socket.emit("chat:history", { roomId: normalizedRoomId }, (response) => {
-      if (response.success) {
-        const historyMessages = response.messages || [];
-        const nextIds = new Set(historyMessages.map((msg) => msg.id).filter(Boolean));
-        seenMessageIdsRef.current = nextIds;
-        const now = Date.now();
-        const nextKeys = new Map();
-        historyMessages.forEach((msg) => {
-          const key = getMessageKey(msg);
-          if (key) {
-            nextKeys.set(key, now);
-          }
-        });
-        recentMessageKeysRef.current = nextKeys;
-        prevMessageCountRef.current = historyMessages.length;
-        setMessages(historyMessages);
-      }
+    socket.on("walkie:Speaking", (data) => {
+      setActiveSpeaker(data.userId);
     });
 
-    // Listen for new messages
-    const handleChatMessage = (message) => {
-      if (shouldIgnoreMessage(message)) return;
-      setMessages((prev) => [...prev, message]);
-    };
-
-    const handleChatVoice = (voiceMessage) => {
-      if (shouldIgnoreMessage(voiceMessage)) return;
-      setMessages((prev) => [...prev, voiceMessage]);
-    };
-
-    socket.off("chat:message", handleChatMessage);
-    socket.off("chat:voice", handleChatVoice);
-    socket.on("chat:message", handleChatMessage);
-    socket.on("chat:voice", handleChatVoice);
+    socket.on("walkie:Stopped", () => {
+      setActiveSpeaker(null);
+    });
 
     return () => {
-      socket.off("chat:message", handleChatMessage);
-      socket.off("chat:voice", handleChatVoice);
+      socket.off("walkie:Speaking");
+      socket.off("walkie:Stopped");
     };
-  }, [socket, normalizedRoomId, currentUserId]);
+  }, [socket, normalizedRoomId]);
 
-  const getMessageKey = (msg) => {
-    if (!msg) return "";
-    const text = msg.type === "text" ? msg.text || "" : "";
-    const audio = msg.type === "voice" ? (msg.audioUrl || msg.audioBlob || "") : "";
-    const audioLength = typeof audio === "string" ? audio.length : 0;
-    const duration = msg.type === "voice" ? Math.round(msg.duration || 0) : 0;
-    const userPart = msg.userId || "unknown";
-    return `${userPart}|${msg.type || "text"}|${text}|${duration}|${audioLength}`;
-  };
-
-  const shouldIgnoreMessage = (msg) => {
-    if (!msg) return true;
-    if (msg.id && seenMessageIdsRef.current.has(msg.id)) {
-      return true;
-    }
-
-    const key = getMessageKey(msg);
-    if (key) {
-      const lastSeen = recentMessageKeysRef.current.get(key);
-      const now = Date.now();
-      if (lastSeen && now - lastSeen < DEDUPE_WINDOW_MS) {
-        return true;
-      }
-      recentMessageKeysRef.current.set(key, now);
-    }
-
-    if (msg.id) {
-      seenMessageIdsRef.current.add(msg.id);
-    }
-
-    const cutoff = Date.now() - DEDUPE_WINDOW_MS;
-    for (const [entryKey, entryTime] of recentMessageKeysRef.current.entries()) {
-      if (entryTime < cutoff) {
-        recentMessageKeysRef.current.delete(entryKey);
-      }
-    }
-
-    return false;
-  };
-
-  // Notification sound and auto-play for incoming messages
-  useEffect(() => {
-    if (messages.length <= prevMessageCountRef.current) return;
-
-    const newMessages = messages.slice(prevMessageCountRef.current);
-    const hasIncomingFromOthers = newMessages.some(
-      (msg) => msg.userId && msg.userId !== currentUserId
-    );
-
-    if (hasIncomingFromOthers) {
-      playPopSound();
-    }
-
-    newMessages.forEach((msg) => {
-      if (msg.type === "voice") {
-        const audioSource = msg.audioUrl || msg.audioBlob;
-        if (audioSource) {
-          playVoiceMessage(audioSource);
-        }
-      }
-    });
-
-    prevMessageCountRef.current = messages.length;
-  }, [messages, currentUserId]);
-
-  // Send text message
-  const sendTextMessage = (e) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !socket || !normalizedRoomId || !currentUserId) return;
-
-    const message = {
-      text: newMessage.trim(),
-    };
-
-    const messageId = `${Date.now()}-${currentUserId}`;
-    const optimisticMessage = {
-      id: messageId,
-      userId: currentUserId,
-      userName: currentUserName,
-      text: message.text,
-      type: "text",
-      timestamp: Date.now(),
-    };
-
-    if (!shouldIgnoreMessage(optimisticMessage)) {
-      setMessages((prev) => [...prev, optimisticMessage]);
-    }
-
-    socket.emit("chat:message", { 
-      roomId: normalizedRoomId, 
-      message,
-      userId: currentUserId,
-      userName: currentUserName,
-      messageId,
-    });
-    setNewMessage("");
-  };
-
-  // Start voice recording
-  const startRecording = async () => {
+  const startTalking = async () => {
     try {
-      if (!navigator.mediaDevices || !window.MediaRecorder) {
-        alert("Voice recording is not supported in this browser.");
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         return;
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream);
-      audioChunksRef.current = [];
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+      });
+      
+      mediaStreamRef.current = stream;
 
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
-      };
+      socket.emit("walkie:start", {
+        roomId: normalizedRoomId,
+        userId: currentUserId,
+        userName: currentUserName
+      });
 
-      mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        const durationSeconds = recordingStartRef.current
-          ? Math.max(1, Math.round((Date.now() - recordingStartRef.current) / 1000))
-          : Math.max(1, recordingTimeRef.current || 0);
-        
-        // Convert blob to base64
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = () => {
-          const base64Audio = reader.result;
-          const messageId = `${Date.now()}-${currentUserId}`;
-          const voiceMessage = {
-            id: messageId,
-            userId: currentUserId,
-            userName: currentUserName,
-            type: "voice",
-            audioUrl: base64Audio,
-            duration: durationSeconds,
-            timestamp: Date.now(),
-          };
-
-          if (!shouldIgnoreMessage(voiceMessage)) {
-            setMessages((prev) => [...prev, voiceMessage]);
-          }
-
-          if (socket && normalizedRoomId && currentUserId) {
-            socket.emit("chat:voice", {
-              roomId: normalizedRoomId,
-              audioBlob: base64Audio,
-              duration: durationSeconds,
-              userId: currentUserId,
-              userName: currentUserName,
-              messageId,
-            });
-          }
-        };
-
-        // Stop all tracks
-        stream.getTracks().forEach((track) => track.stop());
-        
-        setIsRecording(false);
-        setRecordingTime(0);
-        recordingTimeRef.current = 0;
-        recordingStartRef.current = null;
-        if (recordingTimerRef.current) {
-          clearInterval(recordingTimerRef.current);
-          recordingTimerRef.current = null;
-        }
-      };
-
-      mediaRecorderRef.current.start();
-      setIsRecording(true);
-      setRecordingTime(0);
-      recordingTimeRef.current = 0;
-      recordingStartRef.current = Date.now();
-
-      // Start recording timer
-      recordingTimerRef.current = setInterval(() => {
-        setRecordingTime((prev) => {
-          const nextValue = prev + 1;
-          recordingTimeRef.current = nextValue;
-          if (nextValue >= MAX_RECORDING_SECONDS) {
-            stopRecording();
-          }
-          return nextValue;
-        });
-      }, 1000);
+      setIsTalking(true);
+      monitorVoiceActivity();
     } catch (err) {
       console.error("Error accessing microphone:", err);
-      alert("Unable to access microphone. Please enable permissions.");
     }
   };
 
-  // Stop voice recording
-  const stopRecording = () => {
-    if (recordingTimerRef.current) {
-      clearInterval(recordingTimerRef.current);
-      recordingTimerRef.current = null;
+  const monitorVoiceActivity = () => {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioContext.createMediaStreamSource(mediaStreamRef.current);
+    const analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256;
+    source.connect(analyser);
+
+    const checkAudioLevel = () => {
+      if (!mediaStreamRef.current) return;
+      
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(dataArray);
+      const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+      
+      if (average < 10) {
+        if (!window.silenceCount) window.silenceCount = 0;
+        window.silenceCount++;
+        if (window.silenceCount > 5) {
+          stopTalking();
+          return;
+        }
+      } else {
+        window.silenceCount = 0;
+      }
+
+      if (isTalking && mediaStreamRef.current) {
+        animationFrameRef.current = requestAnimationFrame(checkAudioLevel);
+      }
+    };
+
+    checkAudioLevel();
+  };
+
+  const stopTalking = () => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      mediaRecorderRef.current.stop();
-    }
-  };
 
-  // Play voice message
-  const playVoiceMessage = (audioUrl, { queueOnFail = true } = {}) => {
-    const audio = new Audio(audioUrl);
-    const playPromise = audio.play();
-    if (playPromise && queueOnFail) {
-      playPromise.catch(() => {
-        pendingVoiceQueueRef.current.push(audioUrl);
-      });
-    }
-  };
-
-  const handleUserGesture = () => {
-    if (!audioUnlockedRef.current) {
-      audioUnlockedRef.current = true;
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
     }
 
-    if (pendingVoiceQueueRef.current.length > 0) {
-      const queued = [...pendingVoiceQueueRef.current];
-      pendingVoiceQueueRef.current = [];
-      queued.forEach((audioUrl) => playVoiceMessage(audioUrl, { queueOnFail: false }));
-    }
+    window.silenceCount = 0;
+
+    socket.emit("walkie:stop", {
+      roomId: normalizedRoomId,
+      userId: currentUserId
+    });
+
+    setIsTalking(false);
+    setActiveSpeaker(null);
   };
 
-  const playPopSound = () => {
-    try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) return;
-      const context = new AudioContext();
-      const oscillator = context.createOscillator();
-      const gainNode = context.createGain();
+  useEffect(() => {
+    const handleMouseUp = () => {
+      if (isTalking) stopTalking();
+    };
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => window.removeEventListener("mouseup", handleMouseUp);
+  }, [isTalking]);
 
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(880, context.currentTime);
-      gainNode.gain.setValueAtTime(0.12, context.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.15);
-
-      oscillator.connect(gainNode);
-      gainNode.connect(context.destination);
-      oscillator.start();
-      oscillator.stop(context.currentTime + 0.15);
-
-      oscillator.onended = () => {
-        context.close();
-      };
-    } catch (err) {
-      console.warn("Unable to play notification sound:", err);
-    }
-  };
-
-  // Format recording time
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  // Format timestamp
-  const formatTimestamp = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  };
-
-  const currentUserName = members.find(m => m.userId === currentUserId)?.name || "You";
-  const lastMessage = messages[messages.length - 1];
-  const lastMessagePreview = lastMessage
-    ? lastMessage.type === "voice"
-      ? `Voice message (${Math.round(lastMessage.duration)}s)`
-      : lastMessage.text
-    : "No messages yet";
-  const lastMessageAuthor = lastMessage?.userId === currentUserId ? "You" : lastMessage?.userName;
-
-  const handleTouchStart = (event) => {
-    touchStartYRef.current = event.touches[0].clientY;
-  };
-
-  const handleTouchEnd = (event) => {
-    if (touchStartYRef.current === null) return;
-    const endY = event.changedTouches[0].clientY;
-    const deltaY = endY - touchStartYRef.current;
-    touchStartYRef.current = null;
-
-    if (deltaY < -40) {
-      setIsExpanded(true);
-    } else if (deltaY > 40) {
-      setIsExpanded(false);
-    }
-  };
+  useEffect(() => {
+    return () => stopTalking();
+  }, []);
 
   return (
-    <div
-      className={`live-chat-container bottom-sheet ${isExpanded ? "is-expanded" : "is-collapsed"}`}
-      onClick={handleUserGesture}
-      onTouchStart={handleUserGesture}
-    >
-      <div
-        className="chat-sheet-header"
-        onClick={() => !isExpanded && setIsExpanded(true)}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        role="button"
-        tabIndex={0}
+    <div className="walkie-fab-container">
+      {activeSpeaker && (
+        <div className="walkie-speaking-badge">
+          {activeSpeaker === currentUserId ? "You" : members.find(m => m.userId === activeSpeaker)?.name} is talking...
+        </div>
+      )}
+      
+      <button
+        className={`ptt-button-fab ${isTalking ? "active" : ""}`}
+        onMouseDown={startTalking}
+        onMouseUp={stopTalking}
+        onTouchStart={(e) => { e.preventDefault(); startTalking(); }}
+        onTouchEnd={(e) => { e.preventDefault(); stopTalking(); }}
       >
-        <div className="chat-sheet-handle" />
-        <div className="chat-sheet-title">
-          <span className="chat-sheet-online">Online ({members.length})</span>
-          <span className="chat-sheet-preview">
-            {lastMessageAuthor ? `${lastMessageAuthor}: ` : ""}{lastMessagePreview}
-          </span>
-        </div>
-        {isExpanded && (
-          <button
-            type="button"
-            className="chat-sheet-close"
-            onClick={() => setIsExpanded(false)}
-            aria-label="Collapse chat"
-          >
-            ✕
-          </button>
-        )}
-      </div>
-
-      {/* Close Button */}
-      {onClose && (
-        <button className="close-chat-btn" onClick={onClose}>✕</button>
-      )}
-
-      {/* Members Panel - At top inside chat */}
-      {isExpanded && showMembers && members.length > 0 && (
-        <div className="members-panel">
-          <h4 className="members-title">👥 Online ({members.length})</h4>
-          <div className="members-list">
-            {members.map((member) => (
-              <div key={member.userId} className="member-item">
-                <div className="member-avatar">
-                  {member.isHost ? "🎯" : "👤"}
-                </div>
-                <div className="member-name-wrap">
-                  <span className="member-name">{member.name}</span>
-                  {member.distanceLabels && member.distanceLabels.length > 0 && (
-                    <span className="member-distance">
-                      {member.distanceLabels.join(" | ")}
-                    </span>
-                  )}
-                </div>
-                {member.isHost && <span className="member-badge">Host</span>}
-                {member.userId === currentUserId && (
-                  <span className="member-badge you">You</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Chat Messages */}
-      {isExpanded && (
-        <div className="chat-messages-container" ref={messagesContainerRef}>
-          {messages.length === 0 ? (
-            <div className="chat-empty">
-              <p>💬 Start the conversation!</p>
-            </div>
+        <div className="ptt-icon-fab">
+          {isTalking ? (
+            <svg viewBox="0 0 24 24" fill="currentColor" className="mic-active-fab">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/>
+            </svg>
           ) : (
-            messages.slice(-3).map((msg) => (
-              <div
-                key={msg.id}
-                className={`chat-message-bubble ${
-                  msg.userId === currentUserId ? "own-message" : "other-message"
-                }`}
-              >
-                <div className="message-header">
-                  <span className="message-author">{msg.userName}</span>
-                  <span className="message-time">{formatTimestamp(msg.timestamp)}</span>
-                </div>
-
-                {msg.type === "text" ? (
-                  <div className="message-text">{msg.text}</div>
-                ) : msg.type === "voice" ? (
-                  <div className="voice-message">
-                    <button
-                      className="play-voice-btn"
-                      onClick={() => playVoiceMessage(msg.audioUrl || msg.audioBlob)}
-                    >
-                      🎵 Play Voice ({Math.round(msg.duration)}s)
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-            ))
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1 1.93c-3.94-.49-7-3.85-7-7.93h2c0 3.31 2.69 6 6 6s6-2.69 6-6h2c0 4.08-3.06 7.44-7 7.93V19h4v2H8v-2h4v-3.07z"/>
+            </svg>
           )}
-          <div ref={messagesEndRef} />
         </div>
-      )}
-
-      {/* Chat Input - Fixed at bottom */}
-      {isExpanded && (
-        <div className="chat-input-container">
-          <form onSubmit={sendTextMessage} className="text-input-form">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="chat-text-input"
-            />
-            <button type="submit" className="send-btn" disabled={!newMessage.trim()}>
-              📤
-            </button>
-          </form>
-
-          <button
-            className={`record-btn ${isRecording ? "recording" : ""}`}
-            onClick={isRecording ? stopRecording : startRecording}
-          >
-            {isRecording ? (
-              <>
-                🔴 Recording ({formatTime(recordingTime)})
-              </>
-            ) : (
-              <>🎤 Voice</>
-            )}
-          </button>
-        </div>
-      )}
+        <span className="ptt-label-fab">
+          {isTalking ? "Release" : "Hold to talk"}
+        </span>
+        {isTalking && <div className="ptt-waves-fab"><span></span><span></span><span></span></div>}
+      </button>
     </div>
   );
 }
-
-
-
-
-
-

@@ -38,7 +38,6 @@ app.use(express.json());
 const rooms = new Map(); // roomId -> room data (cache)
 const userSockets = new Map(); // userId -> socketId
 const userRooms = new Map(); // userId -> roomId
-const chatHistories = new Map(); // roomId -> chat messages
 
 function getDefaultRoomSettings() {
   return {
@@ -452,75 +451,31 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('room:warning', warning);
   });
 
-  // ===== LIVE CHAT & VOICE MESSAGE HANDLERS =====
+  // ===== WALKIE-TALKIE HANDLERS =====
 
-  // Send text message in room
-  socket.on('chat:message', async ({ roomId, message, userId, userName, messageId }) => {
+  // User starts talking (push-to-talk)
+  socket.on('walkie:start', ({ roomId, userId, userName }) => {
     const normalizedRoomId = (roomId || "").toUpperCase();
-    const room = await getRoomFromCacheOrDb(normalizedRoomId);
-
-    const chatMessage = {
-      id: messageId || Date.now().toString(),
-      userId: userId,
-      userName: userName,
-      text: message.text,
-      type: 'text',
-      timestamp: Date.now(),
-    };
-
-    const history = room?.chatHistory || chatHistories.get(normalizedRoomId) || [];
-    history.push(chatMessage);
-    if (history.length > 100) {
-      history.splice(0, history.length - 100);
-    }
-    chatHistories.set(normalizedRoomId, history);
-    if (room) {
-      room.chatHistory = history;
-      rooms.set(normalizedRoomId, room);
-    }
-
-    // Broadcast to all in room
-    io.to(normalizedRoomId).emit('chat:message', chatMessage);
-    console.log(`💬 Chat message from ${chatMessage.userName} in room ${normalizedRoomId}`);
+    console.log(`📻 ${userName} started talking in room ${normalizedRoomId}`);
+    
+    // Broadcast to all others in the room
+    socket.to(normalizedRoomId).emit('walkie:Speaking', {
+      userId,
+      userName,
+      roomId: normalizedRoomId
+    });
   });
 
-  // Send voice message in room
-  socket.on('chat:voice', async ({ roomId, audioBlob, duration, userId, userName, messageId }) => {
+  // User stops talking
+  socket.on('walkie:stop', ({ roomId, userId }) => {
     const normalizedRoomId = (roomId || "").toUpperCase();
-    const room = await getRoomFromCacheOrDb(normalizedRoomId);
-
-    const voiceMessage = {
-      id: messageId || Date.now().toString(),
-      userId: userId,
-      userName: userName,
-      type: 'voice',
-      audioUrl: audioBlob, // Base64 audio data
-      duration: duration || 0,
-      timestamp: Date.now(),
-    };
-
-    const history = room?.chatHistory || chatHistories.get(normalizedRoomId) || [];
-    history.push(voiceMessage);
-    if (history.length > 100) {
-      history.splice(0, history.length - 100);
-    }
-    chatHistories.set(normalizedRoomId, history);
-    if (room) {
-      room.chatHistory = history;
-      rooms.set(normalizedRoomId, room);
-    }
-
-    // Broadcast to all in room
-    io.to(normalizedRoomId).emit('chat:voice', voiceMessage);
-    console.log(`🎤 Voice message from ${voiceMessage.userName} in room ${normalizedRoomId}`);
-  });
-
-  // Request chat history
-  socket.on('chat:history', async ({ roomId }, callback) => {
-    const normalizedRoomId = (roomId || "").toUpperCase();
-    const room = await getRoomFromCacheOrDb(normalizedRoomId);
-    const messages = room?.chatHistory || chatHistories.get(normalizedRoomId) || [];
-    callback({ success: true, messages });
+    console.log(`📻 User ${userId} stopped talking in room ${normalizedRoomId}`);
+    
+    // Broadcast to all others in the room
+    socket.to(normalizedRoomId).emit('walkie:Stopped', {
+      userId,
+      roomId: normalizedRoomId
+    });
   });
 
   socket.on('disconnect', async () => {

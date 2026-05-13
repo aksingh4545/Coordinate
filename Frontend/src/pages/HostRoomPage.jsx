@@ -33,7 +33,6 @@ export default function HostRoomPage() {
   const [qrCode, setQrCode] = useState("");
   const [showQR, setShowQR] = useState(false);
   const [memberList, setMemberList] = useState([]);
-  const [showChat, setShowChat] = useState(true);
   const [showOptions, setShowOptions] = useState(false);
   const [showTargetNav, setShowTargetNav] = useState(false);
   const [isTargeting, setIsTargeting] = useState(false);
@@ -649,21 +648,13 @@ export default function HostRoomPage() {
           />
         </div>
 
-        {/* Live Chat */}
-        {showChat && currentRoom && user && (
+        {/* Walkie Talkie */}
+        {currentRoom && user && (
           <LiveChat
             roomId={roomId}
             members={memberList}
             currentUserId={user?.userId}
-            onClose={() => setShowChat(false)}
           />
-        )}
-
-        {/* FAB to open chat */}
-        {!showChat && (
-          <button className="chat-fab" onClick={() => setShowChat(true)}>
-            💬
-          </button>
         )}
 
         {/* QR Code Modal */}
