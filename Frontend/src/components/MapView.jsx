@@ -59,7 +59,90 @@ function ZoomHandler({ onZoomChange }) {
   return null;
 }
 
-// Dynamic marker icons based on zoom level
+// Decode polyline string to array of [lat, lng]
+function decodePolyline(encoded) {
+  const points = [];
+  let index = 0;
+  let lat = 0;
+  let lng = 0;
+  
+  while (index < encoded.length) {
+    let b;
+    let shift = 0;
+    let result = 0;
+    
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    
+    const dlat = (result & 1) ? ~(result >> 1) : (result >> 1);
+    lat += dlat;
+    
+    shift = 0;
+    result = 0;
+    
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    
+    const dlng = (result & 1) ? ~(result >> 1) : (result >> 1);
+    lng += dlng;
+    
+    points.push([lat / 1e5, lng / 1e5]);
+  }
+  
+  return points;
+}
+
+function RouteUpdaterWithState({ currentUserId, targetLocation, onRouteUpdate }) {
+  const { locations } = useMap();
+  const fetchedKeyRef = useRef(null);
+
+  useEffect(() => {
+    if (!targetLocation || !currentUserId) {
+      onRouteUpdate(null);
+      return;
+    }
+
+    const currentLoc = locations?.find((loc) => loc.userId === currentUserId);
+    if (!currentLoc || !currentLoc.lat || !currentLoc.lng) return;
+
+    const key = `${currentLoc.lat.toFixed(5)}_${currentLoc.lng.toFixed(5)}_${targetLocation.lat.toFixed(5)}_${targetLocation.lng.toFixed(5)}`;
+    if (fetchedKeyRef.current === key) return;
+    fetchedKeyRef.current = key;
+
+    const fetchRoute = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+        const url = `${API_URL}/api/places/directions?originLat=${currentLoc.lat}&originLng=${currentLoc.lng}&destLat=${targetLocation.lat}&destLng=${targetLocation.lng}`;
+        console.log('🛣️ Fetching route from:', url);
+        const response = await fetch(url);
+        const data = await response.json();
+        console.log('🛣️ Route API response:', data);
+        if (data.routes?.[0]?.overview_polyline?.points) {
+          console.log('🛣️ Route found, points length:', data.routes[0].overview_polyline.points.length);
+          onRouteUpdate(data.routes[0].overview_polyline.points);
+        } else {
+          console.log('🛣️ No route found, response:', data);
+          onRouteUpdate(null);
+        }
+      } catch (err) {
+        console.error("Route fetch error:", err);
+        onRouteUpdate(null);
+      }
+    };
+
+    fetchRoute();
+  }, [targetLocation, currentUserId, locations, onRouteUpdate]);
+
+  return null;
+}
+  
+  // Dynamic marker icons based on zoom level
 const createMarkerIcon = (isHost, isCurrentUser, baseSize = 32) => {
   const color = isCurrentUser ? "#10b981" : isHost ? "#8b5cf6" : "#ec4899";
   const halfSize = baseSize / 2;
@@ -134,6 +217,8 @@ const MapView = forwardRef(({
   const rangeCircles = [];
   const [allowAutoFollow, setAllowAutoFollow] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(15);
+  const [routePath, setRoutePath] = useState(null);
+  const routeFetchedKeyRef = useRef(null);
 
   // Calculate marker size based on zoom level
   // Smaller when zoomed in, larger when zoomed out
@@ -167,6 +252,18 @@ const MapView = forwardRef(({
   const activeUserLocation = validLocations.find((loc) => loc.userId === currentUserId) || hostLocation;
 
   const polylines = [];
+
+  const getRouteMidpoint = (routePath, activeUserLocation, targetLocation) => {
+    if (!routePath) return null;
+    try {
+      const decoded = decodePolyline(routePath);
+      if (!decoded || decoded.length < 2) return null;
+      const midIndex = Math.floor(decoded.length / 2);
+      return decoded[midIndex];
+    } catch (e) {
+      return null;
+    }
+  };
   
   if (targetLocation) {
     if (roomSettings?.mode === "tracking" && activeUserLocation) {
@@ -191,8 +288,9 @@ const MapView = forwardRef(({
         />
       );
 
-      const midLat = (activeUserLocation.lat + targetLocation.lat) / 2;
-      const midLng = (activeUserLocation.lng + targetLocation.lng) / 2;
+      const routeMidpoint = getRouteMidpoint(routePath, activeUserLocation, targetLocation);
+      const midLat = routeMidpoint ? routeMidpoint[0] : (activeUserLocation.lat + targetLocation.lat) / 2;
+      const midLng = routeMidpoint ? routeMidpoint[1] : (activeUserLocation.lng + targetLocation.lng) / 2;
 
       polylines.push(
         <Marker
@@ -390,6 +488,11 @@ const MapView = forwardRef(({
         <MapInteractionTracker onUserInteracted={() => setAllowAutoFollow(false)} />
         <MapUpdater locations={locations} centerOnUsers={centerOnUsers} allowAutoFollow={allowAutoFollow} />
         <ZoomHandler onZoomChange={setZoomLevel} />
+        <RouteUpdaterWithState 
+          currentUserId={currentUserId} 
+          targetLocation={targetLocation} 
+          onRouteUpdate={setRoutePath} 
+        />
 
         <MapClickHandler onMapClick={onMapClick ? (latlng) => {
           if (isTargeting) {
@@ -427,6 +530,28 @@ const MapView = forwardRef(({
         )}
 
         {rangeCircles}
+
+        {/* Route path to target - Google Maps style */}
+        {routePath && (
+          <>
+            <Polyline
+              positions={decodePolyline(routePath)}
+              color="#4A90E2"
+              weight={8}
+              opacity={0.3}
+              lineCap="round"
+              lineJoin="round"
+            />
+            <Polyline
+              positions={decodePolyline(routePath)}
+              color="#2E86DE"
+              weight={5}
+              opacity={1}
+              lineCap="round"
+              lineJoin="round"
+            />
+          </>
+        )}
 
         {/* Connection lines */}
         {polylines}

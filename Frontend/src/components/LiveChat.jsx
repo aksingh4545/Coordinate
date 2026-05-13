@@ -101,10 +101,12 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
 
     window.silenceCount = 0;
 
-    socket.emit("walkie:stop", {
-      roomId: normalizedRoomId,
-      userId: currentUserId
-    });
+    if (socket) {
+      socket.emit("walkie:stop", {
+        roomId: normalizedRoomId,
+        userId: currentUserId
+      });
+    }
 
     setIsTalking(false);
     setActiveSpeaker(null);

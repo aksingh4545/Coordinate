@@ -76,21 +76,31 @@ router.get('/search', async (req, res) => {
 });
 
 router.get('/directions', async (req, res) => {
-  const { originLat, originLng, destLat, destLng, alternatives = true } = req.query;
+  const { originLat, originLng, destLat, destLng } = req.query;
   
-  if (!originLat || !originLng || !destLat || !destLng || !GOOGLE_MAPS_API_KEY) {
-    return res.status(400).json({ error: 'Missing coordinates or API key' });
+  if (!originLat || !originLng || !destLat || !destLng) {
+    return res.status(400).json({ error: 'Missing coordinates' });
   }
 
   try {
-    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${originLat},${originLng}&destination=${destLat},${destLng}&alternatives=${alternatives}&key=${GOOGLE_MAPS_API_KEY}`;
-
-    const response = await fetch(url);
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${originLng},${originLat};${destLng},${destLat}?overview=full&geometries=polyline`;
+    const response = await fetch(osrmUrl);
     const data = await response.json();
     
-    res.json(data);
+    if (data.code === 'Ok' && data.routes?.[0]) {
+      return res.json({
+        routes: [{
+          overview_polyline: {
+            points: data.routes[0].geometry
+          },
+          legs: data.routes[0].legs
+        }],
+        status: 'OK'
+      });
+    }
+    res.status(500).json({ error: 'OSRM routing failed' });
   } catch (error) {
-    console.error('Google Directions API error:', error);
+    console.error('OSRM Directions error:', error);
     res.status(500).json({ error: 'Failed to fetch directions' });
   }
 });
