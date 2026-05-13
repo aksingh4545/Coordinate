@@ -34,6 +34,8 @@ export default function HostRoomPage() {
   const [showQR, setShowQR] = useState(false);
   const [memberList, setMemberList] = useState([]);
   const [showChat, setShowChat] = useState(true);
+  const [showOptions, setShowOptions] = useState(false);
+  const [showTargetNav, setShowTargetNav] = useState(false);
   const [isTargeting, setIsTargeting] = useState(false);
   const [locationStatus, setLocationStatus] = useState("idle");
   const [locationError, setLocationError] = useState("");
@@ -377,23 +379,141 @@ export default function HostRoomPage() {
     <div className="room-page">
       <div className="room-earth-bg"></div>
       <div className="room-shell">
-        {/* Top Bar */}
-        <div className="room-topbar">
-          <div className="room-topbar-left">
-            <span>Group: {roomId}</span>
-            <span className="muted">{locations.length} member{locations.length !== 1 ? 's' : ''}</span>
-            <span className="room-mode-pill">
-              Mode: {roomSettings?.mode === "tracking" ? "Tracking" : "Crowd"}
-            </span>
-          </div>
+        {/* Top Bar - Simple on mobile */}
+        <div className={`room-topbar ${isMobile ? 'mobile-compact' : ''}`}>
+          {isMobile ? (
+            <>
+              <div className="mobile-top-left">
+                <span className="room-id-display">{roomId}</span>
+                <span className="member-count">{locations.length}</span>
+              </div>
+              <div className="mobile-top-right">
+                {roomSettings?.mode && (
+                  <span className={`mode-badge ${roomSettings.mode}`}>
+                    {roomSettings.mode === "tracking" ? "TRK" : "CRW"}
+                  </span>
+                )}
+                <button className="options-fab" onClick={() => setShowOptions(!showOptions)}>
+                  {showOptions ? "✕" : "☰"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="room-topbar-left">
+                <span>Group: {roomId}</span>
+                <span className="muted">{locations.length} member{locations.length !== 1 ? 's' : ''}</span>
+                <span className="room-mode-pill">
+                  Mode: {roomSettings?.mode === "tracking" ? "Tracking" : "Crowd"}
+                </span>
+              </div>
 
-          <div className="room-topbar-right">
-            <button className="soft-pill-btn qr" onClick={() => setShowQR(true)}>Show QR</button>
-            <button className="soft-pill-btn leave" onClick={handleLeaveRoom}>LEAVE</button>
-          </div>
+              <div className="room-topbar-right">
+                <button className="soft-pill-btn qr" onClick={() => setShowQR(true)}>Show QR</button>
+                <button className="soft-pill-btn leave" onClick={handleLeaveRoom}>LEAVE</button>
+              </div>
+            </>
+          )}
         </div>
 
-        {locationStatus !== "active" && (
+        {/* Mobile Options Panel */}
+        {isMobile && showOptions && (
+          <div className="mobile-options-panel">
+            {locationStatus !== "active" && (
+              <div className="option-item location-option">
+                <span className="option-label">Location</span>
+                <button className="option-btn enable" onClick={startLocationTracking}>
+                  {locationStatus === "prompt" ? "Waiting..." : "Enable"}
+                </button>
+              </div>
+            )}
+
+            <div className="option-item" onClick={() => updateRoomSettings({ mode: roomSettings?.mode === "tracking" ? "crowd" : "tracking" })}>
+              <span className="option-label">Mode</span>
+              <span className="option-value">{roomSettings?.mode === "tracking" ? "Crowd" : "Tracking"}</span>
+            </div>
+
+            <div className="option-item">
+              <span className="option-label">Map Style</span>
+              <select
+                className="option-select"
+                value={roomSettings?.mapStyle || "osm"}
+                onChange={handleMapStyleChange}
+              >
+                <option value="osm">Standard</option>
+                <option value="satellite">Satellite</option>
+              </select>
+            </div>
+
+            {roomSettings?.mode === "tracking" && (
+              <div className="option-item">
+                <span className="option-label">Range</span>
+                <input
+                  type="number"
+                  min={5}
+                  max={200}
+                  value={roomSettings.trackingRange ?? 30}
+                  onChange={handleRangeChange}
+                  className="option-input"
+                />
+              </div>
+            )}
+
+            <div className="option-item" onClick={handleSetTarget}>
+              <span className="option-label">📍 Set Target</span>
+              <span className="option-value">{roomSettings?.targetLocation ? "Change" : "Add"}</span>
+            </div>
+
+            {roomSettings?.targetLocation && (
+              <div className="option-item" onClick={handleClearTarget}>
+                <span className="option-label">Clear Target</span>
+              </div>
+            )}
+
+            {roomWarning && (
+              <div className="option-item warning-option" onClick={clearWarning}>
+                <span className="option-label">⚠️ Warning</span>
+                <span className="option-value">Dismiss</span>
+              </div>
+            )}
+
+            <div className="option-item" onClick={() => setShowTargetNav(!showTargetNav)}>
+              <span className="option-label">🧭 Target Nav</span>
+              <span className="option-value">{showTargetNav ? "Hide" : "Show"}</span>
+            </div>
+
+            <div className="option-item" onClick={() => setShowQR(true)}>
+              <span className="option-label">📱 Show QR</span>
+            </div>
+
+            <div className="option-item" onClick={() => setShowChat(true)}>
+              <span className="option-label">💬 Chat</span>
+              <span className="option-value">Open</span>
+            </div>
+
+            <div className="option-item leave-option" onClick={handleLeaveRoom}>
+              <span className="option-label">Leave Room</span>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Target Navigation - Toggle */}
+        {isMobile && showTargetNav && roomSettings?.targetLocation && targetInfo && (
+          <div className="mobile-target-panel">
+            <div className="target-item">
+              <span className="target-value">📍 {formatDistance(targetInfo.distance)}</span>
+            </div>
+            <div className="target-item">
+              <span className="target-value">🧭 {targetInfo.bearingLabel}</span>
+            </div>
+            <div className="target-item">
+              <span className="target-value">⏱️ {targetInfo.etaMinutes}m</span>
+            </div>
+          </div>
+        )}
+
+        {/* Desktop location banner */}
+        {!isMobile && locationStatus !== "active" && (
           <div className="location-banner">
             <span className="location-banner-text">
               {locationStatus === "prompt"
@@ -407,19 +527,8 @@ export default function HostRoomPage() {
           </div>
         )}
 
-        {isMobile && roomSettings?.mode && (
-          <div className="room-mobile-mode">
-            <span
-              className={`room-mobile-mode-pill ${
-                roomSettings.mode === "tracking" ? "tracking" : "crowd"
-              }`}
-            >
-              {roomSettings.mode === "tracking" ? "Tracking" : "Crowd"}
-            </span>
-          </div>
-        )}
-
-        {roomWarning && (
+        {/* Desktop warning banner */}
+        {!isMobile && roomWarning && (
           <div className="room-warning-banner" onClick={clearWarning}>
             <span className="warning-title">Warning</span>
             <span className="warning-text">
@@ -429,71 +538,75 @@ export default function HostRoomPage() {
           </div>
         )}
 
-        <div className="room-controls-panel">
-          <div className="control-row">
-            <span className="control-label">Mode</span>
-            <button
-              className={`mode-btn ${roomSettings?.mode === "tracking" ? "active" : ""}`}
-              onClick={() => updateRoomSettings({ mode: "tracking" })}
-            >
-              Tracking
-            </button>
-            <button
-              className={`mode-btn ${roomSettings?.mode === "crowd" ? "active" : ""}`}
-              onClick={() => updateRoomSettings({ mode: "crowd" })}
-            >
-              Crowd
-            </button>
-          </div>
-
-          <div className="control-row">
-            <label className="control-label" htmlFor="mapStyle">Map</label>
-            <select
-              id="mapStyle"
-              className="control-input"
-              value={roomSettings?.mapStyle || "osm"}
-              onChange={handleMapStyleChange}
-            >
-              <option value="osm">OSM Standard</option>
-              <option value="satellite">Satellite</option>
-            </select>
-          </div>
-
-          {roomSettings?.mode === "tracking" && (
+        {/* Desktop controls panel */}
+        {!isMobile && (
+          <div className="room-controls-panel">
             <div className="control-row">
-              <label className="control-label" htmlFor="trackingRange">Range (m)</label>
-              <input
-                id="trackingRange"
-                type="number"
-                min={5}
-                max={200}
-                step={1}
-                value={roomSettings.trackingRange ?? 30}
-                onChange={handleRangeChange}
-                className="control-input"
-              />
-              <span className="control-hint">Nearest member rule</span>
-            </div>
-          )}
-
-          <div className="control-row">
-            <button type="button" className="soft-pill-btn target" onClick={handleSetTarget}>
-              Set Target
-            </button>
-            {roomSettings?.targetLocation && (
-              <button type="button" className="soft-pill-btn target-clear" onClick={handleClearTarget}>
-                Clear
+              <span className="control-label">Mode</span>
+              <button
+                className={`mode-btn ${roomSettings?.mode === "tracking" ? "active" : ""}`}
+                onClick={() => updateRoomSettings({ mode: "tracking" })}
+              >
+                Tracking
               </button>
+              <button
+                className={`mode-btn ${roomSettings?.mode === "crowd" ? "active" : ""}`}
+                onClick={() => updateRoomSettings({ mode: "crowd" })}
+              >
+                Crowd
+              </button>
+            </div>
+
+            <div className="control-row">
+              <label className="control-label" htmlFor="mapStyle">Map</label>
+              <select
+                id="mapStyle"
+                className="control-input"
+                value={roomSettings?.mapStyle || "osm"}
+                onChange={handleMapStyleChange}
+              >
+                <option value="osm">OSM Standard</option>
+                <option value="satellite">Satellite</option>
+              </select>
+            </div>
+
+            {roomSettings?.mode === "tracking" && (
+              <div className="control-row">
+                <label className="control-label" htmlFor="trackingRange">Range (m)</label>
+                <input
+                  id="trackingRange"
+                  type="number"
+                  min={5}
+                  max={200}
+                  step={1}
+                  value={roomSettings.trackingRange ?? 30}
+                  onChange={handleRangeChange}
+                  className="control-input"
+                />
+                <span className="control-hint">Nearest member rule</span>
+              </div>
+            )}
+
+            <div className="control-row">
+              <button type="button" className="soft-pill-btn target" onClick={handleSetTarget}>
+                Set Target
+              </button>
+              {roomSettings?.targetLocation && (
+                <button type="button" className="soft-pill-btn target-clear" onClick={handleClearTarget}>
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {isTargeting && (
+              <div className="control-hint">Click on map to place the target pin.</div>
             )}
           </div>
+        )}
 
-          {isTargeting && (
-            <div className="control-hint">Click on map to place the target pin.</div>
-          )}
-        </div>
-
-        {roomSettings?.targetLocation && targetInfo && (
-          <div className={`target-nav-panel ${isMobile ? "compact-mobile" : ""}`}>
+        {/* Desktop target nav panel */}
+        {!isMobile && roomSettings?.targetLocation && targetInfo && (
+          <div className="target-nav-panel">
             <div className="target-nav-head glass-card-header">
               <span className="glass-card-title">Target Navigation</span>
               <span className="glass-card-subtitle">Live direction to destination</span>

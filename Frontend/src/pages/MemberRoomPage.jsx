@@ -30,6 +30,8 @@ export default function MemberRoomPage() {
   } = useMap();
   const [memberList, setMemberList] = useState([]);
   const [showChat, setShowChat] = useState(true);
+  const [showOptions, setShowOptions] = useState(false);
+  const [showTargetNav, setShowTargetNav] = useState(false);
   const mapRef = useRef(null);
   const [locationStatus, setLocationStatus] = useState("idle");
   const [locationError, setLocationError] = useState("");
@@ -250,25 +252,92 @@ export default function MemberRoomPage() {
     <div className="room-page">
       <div className="room-earth-bg"></div>
       <div className="room-shell">
-        {/* Top Bar */}
-        <div className="room-topbar">
-          <div className="room-topbar-left">
-            <span>Group: {roomId}</span>
-            <span className="muted">{locations.length} member{locations.length !== 1 ? 's' : ''}</span>
-            <span className="room-mode-pill">
-              Mode: {roomSettings?.mode === "tracking" ? "Tracking" : "Crowd"}
-            </span>
-            {roomSettings?.mode === "tracking" && (
-              <span className="room-range-pill">Range: {roomSettings.trackingRange ?? 30}m</span>
-            )}
-          </div>
-
-          <div className="room-topbar-right">
-            <button className="soft-pill-btn leave" onClick={handleLeaveRoom}>LEAVE</button>
-          </div>
+        {/* Top Bar - Simple on mobile */}
+        <div className={`room-topbar ${isMobile ? 'mobile-compact' : ''}`}>
+          {isMobile ? (
+            <>
+              <div className="mobile-top-left">
+                <span className="room-id-display">{roomId}</span>
+                <span className="member-count">{locations.length}</span>
+              </div>
+              <div className="mobile-top-right">
+                {roomSettings?.mode && (
+                  <span className={`mode-badge ${roomSettings.mode}`}>
+                    {roomSettings.mode === "tracking" ? "TRK" : "CRW"}
+                  </span>
+                )}
+                <button className="options-fab" onClick={() => setShowOptions(!showOptions)}>
+                  {showOptions ? "✕" : "☰"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="room-topbar-left">
+                <span>Group: {roomId}</span>
+                <span className="muted">{locations.length} member{locations.length !== 1 ? 's' : ''}</span>
+                <span className="room-mode-pill">
+                  Mode: {roomSettings?.mode === "tracking" ? "Tracking" : "Crowd"}
+                </span>
+                {roomSettings?.mode === "tracking" && (
+                  <span className="room-range-pill">Range: {roomSettings.trackingRange ?? 30}m</span>
+                )}
+              </div>
+              <div className="room-topbar-right">
+                <button className="soft-pill-btn leave" onClick={handleLeaveRoom}>LEAVE</button>
+              </div>
+            </>
+          )}
         </div>
 
-        {locationStatus !== "active" && (
+        {/* Mobile Options Panel */}
+        {isMobile && showOptions && (
+          <div className="mobile-options-panel">
+            {locationStatus !== "active" && (
+              <div className="option-item location-option">
+                <span className="option-label">Location</span>
+                <button className="option-btn enable" onClick={startLocationTracking}>
+                  {locationStatus === "prompt" ? "Waiting..." : "Enable"}
+                </button>
+              </div>
+            )}
+            {roomWarning && (
+              <div className="option-item warning-option" onClick={clearWarning}>
+                <span className="option-label">⚠️ Warning</span>
+                <span className="option-value">Dismiss</span>
+              </div>
+            )}
+            <div className="option-item" onClick={() => setShowTargetNav(!showTargetNav)}>
+              <span className="option-label">📍 Target Nav</span>
+              <span className="option-value">{showTargetNav ? "Hide" : "Show"}</span>
+            </div>
+            <div className="option-item" onClick={() => setShowChat(true)}>
+              <span className="option-label">💬 Chat</span>
+              <span className="option-value">Open</span>
+            </div>
+            <div className="option-item leave-option" onClick={handleLeaveRoom}>
+              <span className="option-label">Leave Room</span>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Target Navigation - Toggle */}
+        {isMobile && showTargetNav && roomSettings?.targetLocation && targetInfo && (
+          <div className="mobile-target-panel">
+            <div className="target-item">
+              <span className="target-value">📍 {formatDistance(targetInfo.distance)}</span>
+            </div>
+            <div className="target-item">
+              <span className="target-value">🧭 {targetInfo.bearingLabel}</span>
+            </div>
+            <div className="target-item">
+              <span className="target-value">⏱️ {targetInfo.etaMinutes}m</span>
+            </div>
+          </div>
+        )}
+
+        {/* Desktop location banner */}
+        {!isMobile && locationStatus !== "active" && (
           <div className="location-banner">
             <span className="location-banner-text">
               {locationStatus === "prompt"
@@ -282,19 +351,8 @@ export default function MemberRoomPage() {
           </div>
         )}
 
-        {isMobile && roomSettings?.mode && (
-          <div className="room-mobile-mode">
-            <span
-              className={`room-mobile-mode-pill ${
-                roomSettings.mode === "tracking" ? "tracking" : "crowd"
-              }`}
-            >
-              {roomSettings.mode === "tracking" ? "Tracking" : "Crowd"}
-            </span>
-          </div>
-        )}
-
-        {roomWarning && (
+        {/* Desktop warning banner */}
+        {!isMobile && roomWarning && (
           <div className="room-warning-banner" onClick={clearWarning}>
             <span className="warning-title">Warning</span>
             <span className="warning-text">
@@ -304,8 +362,9 @@ export default function MemberRoomPage() {
           </div>
         )}
 
-        {roomSettings?.targetLocation && targetInfo && (
-          <div className={`target-nav-panel ${isMobile ? "compact-mobile" : ""}`}>
+        {/* Desktop target nav panel */}
+        {!isMobile && roomSettings?.targetLocation && targetInfo && (
+          <div className="target-nav-panel">
             <div className="target-nav-head glass-card-header">
               <span className="glass-card-title">Target Navigation</span>
               <span className="glass-card-subtitle">Live direction to destination</span>
@@ -356,7 +415,7 @@ export default function MemberRoomPage() {
           />
         )}
 
-        {/* FAB to open chat */}
+        {/* FAB to open chat - only when chat is closed */}
         {!showChat && (
           <button className="chat-fab" onClick={() => setShowChat(true)}>
             💬
