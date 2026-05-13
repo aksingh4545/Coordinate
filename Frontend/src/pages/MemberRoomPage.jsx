@@ -302,20 +302,20 @@ export default function MemberRoomPage() {
               </div>
             )}
             {roomWarning && (
-              <div className="option-item warning-option" onClick={clearWarning}>
+              <div className="option-item warning-option" onClick={() => { clearWarning(); setShowOptions(false); }}>
                 <span className="option-label">⚠️ Warning</span>
                 <span className="option-value">Dismiss</span>
               </div>
             )}
-            <div className="option-item" onClick={() => setShowTargetNav(!showTargetNav)}>
+            <div className="option-item" onClick={() => { setShowTargetNav(!showTargetNav); setShowOptions(false); }}>
               <span className="option-label">📍 Target Nav</span>
               <span className="option-value">{showTargetNav ? "Hide" : "Show"}</span>
             </div>
-            <div className="option-item" onClick={() => setShowChat(true)}>
+            <div className="option-item" onClick={() => { setShowChat(true); setShowOptions(false); }}>
               <span className="option-label">💬 Chat</span>
               <span className="option-value">Open</span>
             </div>
-            <div className="option-item leave-option" onClick={handleLeaveRoom}>
+            <div className="option-item leave-option" onClick={() => { handleLeaveRoom(); setShowOptions(false); }}>
               <span className="option-label">Leave Room</span>
             </div>
           </div>

@@ -459,34 +459,34 @@ export default function HostRoomPage() {
               </div>
             )}
 
-            <div className="option-item" onClick={handleSetTarget}>
+            <div className="option-item" onClick={() => { handleSetTarget(); setShowOptions(false); }}>
               <span className="option-label">📍 Set Target</span>
               <span className="option-value">{roomSettings?.targetLocation ? "Change" : "Add"}</span>
             </div>
 
             {roomSettings?.targetLocation && (
-              <div className="option-item" onClick={handleClearTarget}>
+              <div className="option-item" onClick={() => { handleClearTarget(); setShowOptions(false); }}>
                 <span className="option-label">Clear Target</span>
               </div>
             )}
 
             {roomWarning && (
-              <div className="option-item warning-option" onClick={clearWarning}>
+              <div className="option-item warning-option" onClick={() => { clearWarning(); setShowOptions(false); }}>
                 <span className="option-label">⚠️ Warning</span>
                 <span className="option-value">Dismiss</span>
               </div>
             )}
 
-            <div className="option-item" onClick={() => setShowTargetNav(!showTargetNav)}>
+            <div className="option-item" onClick={() => { setShowTargetNav(!showTargetNav); setShowOptions(false); }}>
               <span className="option-label">🧭 Target Nav</span>
               <span className="option-value">{showTargetNav ? "Hide" : "Show"}</span>
             </div>
 
-            <div className="option-item" onClick={() => setShowQR(true)}>
+            <div className="option-item" onClick={() => { setShowQR(true); setShowOptions(false); }}>
               <span className="option-label">📱 Show QR</span>
             </div>
 
-            <div className="option-item" onClick={() => setShowChat(true)}>
+            <div className="option-item" onClick={() => { setShowChat(true); setShowOptions(false); }}>
               <span className="option-label">💬 Chat</span>
               <span className="option-value">Open</span>
             </div>
