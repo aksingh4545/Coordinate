@@ -466,15 +466,49 @@ io.on('connection', (socket) => {
     });
   });
 
-  // User stops talking
+// User stops talking
   socket.on('walkie:stop', ({ roomId, userId }) => {
     const normalizedRoomId = (roomId || "").toUpperCase();
     console.log(`📻 User ${userId} stopped talking in room ${normalizedRoomId}`);
-    
+
     // Broadcast to all others in the room
     socket.to(normalizedRoomId).emit('walkie:Stopped', {
       userId,
       roomId: normalizedRoomId
+    });
+  });
+
+  // ===== EMERGENCY SOS HANDLERS =====
+
+  socket.on('sos:activate', ({ roomId, userId, userName, location }) => {
+    const normalizedRoomId = (roomId || "").toUpperCase();
+    console.log(`🚨 SOS ACTIVATED by ${userName} in room ${normalizedRoomId}`);
+
+    io.to(normalizedRoomId).emit('sos:activated', {
+      userId,
+      userName,
+      roomId: normalizedRoomId,
+      location: location,
+      activatedAt: Date.now()
+    });
+  });
+
+  socket.on('sos:cancel', ({ roomId, userId }) => {
+    const normalizedRoomId = (roomId || "").toUpperCase();
+    console.log(`🚨 SOS CANCELLED by user ${userId} in room ${normalizedRoomId}`);
+
+    io.to(normalizedRoomId).emit('sos:cancelled', {
+      userId,
+      roomId: normalizedRoomId
+    });
+  });
+
+  socket.on('sos:countdown', ({ roomId, userId, seconds }) => {
+    const normalizedRoomId = (roomId || "").toUpperCase();
+    socket.to(normalizedRoomId).emit('sos:countdown', {
+      userId,
+      roomId: normalizedRoomId,
+      seconds
     });
   });
 

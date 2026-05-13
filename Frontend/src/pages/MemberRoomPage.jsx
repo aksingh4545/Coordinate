@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useMap } from "../context/MapContext";
 import MapView from "../components/MapView";
 import LiveChat from "../components/LiveChat";
+import SOSOverlay from "../components/SOSOverlay";
 import { LocationSmoother } from "../utils/locationSmoother";
 import "./MemberRoomPage.css";
 
@@ -413,6 +414,9 @@ export default function MemberRoomPage() {
             currentUserId={user?.userId}
           />
         )}
+
+        {/* Emergency SOS Overlay */}
+        <SOSOverlay currentLocation={locations.find(loc => loc.userId === user?.userId)} />
       </div>
     </div>
   );

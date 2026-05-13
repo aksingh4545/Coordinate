@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 import io from "socket.io-client";
 
 const MapContext = createContext(null);
@@ -25,6 +25,14 @@ export function MapProvider({ children }) {
     mapStyle: "osm",
   });
   const [roomWarning, setRoomWarning] = useState(null);
+
+  // Emergency SOS State
+  const [emergencySOS, setEmergencySOS] = useState(null);
+  const [incomingSOS, setIncomingSOS] = useState(null);
+  const [sosCountdown, setSOSCountdown] = useState(0);
+  const [isPressingSOS, setIsPressingSOS] = useState(false);
+  const sosTimerRef = useRef(null);
+  const sosCountdownRef = useRef(null);
 
   // Initialize socket connection
   useEffect(() => {
@@ -64,6 +72,34 @@ export function MapProvider({ children }) {
 
     newSocket.on("room:warning", (warning) => {
       setRoomWarning(warning);
+    });
+
+    // SOS Event Handlers
+    newSocket.on("sos:activated", (data) => {
+      console.log("🚨 SOS Activated:", data);
+      setIncomingSOS(data);
+      setLocations((prev) => {
+        const filtered = prev.filter((loc) => loc.userId !== data.userId);
+        return [...filtered, { 
+          ...(data.location && { lat: data.location.lat, lng: data.location.lng }), 
+          userId: data.userId, 
+          name: data.userName, 
+          isSOS: true 
+        }];
+      });
+    });
+
+    newSocket.on("sos:cancelled", (data) => {
+      console.log("🚨 SOS Cancelled:", data);
+      setIncomingSOS(null);
+      setLocations((prev) => {
+        const filtered = prev.filter((loc) => !loc.isSOS || loc.userId !== data.userId);
+        return filtered;
+      });
+    });
+
+    newSocket.on("sos:countdown", (data) => {
+      setSOSCountdown(data.seconds);
     });
 
     setSocket(newSocket);
@@ -293,6 +329,8 @@ export function MapProvider({ children }) {
       mapStyle: "osm",
     });
     setRoomWarning(null);
+    setEmergencySOS(null);
+    setIncomingSOS(null);
   }, [currentRoom, user]);
 
   const updateRoomSettings = useCallback((partial) => {
@@ -311,6 +349,85 @@ export function MapProvider({ children }) {
 
   const clearWarning = useCallback(() => {
     setRoomWarning(null);
+  }, []);
+
+  // Emergency SOS Functions
+  const startSOSTimer = useCallback((location) => {
+    if (!currentRoom || !user) return;
+    
+    let seconds = 5;
+    setIsPressingSOS(true);
+    setSOSCountdown(seconds);
+
+    sosCountdownRef.current = setInterval(() => {
+      seconds--;
+      setSOSCountdown(seconds);
+      
+      if (socket) {
+        socket.emit("sos:countdown", {
+          roomId: currentRoom.roomId,
+          userId: user.userId,
+          seconds: seconds
+        });
+      }
+
+      if (seconds <= 0) {
+        clearInterval(sosCountdownRef.current);
+        activateSOS(location);
+      }
+    }, 1000);
+
+    sosTimerRef.current = sosCountdownRef.current;
+  }, [currentRoom, user, socket]);
+
+  const cancelSOSTimer = useCallback(() => {
+    if (sosCountdownRef.current) {
+      clearInterval(sosCountdownRef.current);
+      sosCountdownRef.current = null;
+    }
+    setIsPressingSOS(false);
+    setSOSCountdown(0);
+  }, []);
+
+  const activateSOS = useCallback((location) => {
+    if (!currentRoom || !user || !socket) return;
+
+    setIsPressingSOS(false);
+    setSOSCountdown(0);
+    setEmergencySOS({
+      userId: user.userId,
+      userName: user.name,
+      roomId: currentRoom.roomId,
+      location: location,
+      activatedAt: Date.now()
+    });
+
+    socket.emit("sos:activate", {
+      roomId: currentRoom.roomId,
+      userId: user.userId,
+      userName: user.name,
+      location: location
+    });
+
+    // Trigger device vibration
+    if (navigator.vibrate) {
+      navigator.vibrate([200, 100, 200, 100, 200]);
+    }
+  }, [currentRoom, user, socket]);
+
+  const cancelSOS = useCallback(() => {
+    if (!currentRoom || !user || !socket) return;
+
+    setEmergencySOS(null);
+
+    socket.emit("sos:cancel", {
+      roomId: currentRoom.roomId,
+      userId: user.userId
+    });
+  }, [currentRoom, user, socket]);
+
+  const dismissIncomingSOS = useCallback(() => {
+    setIncomingSOS(null);
   }, []);
 
   // Calculate distance between two points (Haversine formula)
@@ -387,6 +504,16 @@ export function MapProvider({ children }) {
     updateRoomSettings,
     roomWarning,
     clearWarning,
+    // Emergency SOS
+    emergencySOS,
+    incomingSOS,
+    sosCountdown,
+    isPressingSOS,
+    startSOSTimer,
+    cancelSOSTimer,
+    activateSOS,
+    cancelSOS,
+    dismissIncomingSOS,
   };
 
   return <MapContext.Provider value={value}>{children}</MapContext.Provider>;

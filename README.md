@@ -30,19 +30,33 @@ A real-time location sharing and group coordination application that helps peopl
 - **Live Navigation**: Shows distance, bearing (direction), and estimated time of arrival
 - **Visual Path**: Dashed lines connecting all members to the target
 
-### 5. Live Chat
-- **Text Messaging**: Real-time text chat between all room members
-- **Voice Messages**: Record and send voice messages (up to 20 seconds)
-- **Member List**: Shows all online members with their distances
-- **Notification Sounds**: Audio alerts for incoming messages
+### 5. Walkie-Talkie Channel
+- **Push-to-Talk**: Hold button to transmit voice
+- **Real-time Indicator**: See who's currently talking
+- **Voice Activity Detection**: Auto-stops when you stop speaking
+- **Member Status**: Visual indicator on who's speaking
 
-### 6. Map Features
+### 6. Emergency SOS
+- **Long Press SOS**: Press anywhere on screen for 5 seconds to activate
+- **Countdown Timer**: 5-second countdown with cancel option
+- **Live Alert**: All room members receive emergency notification
+- **Location Sharing**: SOS includes precise GPS location
+- **Vibration**: Device vibrates during SOS activation
+- **Auto-cancel**: Easy cancellation before activation completes
+
+### 7. Map Features
 - **Multiple Map Styles**: Switch between OpenStreetMap (standard) and Satellite views
 - **Custom Markers**: Distinct markers for host, current user, and other members
 - **Connection Lines**: Visual lines showing relationships between members
 - **Distance Labels**: Real-time distance display on map
+- **Dynamic Sizing**: Markers scale based on zoom level
 
-### 7. Responsive Design
+### 8. Location Smoothing
+- **Kalman Filter**: Smooths GPS jitter for stable marker positions
+- **Reduced Jitter**: Stationary markers stay in place
+- **Natural Movement**: Moving markers glide smoothly
+
+### 8. Responsive Design
 - **Mobile-First**: Optimized for mobile devices
 - **Desktop Features**: Full feature set on desktop browsers
 - **Touch Gestures**: Swipe to expand/collapse chat on mobile
