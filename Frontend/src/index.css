@@ -1295,6 +1295,8 @@ body {
   .room-page {
     padding: 0;
     background: #e5e7eb;
+    overflow: hidden;
+    touch-action: manipulation;
   }
 
   .room-shell {
@@ -1304,10 +1306,22 @@ body {
     border: none;
     box-shadow: none;
     background: transparent;
+    overflow: hidden;
   }
 
   .room-map-wrap {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     border-radius: 0;
+    z-index: 0;
+    touch-action: pan-x pan-y;
+  }
+
+  .room-map-wrap .leaflet-container {
+    touch-action: pan-x pan-y;
   }
 
   .room-topbar {
@@ -1321,6 +1335,7 @@ body {
     backdrop-filter: blur(10px);
     color: #111827;
     box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+    z-index: 100;
   }
 
   .room-topbar-left {
@@ -1353,7 +1368,7 @@ body {
     position: absolute;
     top: 54px;
     left: 10px;
-    z-index: 520;
+    z-index: 110;
   }
 
   .room-mobile-mode-pill {
@@ -1394,6 +1409,7 @@ body {
     align-items: center;
     justify-content: flex-start;
     gap: 8px;
+    z-index: 140;
   }
 
   .room-controls-panel .control-row {
@@ -1444,6 +1460,7 @@ body {
     background: rgba(17, 24, 39, 0.35);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    z-index: 130;
   }
 
   .target-nav-panel {
@@ -1457,6 +1474,7 @@ body {
     box-shadow: 0 6px 16px rgba(15, 23, 42, 0.1);
     backdrop-filter: blur(10px);
     color: #111827;
+    z-index: 120;
   }
 
   .target-nav-grid {
