@@ -1087,14 +1087,11 @@
   line-height: 1.2;
 }
 
-.sos-button-fallback {
+.sos-fab-btn {
   position: fixed;
   bottom: 190px;
   left: 16px;
   z-index: 9997;
-}
-
-.sos-fab-btn {
   width: 50px;
   height: 50px;
   border-radius: 50%;

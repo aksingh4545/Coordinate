@@ -136,12 +136,13 @@ const MapView = forwardRef(({
   const [zoomLevel, setZoomLevel] = useState(15);
 
   // Calculate marker size based on zoom level
+  // Smaller when zoomed in, larger when zoomed out
   const getMarkerSize = (zoom) => {
     const baseSize = 32;
     const referenceZoom = 15;
     const scaleFactor = 0.85;
-    let size = baseSize * Math.pow(scaleFactor, referenceZoom - zoom);
-    return Math.max(16, Math.min(Math.round(size), 40));
+    let size = baseSize * Math.pow(scaleFactor, zoom - referenceZoom);
+    return Math.max(14, Math.min(Math.round(size), 44));
   };
 
   const markerSize = getMarkerSize(zoomLevel);

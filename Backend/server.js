@@ -7,6 +7,7 @@ import QRCode from 'qrcode';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 import { connectDB, getRoomsCollection, isDBConnected } from './db.js';
+import placesRoutes from './Routes/places.js';
 
 dotenv.config();
 
@@ -33,6 +34,9 @@ const io = new Server(server, {
 
 app.use(cors());
 app.use(express.json());
+
+// Google Places API routes
+app.use('/api/places', placesRoutes);
 
 // Hybrid storage: MongoDB + in-memory cache for real-time Socket.IO operations
 const rooms = new Map(); // roomId -> room data (cache)
