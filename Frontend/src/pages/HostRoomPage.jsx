@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useMap } from "../context/MapContext";
 import MapView from "../components/MapView";
 import LiveChat from "../components/LiveChat";
+import { LocationSmoother } from "../utils/locationSmoother";
 import QRCode from "qrcode";
 import "./MemberRoomPage.css";
 
@@ -41,6 +42,7 @@ export default function HostRoomPage() {
   const mapRef = useRef(null);
   const watchIdRef = useRef(null);
   const warningRef = useRef({ signature: null, sentAt: 0 });
+  const locationSmootherRef = useRef(new LocationSmoother());
 
   const targetInfo = (() => {
     if (!roomSettings?.targetLocation) return null;
@@ -115,6 +117,8 @@ export default function HostRoomPage() {
 
   // Start location tracking when host enters room
   const handleLocationUpdate = (latitude, longitude) => {
+    const { lat, lng } = locationSmootherRef.current.filter(latitude, longitude);
+    
     setLocations((prev) => {
       const filtered = prev.filter((loc) => loc.userId !== user.userId);
       return [
@@ -122,8 +126,8 @@ export default function HostRoomPage() {
         {
           userId: user.userId,
           name: user.name,
-          lat: latitude,
-          lng: longitude,
+          lat: lat,
+          lng: lng,
           isHost: true,
         },
       ];
@@ -133,8 +137,8 @@ export default function HostRoomPage() {
       socket.emit("location:update", {
         userId: user.userId,
         roomId: currentRoom.roomId,
-        lat: latitude,
-        lng: longitude,
+        lat: lat,
+        lng: lng,
         name: user.name,
       });
     }
@@ -485,10 +489,7 @@ export default function HostRoomPage() {
               <span className="option-label">📱 Show QR</span>
             </div>
 
-            <div className="option-item" onClick={() => { setShowChat(true); setShowOptions(false); }}>
-              <span className="option-label">💬 Chat</span>
-              <span className="option-value">Open</span>
-            </div>
+
 
             <div className="option-item leave-option" onClick={handleLeaveRoom}>
               <span className="option-label">Leave Room</span>

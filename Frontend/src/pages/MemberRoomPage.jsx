@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useMap } from "../context/MapContext";
 import MapView from "../components/MapView";
 import LiveChat from "../components/LiveChat";
+import { LocationSmoother } from "../utils/locationSmoother";
 import "./MemberRoomPage.css";
 
 export default function MemberRoomPage() {
@@ -35,6 +36,7 @@ export default function MemberRoomPage() {
   const [locationStatus, setLocationStatus] = useState("idle");
   const [locationError, setLocationError] = useState("");
   const watchIdRef = useRef(null);
+  const locationSmootherRef = useRef(new LocationSmoother());
 
   useEffect(() => {
     if (!roomId || currentRoom) return;
@@ -79,12 +81,14 @@ export default function MemberRoomPage() {
 
   // Start location tracking when member enters room
   const handleLocationUpdate = (latitude, longitude) => {
+    const { lat, lng } = locationSmootherRef.current.filter(latitude, longitude);
+
     if (socket) {
       socket.emit("location:update", {
         userId: user.userId,
         roomId: currentRoom.roomId,
-        lat: latitude,
-        lng: longitude,
+        lat: lat,
+        lng: lng,
         name: user.name,
       });
     }
@@ -96,8 +100,8 @@ export default function MemberRoomPage() {
         {
           userId: user.userId,
           name: user.name,
-          lat: latitude,
-          lng: longitude,
+          lat: lat,
+          lng: lng,
           isHost: false,
         },
       ];
@@ -310,10 +314,7 @@ export default function MemberRoomPage() {
               <span className="option-label">📍 Target Nav</span>
               <span className="option-value">{showTargetNav ? "Hide" : "Show"}</span>
             </div>
-            <div className="option-item" onClick={() => { setShowChat(true); setShowOptions(false); }}>
-              <span className="option-label">💬 Chat</span>
-              <span className="option-value">Open</span>
-            </div>
+
             <div className="option-item leave-option" onClick={() => { handleLeaveRoom(); setShowOptions(false); }}>
               <span className="option-label">Leave Room</span>
             </div>

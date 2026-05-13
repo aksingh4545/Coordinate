@@ -50,57 +50,73 @@ function MapInteractionTracker({ onUserInteracted }) {
   return null;
 }
 
-// Custom marker icons
-const createMarkerIcon = (isHost, isCurrentUser) => {
+function ZoomHandler({ onZoomChange }) {
+  useMapEvents({
+    zoomend: (e) => {
+      onZoomChange?.(e.target.getZoom());
+    },
+  });
+  return null;
+}
+
+// Dynamic marker icons based on zoom level
+const createMarkerIcon = (isHost, isCurrentUser, baseSize = 32) => {
   const color = isCurrentUser ? "#10b981" : isHost ? "#8b5cf6" : "#ec4899";
+  const halfSize = baseSize / 2;
+  const fontSize = Math.round(baseSize * 0.5);
 
   return new DivIcon({
     html: `
       <div style="
         background-color: ${color};
-        width: 40px;
-        height: 40px;
+        width: ${baseSize}px;
+        height: ${baseSize}px;
         border-radius: 50%;
-        border: 4px solid white;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        border: ${Math.max(2, baseSize * 0.1)}px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
+        font-size: ${fontSize}px;
       ">
         ${isCurrentUser ? '📍' : isHost ? '🎯' : '👤'}
       </div>
     `,
     className: "custom-marker",
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
-    popupAnchor: [0, -20],
+    iconSize: [baseSize, baseSize],
+    iconAnchor: [halfSize, halfSize],
+    popupAnchor: [0, -halfSize],
   });
 };
 
-const createTargetIcon = () => new DivIcon({
-  html: `
-    <div style="
-      background: #f59e0b;
-      width: 36px;
-      height: 36px;
-      border-radius: 10px 10px 18px 18px;
-      border: 3px solid white;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      transform: translateY(-4px) rotate(45deg);
-    ">
-      <span style="transform: rotate(-45deg);">📌</span>
-    </div>
-  `,
-  className: "custom-marker",
-  iconSize: [36, 36],
-  iconAnchor: [18, 30],
-  popupAnchor: [0, -24],
-});
+const createTargetIcon = (baseSize = 28) => {
+  const halfSize = baseSize / 2;
+  const fontSize = Math.round(baseSize * 0.5);
+
+  return new DivIcon({
+    html: `
+      <div style="
+        background: #f59e0b;
+        width: ${baseSize}px;
+        height: ${baseSize}px;
+        border-radius: ${Math.round(baseSize * 0.2)}px ${Math.round(baseSize * 0.2)}px ${Math.round(baseSize * 0.5)}px ${Math.round(baseSize * 0.5)}px;
+        border: ${Math.max(1.5, baseSize * 0.08)}px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: ${fontSize}px;
+        transform: translateY(-${baseSize * 0.1}px) rotate(45deg);
+      ">
+        <span style="transform: rotate(-45deg);">📌</span>
+      </div>
+    `,
+    className: "custom-marker",
+    iconSize: [baseSize, baseSize],
+    iconAnchor: [halfSize, baseSize * 0.85],
+    popupAnchor: [0, -baseSize * 0.65],
+  });
+};
 
 const MapView = forwardRef(({
   locations,
@@ -117,9 +133,18 @@ const MapView = forwardRef(({
   const targetLines = [];
   const rangeCircles = [];
   const [allowAutoFollow, setAllowAutoFollow] = useState(true);
+  const [zoomLevel, setZoomLevel] = useState(15);
 
-  // Debug logging
-  console.log('🗺️ MapView received locations:', locations);
+  // Calculate marker size based on zoom level
+  const getMarkerSize = (zoom) => {
+    const baseSize = 32;
+    const referenceZoom = 15;
+    const scaleFactor = 0.85;
+    let size = baseSize * Math.pow(scaleFactor, referenceZoom - zoom);
+    return Math.max(16, Math.min(Math.round(size), 40));
+  };
+
+  const markerSize = getMarkerSize(zoomLevel);
 
   // Expose map methods to parent
   useImperativeHandle(ref, () => ({
@@ -363,6 +388,7 @@ const MapView = forwardRef(({
         {/* Auto-center map on locations */}
         <MapInteractionTracker onUserInteracted={() => setAllowAutoFollow(false)} />
         <MapUpdater locations={locations} centerOnUsers={centerOnUsers} allowAutoFollow={allowAutoFollow} />
+        <ZoomHandler onZoomChange={setZoomLevel} />
 
         <MapClickHandler onMapClick={onMapClick ? (latlng) => {
           if (isTargeting) {
@@ -379,14 +405,10 @@ const MapView = forwardRef(({
             <Marker
               key={loc.userId}
               position={[loc.lat, loc.lng]}
-              icon={createMarkerIcon(isHost, isCurrentUser)}
+              icon={createMarkerIcon(isHost, isCurrentUser, markerSize)}
             >
               <Popup>
-                <div className="text-center">
-                  <p className="font-bold text-gray-800">{loc.name}</p>
-                  {isHost && <p className="text-xs text-purple-600 font-semibold">🎯 HOST</p>}
-                  {isCurrentUser && <p className="text-xs text-green-600 font-semibold">📍 You</p>}
-                </div>
+                <p><b>{loc.name}</b> {isCurrentUser ? '📍' : ''} {isHost ? '🎯' : ''}</p>
               </Popup>
             </Marker>
           );
@@ -395,13 +417,10 @@ const MapView = forwardRef(({
         {targetLocation && (
           <Marker
             position={[targetLocation.lat, targetLocation.lng]}
-            icon={createTargetIcon()}
+            icon={createTargetIcon(markerSize)}
           >
             <Popup>
-              <div className="text-center">
-                <p className="font-bold text-gray-800">Target Location</p>
-                <p className="text-xs text-amber-600 font-semibold">📌 Destination</p>
-              </div>
+              <p>📌 Target</p>
             </Popup>
           </Marker>
         )}
@@ -426,12 +445,50 @@ const MapView = forwardRef(({
         }
 
         .leaflet-popup-content-wrapper {
-          border-radius: 12px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          border-radius: 8px !important;
+          background: rgba(15, 15, 35, 0.92) !important;
+          backdrop-filter: blur(8px);
+          padding: 4px 8px !important;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
 
         .leaflet-popup-content {
-          margin: 12px;
+          margin: 0 !important;
+          padding: 4px 6px !important;
+          line-height: 1.2 !important;
+          font-size: 11px !important;
+          width: auto !important;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          color: #ffffff;
+        }
+
+        .leaflet-popup-content p {
+          margin: 0 !important;
+          padding: 0 !important;
+          font-size: 11px !important;
+          color: #ffffff !important;
+        }
+
+        .leaflet-popup-tip-container {
+          display: none !important;
+        }
+
+        .leaflet-popup-close-button {
+          display: none !important;
+        }
+
+        .leaflet-container a.leaflet-popup-content-wrapper {
+          min-width: 60px;
+        }
+
+        .leaflet-marker-icon {
+          transition: transform 0.5s ease-out, left 0.5s ease-out, top 0.5s ease-out !important;
+        }
+
+        .custom-marker {
+          transition: transform 0.5s ease-out !important;
         }
       `}</style>
     </div>
