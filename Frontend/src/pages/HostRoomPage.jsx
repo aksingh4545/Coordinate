@@ -4,7 +4,7 @@ import { useMap } from "../context/MapContext";
 import MapView from "../components/MapView";
 import LiveChat from "../components/LiveChat";
 import SOSOverlay from "../components/SOSOverlay";
-import { LocationSmoother } from "../utils/locationSmoother";
+import { LocationSmoother, GpsAccuracyManager } from "../utils/locationSmoother";
 import QRCode from "qrcode";
 import "./MemberRoomPage.css";
 
@@ -43,7 +43,8 @@ export default function HostRoomPage() {
   const mapRef = useRef(null);
   const watchIdRef = useRef(null);
   const warningRef = useRef({ signature: null, sentAt: 0 });
-  const locationSmootherRef = useRef(new LocationSmoother());
+  const locationSmootherRef = useRef(new LocationSmoother({ minAccuracy: 50 }));
+  const accuracyManagerRef = useRef(new GpsAccuracyManager());
 
   const targetInfo = (() => {
     if (!roomSettings?.targetLocation) return null;
@@ -117,19 +118,26 @@ export default function HostRoomPage() {
   }, [syncRoomLocations]);
 
   // Start location tracking when host enters room
-  const handleLocationUpdate = (latitude, longitude) => {
-    const { lat, lng } = locationSmootherRef.current.filter(latitude, longitude);
+  const handleLocationUpdate = (latitude, longitude, accuracy = null, speed = null) => {
+    accuracyManagerRef.current.addReading(accuracy);
+    
+    const filtered = locationSmootherRef.current.filter(latitude, longitude, accuracy, speed);
+    
+    if (!filtered) return;
+
+    const { lat, lng } = filtered;
     
     setLocations((prev) => {
-      const filtered = prev.filter((loc) => loc.userId !== user.userId);
+      const locs = prev.filter((loc) => loc.userId !== user.userId);
       return [
-        ...filtered,
+        ...locs,
         {
           userId: user.userId,
           name: user.name,
           lat: lat,
           lng: lng,
           isHost: true,
+          accuracy: accuracy,
         },
       ];
     });
@@ -141,6 +149,7 @@ export default function HostRoomPage() {
         lat: lat,
         lng: lng,
         name: user.name,
+        accuracy: accuracy,
       });
     }
   };
@@ -173,8 +182,9 @@ export default function HostRoomPage() {
     setLocationError("");
 
     const onSuccess = (position) => {
-      const { latitude, longitude } = position.coords;
-      handleLocationUpdate(latitude, longitude);
+      const { latitude, longitude, accuracy, speed } = position.coords;
+      console.log(`📍 GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} | Accuracy: ${accuracy?.toFixed(1)}m | Speed: ${speed?.toFixed(1)}m/s`);
+      handleLocationUpdate(latitude, longitude, accuracy, speed);
       setLocationStatus("active");
       setLocationError("");
     };
@@ -195,14 +205,14 @@ export default function HostRoomPage() {
 
     navigator.geolocation.getCurrentPosition(onSuccess, onError, {
       enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 0,
+      timeout: 10000,
+      maximumAge: 5000,
     });
 
     watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
       enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 0,
+      timeout: 10000,
+      maximumAge: 3000,
     });
   };
 

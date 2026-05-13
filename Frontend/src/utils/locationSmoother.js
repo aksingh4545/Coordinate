@@ -33,16 +33,66 @@ export class LocationSmoother {
     this.measurementNoise = options.measurementNoise || 0.0001;
     this.enableHighAccuracy = options.enableHighAccuracy !== false;
     this.positionHistory = [];
-    this.maxHistorySize = options.maxHistorySize || 5;
+    this.maxHistorySize = options.maxHistorySize || 10;
+    this.minAccuracy = options.minAccuracy || 50;
     
     this.kalmanLat = new SimpleKalmanFilter(this.processNoise, this.measurementNoise);
     this.kalmanLng = new SimpleKalmanFilter(this.processNoise, this.measurementNoise);
   }
 
-  filter(lat, lng) {
+  filter(lat, lng, accuracy = null, speed = null) {
+    if (accuracy && accuracy > this.minAccuracy) {
+      console.log(`⚠️ Low accuracy (${accuracy}m), using previous estimate`);
+      return null;
+    }
+
+    if (speed !== null && speed > 50) {
+      console.log(`⚠️ Suspicious speed (${speed}m/s), ignoring`);
+      return null;
+    }
+
+    const measurementNoise = this.calculateMeasurementNoise(accuracy);
+    this.kalmanLat.measurementNoise = measurementNoise;
+    this.kalmanLng.measurementNoise = measurementNoise;
+
     const smoothedLat = this.kalmanLat.filter(lat);
     const smoothedLng = this.kalmanLng.filter(lng);
+
+    this.positionHistory.push({ lat: smoothedLat, lng: smoothedLng, timestamp: Date.now() });
+    if (this.positionHistory.length > this.maxHistorySize) {
+      this.positionHistory.shift();
+    }
+
     return { lat: smoothedLat, lng: smoothedLng };
+  }
+
+  calculateMeasurementNoise(accuracy) {
+    if (!accuracy) return 0.0001;
+    if (accuracy < 5) return 0.00001;
+    if (accuracy < 10) return 0.00005;
+    if (accuracy < 20) return 0.0001;
+    if (accuracy < 50) return 0.0005;
+    return 0.001;
+  }
+
+  getWeightedAverage() {
+    if (this.positionHistory.length === 0) return null;
+    
+    let totalWeight = 0;
+    let weightedLat = 0;
+    let weightedLng = 0;
+
+    this.positionHistory.forEach((pos, index) => {
+      const weight = index + 1;
+      totalWeight += weight;
+      weightedLat += pos.lat * weight;
+      weightedLng += pos.lng * weight;
+    });
+
+    return {
+      lat: weightedLat / totalWeight,
+      lng: weightedLng / totalWeight
+    };
   }
 
   reset() {
@@ -57,4 +107,34 @@ export function calculateAccuracy(speed, accuracy) {
   if (accuracy > 50) return 0.0002;
   if (accuracy > 20) return 0.0001;
   return 0.00005;
+}
+
+export class GpsAccuracyManager {
+  constructor() {
+    this.accuracyHistory = [];
+    this.maxHistory = 20;
+  }
+
+  addReading(accuracy) {
+    this.accuracyHistory.push({ accuracy, timestamp: Date.now() });
+    if (this.accuracyHistory.length > this.maxHistory) {
+      this.accuracyHistory.shift();
+    }
+  }
+
+  getBestAccuracy() {
+    if (this.accuracyHistory.length === 0) return null;
+    return Math.min(...this.accuracyHistory.map(r => r.accuracy));
+  }
+
+  getAverageAccuracy() {
+    if (this.accuracyHistory.length === 0) return null;
+    const sum = this.accuracyHistory.reduce((acc, r) => acc + r.accuracy, 0);
+    return sum / this.accuracyHistory.length;
+  }
+
+  isReliable() {
+    const avg = this.getAverageAccuracy();
+    return avg !== null && avg < 30;
+  }
 }
