@@ -9,9 +9,71 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
   const normalizedRoomId = (currentRoom?.roomId || roomId || "").toUpperCase();
   const mediaStreamRef = useRef(null);
   const animationFrameRef = useRef(null);
+  const peerConnectionsRef = useRef(new Map());
+  const remoteAudioRef = useRef(new Map());
   const touchStartYRef = useRef(null);
 
   const currentUserName = members.find(m => m.userId === currentUserId)?.name || "You";
+
+  const createPeerConnection = (remoteUserId, isSender) => {
+    const pc = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    });
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit("walkie:ice", {
+          toUserId: remoteUserId,
+          fromUserId: currentUserId,
+          candidate: event.candidate,
+        });
+      }
+    };
+
+    pc.ontrack = (event) => {
+      let audioEl = remoteAudioRef.current.get(remoteUserId);
+      if (!audioEl) {
+        audioEl = new Audio();
+        audioEl.autoplay = true;
+        audioEl.playsInline = true;
+        remoteAudioRef.current.set(remoteUserId, audioEl);
+      }
+      if (event.streams && event.streams[0]) {
+        audioEl.srcObject = event.streams[0];
+        audioEl.play().catch(() => {});
+      }
+    };
+
+    pc.onconnectionstatechange = () => {
+      if (["failed", "disconnected", "closed"].includes(pc.connectionState)) {
+        cleanupPeer(remoteUserId);
+      }
+    };
+
+    if (isSender && mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => {
+        pc.addTrack(track, mediaStreamRef.current);
+      });
+    } else {
+      pc.addTransceiver("audio", { direction: "recvonly" });
+    }
+
+    peerConnectionsRef.current.set(remoteUserId, pc);
+    return pc;
+  };
+
+  const cleanupPeer = (remoteUserId) => {
+    const pc = peerConnectionsRef.current.get(remoteUserId);
+    if (pc) {
+      pc.close();
+      peerConnectionsRef.current.delete(remoteUserId);
+    }
+    const audioEl = remoteAudioRef.current.get(remoteUserId);
+    if (audioEl) {
+      audioEl.srcObject = null;
+      remoteAudioRef.current.delete(remoteUserId);
+    }
+  };
 
   useEffect(() => {
     if (!socket || !normalizedRoomId) return;
@@ -24,16 +86,64 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
       setActiveSpeaker(null);
     });
 
+    socket.on("walkie:offer", async ({ fromUserId, sdp }) => {
+      try {
+        let pc = peerConnectionsRef.current.get(fromUserId);
+        if (!pc) {
+          pc = createPeerConnection(fromUserId, false);
+        }
+
+        await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        socket.emit("walkie:answer", {
+          toUserId: fromUserId,
+          fromUserId: currentUserId,
+          sdp: answer,
+        });
+      } catch (err) {
+        console.error("Walkie offer error:", err);
+      }
+    });
+
+    socket.on("walkie:answer", async ({ fromUserId, sdp }) => {
+      try {
+        const pc = peerConnectionsRef.current.get(fromUserId);
+        if (!pc) return;
+        await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+      } catch (err) {
+        console.error("Walkie answer error:", err);
+      }
+    });
+
+    socket.on("walkie:ice", async ({ fromUserId, candidate }) => {
+      try {
+        const pc = peerConnectionsRef.current.get(fromUserId);
+        if (!pc || !candidate) return;
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (err) {
+        console.error("Walkie ICE error:", err);
+      }
+    });
+
     return () => {
       socket.off("walkie:Speaking");
       socket.off("walkie:Stopped");
+      socket.off("walkie:offer");
+      socket.off("walkie:answer");
+      socket.off("walkie:ice");
     };
-  }, [socket, normalizedRoomId]);
+  }, [socket, normalizedRoomId, currentUserId]);
 
   const startTalking = async () => {
     try {
       if (!socket || !normalizedRoomId) {
         console.warn("Walkie talkie unavailable: socket or room missing");
+        return;
+      }
+
+      if (!currentUserId) {
+        console.warn("Walkie talkie unavailable: user missing");
         return;
       }
 
@@ -57,6 +167,23 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
         userId: currentUserId,
         userName: currentUserName
       });
+
+      const targets = (members || []).filter((m) => m.userId && m.userId !== currentUserId);
+      for (const member of targets) {
+        const remoteUserId = member.userId;
+        let pc = peerConnectionsRef.current.get(remoteUserId);
+        if (!pc) {
+          pc = createPeerConnection(remoteUserId, true);
+        }
+
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        socket.emit("walkie:offer", {
+          toUserId: remoteUserId,
+          fromUserId: currentUserId,
+          sdp: offer,
+        });
+      }
 
       setIsTalking(true);
       monitorVoiceActivity();
@@ -108,6 +235,10 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
       mediaStreamRef.current.getTracks().forEach(track => track.stop());
       mediaStreamRef.current = null;
     }
+
+    peerConnectionsRef.current.forEach((_, remoteUserId) => {
+      cleanupPeer(remoteUserId);
+    });
 
     window.silenceCount = 0;
 

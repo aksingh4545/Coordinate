@@ -29,3 +29,5 @@ npm-debug.log*
 # Test files
 mongodb-test.js
 render.js
+
+about.md

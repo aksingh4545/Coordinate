@@ -505,6 +505,24 @@ io.on('connection', (socket) => {
     });
   });
 
+  socket.on('walkie:offer', ({ toUserId, fromUserId, sdp }) => {
+    const targetSocketId = userSockets.get(toUserId);
+    if (!targetSocketId) return;
+    io.to(targetSocketId).emit('walkie:offer', { fromUserId, sdp });
+  });
+
+  socket.on('walkie:answer', ({ toUserId, fromUserId, sdp }) => {
+    const targetSocketId = userSockets.get(toUserId);
+    if (!targetSocketId) return;
+    io.to(targetSocketId).emit('walkie:answer', { fromUserId, sdp });
+  });
+
+  socket.on('walkie:ice', ({ toUserId, fromUserId, candidate }) => {
+    const targetSocketId = userSockets.get(toUserId);
+    if (!targetSocketId) return;
+    io.to(targetSocketId).emit('walkie:ice', { fromUserId, candidate });
+  });
+
   // ===== EMERGENCY SOS HANDLERS =====
 
   socket.on('sos:activate', ({ roomId, userId, userName, location }) => {
