@@ -106,14 +106,24 @@ app.post('/api/trips', async (req, res) => {
   try {
     const authHeader = req.headers.authorization || '';
     const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    
+    if (!idToken) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    
     const payload = await verifyGoogleToken(idToken);
 
     if (!payload) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: 'Invalid token' });
     }
 
     if (!isDBConnected()) {
-      return res.status(503).json({ error: 'Database unavailable' });
+      return res.status(503).json({ error: 'Database unavailable - please configure MongoDB' });
+    }
+
+    const tripsCollection = getTripsCollection();
+    if (!tripsCollection) {
+      return res.status(503).json({ error: 'Trips collection not available' });
     }
 
     const {
@@ -128,11 +138,11 @@ app.post('/api/trips', async (req, res) => {
       durationMs,
     } = req.body || {};
 
-    if (!tripName || !startLocation || !endLocation || !Array.isArray(path) || path.length < 2) {
-      return res.status(400).json({ error: 'Invalid trip data' });
-    }
+    console.log('Saving trip:', { tripName, startLocation, endLocation, path: path?.length });
 
-    const tripsCollection = getTripsCollection();
+    if (!tripName || !startLocation || !endLocation || !Array.isArray(path) || path.length < 2) {
+      return res.status(400).json({ error: 'Invalid trip data - need tripName, startLocation, endLocation, and path with 2+ points' });
+    }
 
     const doc = {
       userId: payload.sub,
@@ -150,10 +160,11 @@ app.post('/api/trips', async (req, res) => {
     };
 
     const result = await tripsCollection.insertOne(doc);
+    console.log('Trip saved successfully:', result.insertedId);
     res.json({ success: true, tripId: result.insertedId });
   } catch (err) {
-    console.error('Trip save error:', err);
-    res.status(500).json({ error: 'Failed to save trip' });
+    console.error('Trip save error:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to save trip: ' + err.message });
   }
 });
 
