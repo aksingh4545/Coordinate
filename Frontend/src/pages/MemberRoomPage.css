@@ -243,6 +243,93 @@
   font-size: 0.9rem;
 }
 
+/* Trip mode UI */
+.trip-header-overlay {
+  position: sticky;
+  top: 56px;
+  z-index: 20;
+  margin: 8px 12px 0;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(12, 12, 28, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+.trip-header-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.trip-header-input {
+  flex: 1;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.trip-header-btn {
+  height: 44px;
+  min-width: 64px;
+  border-radius: 12px;
+  border: none;
+  background: #8b5cf6;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.trip-header-hint {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.trip-search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.trip-suggestions {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trip-suggestion {
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.trip-suggestion-name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.trip-suggestion-address {
+  display: block;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.option-hint {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
 /* Chat box */
 .call-chat-box {
   width: 300px;

@@ -22,6 +22,7 @@ export function MapProvider({ children }) {
     mode: "crowd",
     trackingRange: 30,
     targetLocation: null,
+    targetLabel: null,
     mapStyle: "osm",
   });
   const [roomWarning, setRoomWarning] = useState(null);
@@ -158,7 +159,7 @@ export function MapProvider({ children }) {
   }, [user]);
 
   // Create a new room (Host)
-  const createRoom = useCallback(async (hostName) => {
+  const createRoom = useCallback(async (hostName, mode) => {
     setIsLoading(true);
     setError(null);
 
@@ -174,6 +175,7 @@ export function MapProvider({ children }) {
         body: JSON.stringify({
           hostId: currentUser.userId,
           hostName,
+          mode,
         }),
       });
 
@@ -326,6 +328,7 @@ export function MapProvider({ children }) {
       mode: "crowd",
       trackingRange: 30,
       targetLocation: null,
+      targetLabel: null,
       mapStyle: "osm",
     });
     setRoomWarning(null);

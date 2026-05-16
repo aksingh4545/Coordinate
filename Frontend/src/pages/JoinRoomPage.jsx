@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMap } from "../context/MapContext";
+import AuthMenu from "../components/AuthMenu";
 
 export default function JoinRoomPage() {
   const { roomId } = useParams();
@@ -10,6 +11,21 @@ export default function JoinRoomPage() {
   const [roomInfo, setRoomInfo] = useState(null);
   const [localError, setLocalError] = useState("");
   const normalizedRoomId = (roomId || "").toUpperCase();
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!showMenu) return;
+
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showMenu]);
 
   // Fetch room info on mount
   useEffect(() => {
@@ -58,10 +74,18 @@ export default function JoinRoomPage() {
       <header className="top-glass-bar">
         <div className="brand-small">Coordinator</div>
         <div className="tagline-top">Find your group in crowded places</div>
-        <div className="menu-icon">
-          <span></span>
-          <span></span>
-          <span></span>
+        <div className="menu-wrap" ref={menuRef}>
+          <button
+            type="button"
+            className="menu-icon"
+            onClick={() => setShowMenu((prev) => !prev)}
+            aria-label="Open account menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          {showMenu && <AuthMenu />}
         </div>
       </header>
 

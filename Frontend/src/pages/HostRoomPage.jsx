@@ -5,6 +5,8 @@ import MapView from "../components/MapView";
 import LiveChat from "../components/LiveChat";
 import SOSOverlay from "../components/SOSOverlay";
 import { LocationSmoother, GpsAccuracyManager } from "../utils/locationSmoother";
+import { placesService } from "../utils/placesService";
+import { getAuthUser } from "../utils/authStorage";
 import QRCode from "qrcode";
 import "./MemberRoomPage.css";
 
@@ -38,6 +40,15 @@ export default function HostRoomPage() {
   const [showOptions, setShowOptions] = useState(false);
   const [showTargetNav, setShowTargetNav] = useState(false);
   const [isTargeting, setIsTargeting] = useState(false);
+  const [tripQuery, setTripQuery] = useState("");
+  const [tripSuggestions, setTripSuggestions] = useState([]);
+  const [isTripSearching, setIsTripSearching] = useState(false);
+  const [tripSearchError, setTripSearchError] = useState("");
+  const [tripPath, setTripPath] = useState([]);
+  const [showTripModal, setShowTripModal] = useState(false);
+  const [tripName, setTripName] = useState("");
+  const [pendingTrip, setPendingTrip] = useState(null);
+  const [waitingForLogin, setWaitingForLogin] = useState(false);
   const [locationStatus, setLocationStatus] = useState("idle");
   const [locationError, setLocationError] = useState("");
   const mapRef = useRef(null);
@@ -45,6 +56,15 @@ export default function HostRoomPage() {
   const warningRef = useRef({ signature: null, sentAt: 0 });
   const locationSmootherRef = useRef(new LocationSmoother({ minAccuracy: 50 }));
   const accuracyManagerRef = useRef(new GpsAccuracyManager());
+  const tripStateRef = useRef({
+    active: false,
+    startedAt: null,
+    startLocation: null,
+    lastPoint: null,
+    completed: false,
+  });
+  const arrivalThresholdMeters = 50;
+  const minTripPointDistance = 8;
 
   const targetInfo = (() => {
     if (!roomSettings?.targetLocation) return null;
@@ -68,6 +88,8 @@ export default function HostRoomPage() {
       etaMinutes: estimateEtaMinutes(distance),
     };
   })();
+
+  const currentUserLocation = locations.find((loc) => loc.userId === user?.userId) || null;
 
   const joinUrl = `${window.location.origin}/join/${roomId}`;
 
@@ -227,6 +249,184 @@ export default function HostRoomPage() {
     };
   }, [currentRoom, user, socket, setError]);
 
+  const resetTripState = () => {
+    tripStateRef.current = {
+      active: false,
+      startedAt: null,
+      startLocation: null,
+      lastPoint: null,
+      completed: false,
+    };
+    setTripPath([]);
+    setPendingTrip(null);
+    setWaitingForLogin(false);
+    setTripName("");
+    setShowTripModal(false);
+  };
+
+  useEffect(() => {
+    if (roomSettings?.mode !== "trip" || !roomSettings?.targetLocation) {
+      resetTripState();
+      return;
+    }
+
+    if (!currentUserLocation || currentUserLocation.lat === 0 || currentUserLocation.lng === 0) return;
+
+    if (!tripStateRef.current.active && !tripStateRef.current.completed) {
+      tripStateRef.current.active = true;
+      tripStateRef.current.startedAt = Date.now();
+      tripStateRef.current.startLocation = {
+        lat: currentUserLocation.lat,
+        lng: currentUserLocation.lng,
+      };
+      const firstPoint = {
+        lat: currentUserLocation.lat,
+        lng: currentUserLocation.lng,
+        timestamp: Date.now(),
+      };
+      tripStateRef.current.lastPoint = firstPoint;
+      setTripPath([firstPoint]);
+    }
+  }, [roomSettings?.mode, roomSettings?.targetLocation, currentUserLocation]);
+
+  useEffect(() => {
+    if (roomSettings?.mode !== "trip") return;
+    if (!roomSettings?.targetLocation) return;
+    if (!currentUserLocation) return;
+    if (!tripStateRef.current.active || tripStateRef.current.completed) return;
+
+    const lastPoint = tripStateRef.current.lastPoint;
+    if (!lastPoint) return;
+
+    const distanceFromLast = calculateDistance(
+      lastPoint.lat,
+      lastPoint.lng,
+      currentUserLocation.lat,
+      currentUserLocation.lng
+    );
+
+    if (distanceFromLast >= minTripPointDistance) {
+      const nextPoint = {
+        lat: currentUserLocation.lat,
+        lng: currentUserLocation.lng,
+        timestamp: Date.now(),
+      };
+      tripStateRef.current.lastPoint = nextPoint;
+      setTripPath((prev) => [...prev, nextPoint]);
+    }
+
+    const distanceToTarget = calculateDistance(
+      currentUserLocation.lat,
+      currentUserLocation.lng,
+      roomSettings.targetLocation.lat,
+      roomSettings.targetLocation.lng
+    );
+
+    if (distanceToTarget <= arrivalThresholdMeters) {
+      tripStateRef.current.completed = true;
+      tripStateRef.current.active = false;
+
+      setPendingTrip({
+        roomId: currentRoom?.roomId,
+        startLocation: tripStateRef.current.startLocation,
+        endLocation: {
+          lat: currentUserLocation.lat,
+          lng: currentUserLocation.lng,
+        },
+        targetLocation: roomSettings.targetLocation,
+        startedAt: tripStateRef.current.startedAt,
+        endedAt: Date.now(),
+        path: tripPath.length ? tripPath : [tripStateRef.current.startLocation],
+      });
+      setShowTripModal(true);
+    }
+  }, [currentUserLocation, roomSettings, calculateDistance, currentRoom, tripPath]);
+
+  useEffect(() => {
+    if (!waitingForLogin || !pendingTrip) return;
+
+    const checkLogin = () => {
+      const authUser = getAuthUser();
+      if (authUser?.idToken) {
+        saveTripRequest(authUser, pendingTrip, tripName);
+      }
+    };
+
+    const interval = setInterval(checkLogin, 1500);
+    return () => clearInterval(interval);
+  }, [waitingForLogin, pendingTrip, tripName]);
+
+  const saveTripRequest = async (authUser, tripData, name) => {
+    if (!authUser?.idToken) return;
+
+    try {
+      const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+      const response = await fetch(`${API_URL}/api/trips`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authUser.idToken}`,
+        },
+        body: JSON.stringify({
+          ...tripData,
+          tripName: name || "My Trip",
+          durationMs: tripData.endedAt - tripData.startedAt,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save trip");
+      }
+
+      setShowTripModal(false);
+      setWaitingForLogin(false);
+      setPendingTrip(null);
+      setTripName("");
+    } catch (err) {
+      console.error("Trip save error:", err);
+    }
+  };
+
+  const handleTripSave = async () => {
+    if (!pendingTrip) return;
+    const authUser = getAuthUser();
+    if (!authUser?.idToken) {
+      setWaitingForLogin(true);
+      return;
+    }
+    await saveTripRequest(authUser, pendingTrip, tripName);
+  };
+
+  const handleTripSearch = async () => {
+    if (!tripQuery.trim()) return;
+    setIsTripSearching(true);
+    setTripSearchError("");
+
+    try {
+      const results = await placesService.searchPlaces(
+        tripQuery.trim(),
+        currentUserLocation
+      );
+      setTripSuggestions(results);
+      if (results.length === 0) {
+        setTripSearchError("No results found");
+      }
+    } catch (err) {
+      setTripSearchError("Search failed");
+    } finally {
+      setIsTripSearching(false);
+    }
+  };
+
+  const handleSelectTripPlace = (place) => {
+    updateRoomSettings({
+      targetLocation: { lat: place.lat, lng: place.lng },
+      targetLabel: place.name,
+    });
+    setTripSuggestions([]);
+    setTripQuery(place.name);
+  };
+
   useEffect(() => {
     // Update member list with distances
     if (locations.length > 0 && user) {
@@ -347,18 +547,25 @@ export default function HostRoomPage() {
     updateRoomSettings({ mapStyle: event.target.value });
   };
 
+  const modeLabel = roomSettings?.mode === "tracking"
+    ? "Tracking"
+    : roomSettings?.mode === "trip"
+      ? "Trip"
+      : "Crowd";
+
   const handleSetTarget = () => {
     setIsTargeting(true);
   };
 
   const handleClearTarget = () => {
-    updateRoomSettings({ targetLocation: null });
+    updateRoomSettings({ targetLocation: null, targetLabel: null });
     setIsTargeting(false);
   };
 
   const handleMapTarget = (latlng) => {
     updateRoomSettings({
       targetLocation: { lat: latlng.lat, lng: latlng.lng },
+      targetLabel: "Pinned location",
     });
     setIsTargeting(false);
   };
@@ -390,7 +597,7 @@ export default function HostRoomPage() {
               <div className="mobile-top-right">
                 {roomSettings?.mode && (
                   <span className={`mode-badge ${roomSettings.mode}`}>
-                    {roomSettings.mode === "tracking" ? "TRK" : "CRW"}
+                    {roomSettings.mode === "tracking" ? "TRK" : roomSettings.mode === "trip" ? "TRP" : "CRW"}
                   </span>
                 )}
                 <button className="options-fab" onClick={() => setShowOptions(!showOptions)}>
@@ -404,7 +611,7 @@ export default function HostRoomPage() {
                 <span>Group: {roomId}</span>
                 <span className="muted">{locations.length} member{locations.length !== 1 ? 's' : ''}</span>
                 <span className="room-mode-pill">
-                  Mode: {roomSettings?.mode === "tracking" ? "Tracking" : "Crowd"}
+                  Mode: {modeLabel}
                 </span>
               </div>
 
@@ -415,6 +622,44 @@ export default function HostRoomPage() {
             </>
           )}
         </div>
+
+        {isMobile && roomSettings?.mode === "trip" && (
+          <div className="trip-header-overlay">
+            <div className="trip-header-row">
+              <input
+                type="text"
+                value={tripQuery}
+                onChange={(e) => setTripQuery(e.target.value)}
+                placeholder="Search destination"
+                className="trip-header-input"
+              />
+              <button
+                type="button"
+                className="trip-header-btn"
+                onClick={handleTripSearch}
+                disabled={isTripSearching}
+              >
+                {isTripSearching ? "..." : "Go"}
+              </button>
+            </div>
+            {tripSearchError && <div className="trip-header-hint">{tripSearchError}</div>}
+            {tripSuggestions.length > 0 && (
+              <div className="trip-suggestions">
+                {tripSuggestions.map((place) => (
+                  <button
+                    key={place.placeId}
+                    type="button"
+                    className="trip-suggestion"
+                    onClick={() => handleSelectTripPlace(place)}
+                  >
+                    <span className="trip-suggestion-name">{place.name}</span>
+                    <span className="trip-suggestion-address">{place.address}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Mobile Options Panel */}
         {isMobile && showOptions && (
@@ -428,9 +673,9 @@ export default function HostRoomPage() {
               </div>
             )}
 
-            <div className="option-item" onClick={() => updateRoomSettings({ mode: roomSettings?.mode === "tracking" ? "crowd" : "tracking" })}>
+            <div className="option-item">
               <span className="option-label">Mode</span>
-              <span className="option-value">{roomSettings?.mode === "tracking" ? "Crowd" : "Tracking"}</span>
+              <span className="option-value">{modeLabel}</span>
             </div>
 
             <div className="option-item">
@@ -459,12 +704,53 @@ export default function HostRoomPage() {
               </div>
             )}
 
-            <div className="option-item" onClick={() => { handleSetTarget(); setShowOptions(false); }}>
-              <span className="option-label">📍 Set Target</span>
-              <span className="option-value">{roomSettings?.targetLocation ? "Change" : "Add"}</span>
-            </div>
+            {roomSettings?.mode === "trip" && (
+              <div className="option-item trip-search">
+                <span className="option-label">Trip Destination</span>
+                <div className="trip-search-row">
+                  <input
+                    type="text"
+                    className="option-input"
+                    value={tripQuery}
+                    onChange={(e) => setTripQuery(e.target.value)}
+                    placeholder="Type a place or address"
+                  />
+                  <button
+                    type="button"
+                    className="option-btn"
+                    onClick={handleTripSearch}
+                    disabled={isTripSearching}
+                  >
+                    {isTripSearching ? "..." : "Go"}
+                  </button>
+                </div>
+                {tripSearchError && <span className="option-hint">{tripSearchError}</span>}
+                {tripSuggestions.length > 0 && (
+                  <div className="trip-suggestions">
+                    {tripSuggestions.map((place) => (
+                      <button
+                        key={place.placeId}
+                        type="button"
+                        className="trip-suggestion"
+                        onClick={() => handleSelectTripPlace(place)}
+                      >
+                        <span className="trip-suggestion-name">{place.name}</span>
+                        <span className="trip-suggestion-address">{place.address}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
-            {roomSettings?.targetLocation && (
+            {roomSettings?.mode !== "trip" && (
+              <div className="option-item" onClick={() => { handleSetTarget(); setShowOptions(false); }}>
+                <span className="option-label">📍 Set Target</span>
+                <span className="option-value">{roomSettings?.targetLocation ? "Change" : "Add"}</span>
+              </div>
+            )}
+
+            {roomSettings?.targetLocation && roomSettings?.mode !== "trip" && (
               <div className="option-item" onClick={() => { handleClearTarget(); setShowOptions(false); }}>
                 <span className="option-label">Clear Target</span>
               </div>
@@ -540,18 +826,7 @@ export default function HostRoomPage() {
           <div className="room-controls-panel">
             <div className="control-row">
               <span className="control-label">Mode</span>
-              <button
-                className={`mode-btn ${roomSettings?.mode === "tracking" ? "active" : ""}`}
-                onClick={() => updateRoomSettings({ mode: "tracking" })}
-              >
-                Tracking
-              </button>
-              <button
-                className={`mode-btn ${roomSettings?.mode === "crowd" ? "active" : ""}`}
-                onClick={() => updateRoomSettings({ mode: "crowd" })}
-              >
-                Crowd
-              </button>
+              <span className="control-hint">{modeLabel}</span>
             </div>
 
             {roomSettings?.mode === "tracking" && (
@@ -571,19 +846,62 @@ export default function HostRoomPage() {
               </div>
             )}
 
-            <div className="control-row">
-              <button type="button" className="soft-pill-btn target" onClick={handleSetTarget}>
-                Set Target
-              </button>
-              {roomSettings?.targetLocation && (
-                <button type="button" className="soft-pill-btn target-clear" onClick={handleClearTarget}>
-                  Clear
-                </button>
-              )}
-            </div>
+            {roomSettings?.mode !== "trip" && (
+              <>
+                <div className="control-row">
+                  <button type="button" className="soft-pill-btn target" onClick={handleSetTarget}>
+                    Set Target
+                  </button>
+                  {roomSettings?.targetLocation && (
+                    <button type="button" className="soft-pill-btn target-clear" onClick={handleClearTarget}>
+                      Clear
+                    </button>
+                  )}
+                </div>
 
-            {isTargeting && (
-              <div className="control-hint">Click on map to place the target pin.</div>
+                {isTargeting && (
+                  <div className="control-hint">Click on map to place the target pin.</div>
+                )}
+              </>
+            )}
+
+            {roomSettings?.mode === "trip" && (
+              <div className="control-row trip-search">
+                <label className="control-label">Trip Destination</label>
+                <div className="trip-search-row">
+                  <input
+                    type="text"
+                    className="control-input"
+                    value={tripQuery}
+                    onChange={(e) => setTripQuery(e.target.value)}
+                    placeholder="Type a place or address"
+                  />
+                  <button
+                    type="button"
+                    className="soft-pill-btn target"
+                    onClick={handleTripSearch}
+                    disabled={isTripSearching}
+                  >
+                    {isTripSearching ? "Searching" : "Search"}
+                  </button>
+                </div>
+                {tripSearchError && <span className="control-hint">{tripSearchError}</span>}
+                {tripSuggestions.length > 0 && (
+                  <div className="trip-suggestions">
+                    {tripSuggestions.map((place) => (
+                      <button
+                        key={place.placeId}
+                        type="button"
+                        className="trip-suggestion"
+                        onClick={() => handleSelectTripPlace(place)}
+                      >
+                        <span className="trip-suggestion-name">{place.name}</span>
+                        <span className="trip-suggestion-address">{place.address}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
 
             <div className="control-divider"></div>
@@ -648,6 +966,7 @@ export default function HostRoomPage() {
             onMapClick={handleMapTarget}
             isTargeting={isTargeting}
             roomSettings={roomSettings}
+            tripPath={roomSettings?.mode === "trip" ? tripPath : null}
           />
         </div>
 
@@ -658,6 +977,52 @@ export default function HostRoomPage() {
             members={memberList}
             currentUserId={user?.userId}
           />
+        )}
+
+        {showTripModal && pendingTrip && (
+          <div className="modal-backdrop-custom">
+            <div className="custom-modal">
+              <div className="modal-head">
+                <div className="modal-icon">🧭</div>
+                <h2>Trip Complete</h2>
+                <p>Name your trip to save it</p>
+              </div>
+
+              <div className="input-group">
+                <label>Trip Name</label>
+                <input
+                  type="text"
+                  value={tripName}
+                  onChange={(e) => setTripName(e.target.value)}
+                  placeholder="Evening Walk"
+                />
+              </div>
+
+              {waitingForLogin && (
+                <div className="home-error">Login required. Use the menu to sign in.</div>
+              )}
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="modal-btn secondary"
+                  onClick={() => {
+                    setShowTripModal(false);
+                    setWaitingForLogin(false);
+                  }}
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  className="modal-btn primary"
+                  onClick={handleTripSave}
+                >
+                  Save Trip
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* QR Code Modal */}

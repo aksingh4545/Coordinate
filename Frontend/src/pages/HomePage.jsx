@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMap } from "../context/MapContext";
 import CoordinatorLogo from "../assets/CoordinatorLogo";
+import AuthMenu from "../components/AuthMenu";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -12,6 +13,22 @@ export default function HomePage() {
   const [roomId, setRoomId] = useState("");
   const [memberName, setMemberName] = useState("");
   const [localError, setLocalError] = useState("");
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
+  const [roomMode, setRoomMode] = useState("crowd");
+
+  useEffect(() => {
+    if (!showMenu) return;
+
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showMenu]);
 
   const handleCreateRoom = async (e) => {
     e.preventDefault();
@@ -21,7 +38,7 @@ export default function HomePage() {
     }
 
     try {
-      const data = await createRoom(hostName.trim());
+      const data = await createRoom(hostName.trim(), roomMode);
       navigate(`/host/${data.roomId}`);
     } catch (err) {
       setLocalError(err.message || "Failed to create room");
@@ -52,10 +69,18 @@ export default function HomePage() {
       <header className="top-glass-bar">
         <div className="brand-small">Coordinator</div>
         <div className="tagline-top">Find your group in crowded places</div>
-        <div className="menu-icon">
-          <span></span>
-          <span></span>
-          <span></span>
+        <div className="menu-wrap" ref={menuRef}>
+          <button
+            type="button"
+            className="menu-icon"
+            onClick={() => setShowMenu((prev) => !prev)}
+            aria-label="Open account menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          {showMenu && <AuthMenu />}
         </div>
       </header>
 
@@ -119,6 +144,18 @@ export default function HomePage() {
                   placeholder="Enter your name"
                   autoFocus
                 />
+              </div>
+
+              <div className="input-group">
+                <label>Mode</label>
+                <select
+                  value={roomMode}
+                  onChange={(e) => setRoomMode(e.target.value)}
+                >
+                  <option value="crowd">Crowd</option>
+                  <option value="tracking">Tracking</option>
+                  <option value="trip">Trip</option>
+                </select>
               </div>
 
               <div className="modal-actions">

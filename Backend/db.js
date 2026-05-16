@@ -14,6 +14,8 @@ if (!uri) {
 let client;
 let db;
 let roomsCollection;
+let usersCollection;
+let tripsCollection;
 let isConnected = false;
 
 export async function connectDB() {
@@ -37,11 +39,17 @@ export async function connectDB() {
     
     db = client.db('coordinate');
     roomsCollection = db.collection('rooms');
+    usersCollection = db.collection('users');
+    tripsCollection = db.collection('trips');
     
     // Create indexes for better performance
     try {
       await roomsCollection.createIndex({ roomId: 1 }, { unique: true });
       await roomsCollection.createIndex({ 'members.userId': 1 });
+      await usersCollection.createIndex({ googleSub: 1 }, { unique: true });
+      await usersCollection.createIndex({ email: 1 });
+      await tripsCollection.createIndex({ userId: 1 });
+      await tripsCollection.createIndex({ createdAt: -1 });
     } catch (indexErr) {
       console.warn('⚠️  Index creation failed (non-critical):', indexErr.message);
     }
@@ -66,6 +74,20 @@ export function getRoomsCollection() {
     return null;
   }
   return roomsCollection;
+}
+
+export function getUsersCollection() {
+  if (!isConnected || !usersCollection) {
+    return null;
+  }
+  return usersCollection;
+}
+
+export function getTripsCollection() {
+  if (!isConnected || !tripsCollection) {
+    return null;
+  }
+  return tripsCollection;
 }
 
 export function isDBConnected() {

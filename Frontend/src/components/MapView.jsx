@@ -210,6 +210,7 @@ const MapView = forwardRef(({
   onMapClick = null,
   isTargeting = false,
   roomSettings = null,
+  tripPath = null,
 }, ref) => {
   const { calculateDistance, formatDistance } = useMap();
   const mapRef = useRef(null);
@@ -551,6 +552,18 @@ const MapView = forwardRef(({
               lineJoin="round"
             />
           </>
+        )}
+
+        {/* Recorded trip path */}
+        {tripPath && tripPath.length > 1 && (
+          <Polyline
+            positions={tripPath.map((point) => [point.lat, point.lng])}
+            color="#14b8a6"
+            weight={4}
+            opacity={0.85}
+            lineCap="round"
+            lineJoin="round"
+          />
         )}
 
         {/* Connection lines */}

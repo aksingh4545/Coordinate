@@ -6,7 +6,8 @@ import cors from 'cors';
 import QRCode from 'qrcode';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
-import { connectDB, getRoomsCollection, isDBConnected } from './db.js';
+import { OAuth2Client } from 'google-auth-library';
+import { connectDB, getRoomsCollection, getTripsCollection, getUsersCollection, isDBConnected } from './db.js';
 import placesRoutes from './Routes/places.js';
 
 dotenv.config();
@@ -55,18 +56,138 @@ app.use(express.json());
 // Google Places API routes
 app.use('/api/places', placesRoutes);
 
+// Google Auth - verify ID token and upsert user
+app.post('/api/auth/google', async (req, res) => {
+  try {
+    const { idToken } = req.body || {};
+    const payload = await verifyGoogleToken(idToken);
+
+    if (!payload) {
+      return res.status(401).json({ error: 'Invalid Google token' });
+    }
+
+    if (!isDBConnected()) {
+      return res.status(503).json({ error: 'Database unavailable' });
+    }
+
+    const usersCollection = getUsersCollection();
+    const userDoc = {
+      googleSub: payload.sub,
+      name: payload.name,
+      email: payload.email,
+      picture: payload.picture,
+      lastLoginAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    await usersCollection.updateOne(
+      { googleSub: payload.sub },
+      { $set: userDoc, $setOnInsert: { createdAt: new Date() } },
+      { upsert: true }
+    );
+
+    res.json({
+      success: true,
+      user: {
+        id: payload.sub,
+        name: payload.name,
+        email: payload.email,
+        picture: payload.picture,
+      },
+    });
+  } catch (err) {
+    console.error('Auth error:', err);
+    res.status(500).json({ error: 'Authentication failed' });
+  }
+});
+
+// Save trip route (requires Google ID token)
+app.post('/api/trips', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const payload = await verifyGoogleToken(idToken);
+
+    if (!payload) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!isDBConnected()) {
+      return res.status(503).json({ error: 'Database unavailable' });
+    }
+
+    const {
+      roomId,
+      tripName,
+      startLocation,
+      endLocation,
+      targetLocation,
+      path,
+      startedAt,
+      endedAt,
+      durationMs,
+    } = req.body || {};
+
+    if (!tripName || !startLocation || !endLocation || !Array.isArray(path) || path.length < 2) {
+      return res.status(400).json({ error: 'Invalid trip data' });
+    }
+
+    const tripsCollection = getTripsCollection();
+
+    const doc = {
+      userId: payload.sub,
+      userEmail: payload.email,
+      roomId: (roomId || '').toUpperCase(),
+      tripName,
+      startLocation,
+      endLocation,
+      targetLocation: targetLocation || null,
+      path,
+      startedAt: startedAt ? new Date(startedAt) : new Date(),
+      endedAt: endedAt ? new Date(endedAt) : new Date(),
+      durationMs: typeof durationMs === 'number' ? durationMs : null,
+      createdAt: new Date(),
+    };
+
+    const result = await tripsCollection.insertOne(doc);
+    res.json({ success: true, tripId: result.insertedId });
+  } catch (err) {
+    console.error('Trip save error:', err);
+    res.status(500).json({ error: 'Failed to save trip' });
+  }
+});
+
 // Hybrid storage: MongoDB + in-memory cache for real-time Socket.IO operations
 const rooms = new Map(); // roomId -> room data (cache)
 const userSockets = new Map(); // userId -> socketId
 const userRooms = new Map(); // userId -> roomId
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-function getDefaultRoomSettings() {
+function getDefaultRoomSettings(mode = "crowd") {
   return {
-    mode: "crowd",
+    mode,
     trackingRange: 30,
     targetLocation: null,
+    targetLabel: null,
     mapStyle: "osm",
   };
+}
+
+async function verifyGoogleToken(idToken) {
+  if (!idToken || !process.env.GOOGLE_CLIENT_ID) {
+    return null;
+  }
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    return ticket.getPayload();
+  } catch (err) {
+    console.error('Google token verification failed:', err.message);
+    return null;
+  }
 }
 
 // Helper: Calculate distance between two coordinates (Haversine formula)
@@ -123,10 +244,12 @@ async function getRoomFromCacheOrDb(roomId) {
 // Create a new room (Host)
 app.post('/api/rooms/create', async (req, res) => {
   try {
-    const { hostId, hostName } = req.body;
+    const { hostId, hostName, mode } = req.body;
     if (!hostId || !hostName) {
       return res.status(400).json({ error: 'hostId and hostName are required' });
     }
+
+    const normalizedMode = ["crowd", "tracking", "trip"].includes(mode) ? mode : "crowd";
 
     const roomId = crypto.randomUUID().slice(0, 8).toUpperCase();
     const room = {
@@ -136,7 +259,7 @@ app.post('/api/rooms/create', async (req, res) => {
       members: [],
       createdAt: Date.now(),
       isActive: true,
-      settings: getDefaultRoomSettings(),
+      settings: getDefaultRoomSettings(normalizedMode),
     };
 
     // Save to MongoDB (with safe fallback)
@@ -447,7 +570,20 @@ io.on('connection', (socket) => {
     const normalizedRoomId = (roomId || "").toUpperCase();
     let room = rooms.get(normalizedRoomId);
     if (!room) return;
-    if (userId !== room.hostId) return;
+    const isHost = userId === room.hostId;
+    const isTripMode = room.settings?.mode === 'trip';
+
+    if (settings && Object.prototype.hasOwnProperty.call(settings, 'mode')) {
+      delete settings.mode;
+    }
+
+    if (!isHost) {
+      if (!isTripMode) return;
+      const allowedKeys = ['targetLocation', 'targetLabel'];
+      const incomingKeys = Object.keys(settings || {});
+      const hasInvalid = incomingKeys.some(key => !allowedKeys.includes(key));
+      if (hasInvalid) return;
+    }
 
     const nextSettings = {
       ...(room.settings || getDefaultRoomSettings()),

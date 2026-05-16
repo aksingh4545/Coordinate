@@ -23,6 +23,10 @@ router.get('/nearby', async (req, res) => {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
+  if (!process.env.NOMINATIM_EMAIL) {
+    return res.status(400).json({ error: 'NOMINATIM_EMAIL is not configured' });
+  }
+
   try {
     let url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&key=${GOOGLE_MAPS_API_KEY}`;
     
@@ -53,24 +57,53 @@ router.get('/nearby', async (req, res) => {
 
 router.get('/search', async (req, res) => {
   const { query, lat, lng, radius = 2000 } = req.query;
-  
-  if (!query || !GOOGLE_MAPS_API_KEY) {
-    return res.status(400).json({ error: 'Missing query or API key' });
+
+  if (!query) {
+    return res.status(400).json({ error: 'Missing query' });
   }
 
   try {
-    let url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_API_KEY}`;
-    
-    if (lat && lng) {
-      url += `&location=${lat},${lng}&radius=${radius}`;
+    const searchParams = new URLSearchParams({
+      q: query,
+      format: 'json',
+      addressdetails: '1',
+      limit: '10',
+    });
+
+    if (process.env.NOMINATIM_EMAIL) {
+      searchParams.set('email', process.env.NOMINATIM_EMAIL);
     }
 
-    const response = await fetch(url);
+    const url = `https://nominatim.openstreetmap.org/search?${searchParams.toString()}`;
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': `Coordinator/1.0 (contact: ${process.env.NOMINATIM_EMAIL})`,
+        'Accept-Language': 'en',
+      }
+    });
+
+    if (!response.ok) {
+      console.error('Nominatim error:', response.status);
+      return res.status(response.status).json({ error: 'Nominatim search failed' });
+    }
+
     const data = await response.json();
-    
-    res.json(data);
+    const results = (data || []).map((item) => ({
+      name: item.display_name?.split(',')[0] || item.display_name || 'Unknown',
+      formatted_address: item.display_name || '',
+      geometry: {
+        location: {
+          lat: Number(item.lat),
+          lng: Number(item.lon),
+        },
+      },
+      place_id: item.place_id,
+      types: item.type ? [item.type] : [],
+    }));
+
+    res.json({ status: 'OK', results });
   } catch (error) {
-    console.error('Google Places API error:', error);
+    console.error('Nominatim search error:', error);
     res.status(500).json({ error: 'Failed to search places' });
   }
 });
