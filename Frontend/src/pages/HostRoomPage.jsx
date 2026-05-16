@@ -617,16 +617,17 @@ export default function HostRoomPage() {
       alert("Set a trip destination first!");
       return;
     }
+    const startLoc = tripStateRef.current.startLocation || { lat: currentUserLocation.lat - 0.01, lng: currentUserLocation.lng - 0.01 };
     tripStateRef.current.completed = true;
     tripStateRef.current.active = false;
     setPendingTrip({
       roomId: currentRoom?.roomId,
-      startLocation: tripStateRef.current.startLocation || currentUserLocation,
+      startLocation: startLoc,
       endLocation: currentUserLocation,
       targetLocation: roomSettings.targetLocation,
       startedAt: Date.now() - 600000,
       endedAt: Date.now(),
-      path: tripPath.length ? tripPath : [currentUserLocation],
+      path: tripPath.length >= 2 ? tripPath : [startLoc, currentUserLocation],
     });
     setShowTripModal(true);
   };
