@@ -32,6 +32,16 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
 
   const startTalking = async () => {
     try {
+      if (!socket || !normalizedRoomId) {
+        console.warn("Walkie talkie unavailable: socket or room missing");
+        return;
+      }
+
+      socket.emit("user:join", {
+        userId: currentUserId,
+        roomId: normalizedRoomId,
+      });
+
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         return;
       }

@@ -349,15 +349,18 @@ io.on('connection', (socket) => {
 
   // User joins with their ID
   socket.on('user:join', ({ userId, roomId }) => {
+    const normalizedRoomId = (roomId || "").toUpperCase();
+    if (!normalizedRoomId) return;
     userSockets.set(userId, socket.id);
-    userRooms.set(userId, roomId);
-    socket.join(roomId);
-    console.log(`User ${userId} joined room ${roomId}`);
+    userRooms.set(userId, normalizedRoomId);
+    socket.join(normalizedRoomId);
+    console.log(`User ${userId} joined room ${normalizedRoomId}`);
   });
 
   // Update user location
   socket.on('location:update', async ({ userId, roomId, lat, lng, name }) => {
-    let room = rooms.get(roomId);
+    const normalizedRoomId = (roomId || "").toUpperCase();
+    let room = rooms.get(normalizedRoomId);
     if (room) {
       // Update in cache
       let member = room.members.find(m => m.userId === userId);
@@ -387,7 +390,7 @@ io.on('connection', (socket) => {
       rooms.set(roomId, room);
 
       // Broadcast to all in room
-      io.to(roomId).emit('location:updated', {
+      io.to(normalizedRoomId).emit('location:updated', {
         userId,
         name,
         lat,
@@ -399,16 +402,17 @@ io.on('connection', (socket) => {
 
   // Get all current locations in room
   socket.on('room:sync', async ({ roomId }, callback) => {
-    let room = rooms.get(roomId);
+    const normalizedRoomId = (roomId || "").toUpperCase();
+    let room = rooms.get(normalizedRoomId);
     
     // If not in cache, fetch from MongoDB
     if (!room) {
       room = await safeMongoOperation(
         async () => {
           const roomsCollection = getRoomsCollection();
-          const foundRoom = await roomsCollection.findOne({ roomId });
+          const foundRoom = await roomsCollection.findOne({ roomId: normalizedRoomId });
           if (foundRoom) {
-            rooms.set(roomId, foundRoom);
+            rooms.set(normalizedRoomId, foundRoom);
           }
           return foundRoom;
         },
@@ -440,7 +444,8 @@ io.on('connection', (socket) => {
   });
 
   socket.on('room:settings:update', async ({ roomId, userId, settings }) => {
-    let room = rooms.get(roomId);
+    const normalizedRoomId = (roomId || "").toUpperCase();
+    let room = rooms.get(normalizedRoomId);
     if (!room) return;
     if (userId !== room.hostId) return;
 
@@ -454,22 +459,23 @@ io.on('connection', (socket) => {
     }
 
     room.settings = nextSettings;
-    rooms.set(roomId, room);
+    rooms.set(normalizedRoomId, room);
 
     if (isDBConnected()) {
       const roomsCollection = getRoomsCollection();
       roomsCollection.updateOne(
-        { roomId },
+        { roomId: normalizedRoomId },
         { $set: { settings: room.settings } }
       ).catch(err => console.error('Error updating settings in DB:', err.message));
     }
 
-    io.to(roomId).emit('room:settings', room.settings);
+    io.to(normalizedRoomId).emit('room:settings', room.settings);
   });
 
   socket.on('room:warning', ({ roomId, warning }) => {
-    if (!rooms.get(roomId)) return;
-    io.to(roomId).emit('room:warning', warning);
+    const normalizedRoomId = (roomId || "").toUpperCase();
+    if (!rooms.get(normalizedRoomId)) return;
+    io.to(normalizedRoomId).emit('room:warning', warning);
   });
 
   // ===== WALKIE-TALKIE HANDLERS =====
