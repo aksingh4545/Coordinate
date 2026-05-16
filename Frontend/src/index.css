@@ -1229,6 +1229,12 @@ body {
   box-shadow: 0 6px 14px rgba(139, 92, 246, 0.25);
 }
 
+.soft-pill-btn.watch {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.85), rgba(124, 58, 237, 0.85));
+  color: white;
+  box-shadow: 0 6px 14px rgba(139, 92, 246, 0.25);
+}
+
 .soft-pill-btn.leave {
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.85), rgba(220, 38, 38, 0.85));
   color: white;
@@ -1750,6 +1756,20 @@ body {
     padding: 0;
   }
 
+  .mobile-watch-btn {
+    background: rgba(139, 92, 246, 0.3);
+    border: 1px solid rgba(139, 92, 246, 0.5);
+    color: #ffffff;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
   /* Mobile Options Panel - Compact Floating */
   .mobile-options-panel {
     position: absolute;
@@ -1819,6 +1839,15 @@ body {
     text-align: center;
     width: 100%;
     font-size: 0.7rem;
+  }
+
+  .watch-option {
+    background: rgba(139, 92, 246, 0.15) !important;
+    border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  }
+
+  .watch-option .option-label {
+    color: #a78bfa !important;
   }
 
   .option-select {
@@ -1893,11 +1922,252 @@ body {
     font-weight: 700;
   }
 
-  .target-value {
-    color: #fbbf24;
-    font-size: 0.85rem;
-    font-weight: 800;
+.target-value {
+  color: #fbbf24;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+/* ===== Watch Mode Styles ===== */
+
+.watch-info-banner {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1015;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.watch-info-icon {
+  font-size: 1.5rem;
+}
+
+.watch-info-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.watch-info-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.watch-info-subtitle {
+  font-size: 12px;
+  color: #666666;
+}
+
+.mobile-watch-info {
+  position: absolute;
+  top: 60px;
+  left: 8px;
+  right: 8px;
+  padding: 8px 12px;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b21a8;
+  z-index: 95;
+}
+
+/* Watch Join Page */
+.watch-join-container {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 80px 16px 32px;
+}
+
+.watch-join-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  padding: 32px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.watch-join-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.watch-join-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.watch-join-subtitle {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 24px;
+}
+
+.watch-join-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.watch-join-info {
+  margin-top: 20px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+}
+
+.watch-join-info p {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.5;
+}
+
+/* Watcher List in Host Room */
+.watcher-list-panel {
+  position: fixed;
+  top: 80px;
+  right: 18px;
+  z-index: 2000;
+  width: 280px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
+}
+
+.watcher-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.watcher-list-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.watcher-list-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #666666;
+  cursor: pointer;
+}
+
+.watcher-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(139, 92, 246, 0.08);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.watcher-avatar {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: white;
+  font-weight: 700;
+}
+
+.watcher-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.watcher-empty {
+  text-align: center;
+  color: #666666;
+  font-size: 13px;
+  padding: 16px 0;
+}
+
+.watch-qr-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.watch-qr-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #666666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.watch-qr-code {
+  width: 100%;
+  border-radius: 12px;
+  background: white;
+  padding: 8px;
+}
+
+.watch-link-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 16px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 10px;
+  color: #6b21a8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.watch-link-btn:hover {
+  background: rgba(139, 92, 246, 0.2);
+}
+
+/* Mobile Watch Panel */
+@media (max-width: 640px) {
+  .watcher-list-panel {
+    position: absolute;
+    top: 60px;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    z-index: 95;
   }
+}
 
   @keyframes slideIn {
     from {

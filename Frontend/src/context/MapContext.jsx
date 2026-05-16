@@ -190,6 +190,7 @@ export function MapProvider({ children }) {
         hostId: currentUser.userId,
         hostName,
         isHost: true,
+        role: "host",
       });
 
       if (data.settings) {
@@ -214,7 +215,7 @@ export function MapProvider({ children }) {
   }, [socket, getOrCreateUser]);
 
   // Join an existing room (Member)
-  const joinRoom = useCallback(async (roomId, userName) => {
+  const joinRoom = useCallback(async (roomId, userName, role) => {
     setIsLoading(true);
     setError(null);
 
@@ -231,6 +232,7 @@ export function MapProvider({ children }) {
           roomId,
           userId: currentUser.userId,
           userName,
+          role,
         }),
       });
 
@@ -245,6 +247,7 @@ export function MapProvider({ children }) {
         hostId: data.room.hostId,
         hostName: data.room.hostName,
         isHost: false,
+        role: data.room.role || role || "member",
       });
 
       if (data.room.settings) {

@@ -36,6 +36,9 @@ export default function HostRoomPage() {
   } = useMap();
   const [qrCode, setQrCode] = useState("");
   const [showQR, setShowQR] = useState(false);
+  const [showWatchPanel, setShowWatchPanel] = useState(false);
+  const [watchQrCode, setWatchQrCode] = useState("");
+  const [watchers, setWatchers] = useState([]);
   const [memberList, setMemberList] = useState([]);
   const [showOptions, setShowOptions] = useState(false);
   const [showTargetNav, setShowTargetNav] = useState(false);
@@ -92,6 +95,7 @@ export default function HostRoomPage() {
   const currentUserLocation = locations.find((loc) => loc.userId === user?.userId) || null;
 
   const joinUrl = `${window.location.origin}/join/${roomId}`;
+  const watchUrl = `${window.location.origin}/watch/${roomId}`;
 
   useEffect(() => {
     if (!roomId || currentRoom) return;
@@ -129,6 +133,36 @@ export default function HostRoomPage() {
       .then(setQrCode)
       .catch((err) => console.error("QR generation error:", err));
   }, [roomId]);
+
+  useEffect(() => {
+    // Generate watch QR code
+    QRCode.toDataURL(watchUrl, { width: 256, height: 256 })
+      .then(setWatchQrCode)
+      .catch((err) => console.error("Watch QR generation error:", err));
+  }, [roomId]);
+
+  // Fetch watchers periodically
+  useEffect(() => {
+    if (roomSettings?.mode !== "trip") return;
+    
+    const fetchWatchers = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+        const response = await fetch(`${API_URL}/api/rooms/${roomId.toUpperCase()}`);
+        const data = await response.json();
+        if (data.success && data.room.members) {
+          const watchersList = data.room.members.filter(m => m.role === "watcher");
+          setWatchers(watchersList);
+        }
+      } catch (err) {
+        console.error("Failed to fetch watchers:", err);
+      }
+    };
+
+    fetchWatchers();
+    const interval = setInterval(fetchWatchers, 5000);
+    return () => clearInterval(interval);
+  }, [roomId, roomSettings?.mode]);
 
   useEffect(() => {
     // Sync locations periodically
@@ -595,6 +629,14 @@ export default function HostRoomPage() {
                 <span className="member-count">{locations.length}</span>
               </div>
               <div className="mobile-top-right">
+                {roomSettings?.mode === "trip" && (
+                  <button 
+                    className="mobile-watch-btn" 
+                    onClick={() => setShowWatchPanel(true)}
+                  >
+                    👁️ {watchers.length > 0 ? `(${watchers.length})` : ''}
+                  </button>
+                )}
                 {roomSettings?.mode && (
                   <span className={`mode-badge ${roomSettings.mode}`}>
                     {roomSettings.mode === "tracking" ? "TRK" : roomSettings.mode === "trip" ? "TRP" : "CRW"}
@@ -616,7 +658,14 @@ export default function HostRoomPage() {
               </div>
 
               <div className="room-topbar-right">
-                <button className="soft-pill-btn qr" onClick={() => setShowQR(true)}>Show QR</button>
+                {console.log("Mode:", roomSettings?.mode) || null}
+                {roomSettings?.mode === "trip" ? (
+                  <button className="soft-pill-btn watch" onClick={() => setShowWatchPanel(true)}>
+                    Watch {watchers.length > 0 ? `(${watchers.length})` : ''}
+                  </button>
+                ) : (
+                  <button className="soft-pill-btn qr" onClick={() => setShowQR(true)}>Show QR</button>
+                )}
                 <button className="soft-pill-btn leave" onClick={handleLeaveRoom}>LEAVE</button>
               </div>
             </>
@@ -724,22 +773,13 @@ export default function HostRoomPage() {
                     {isTripSearching ? "..." : "Go"}
                   </button>
                 </div>
-                {tripSearchError && <span className="option-hint">{tripSearchError}</span>}
-                {tripSuggestions.length > 0 && (
-                  <div className="trip-suggestions">
-                    {tripSuggestions.map((place) => (
-                      <button
-                        key={place.placeId}
-                        type="button"
-                        className="trip-suggestion"
-                        onClick={() => handleSelectTripPlace(place)}
-                      >
-                        <span className="trip-suggestion-name">{place.name}</span>
-                        <span className="trip-suggestion-address">{place.address}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+              </div>
+            )}
+
+            {roomSettings?.mode === "trip" && (
+              <div className="option-item watch-option" onClick={() => { setShowWatchPanel(true); setShowOptions(false); }}>
+                <span className="option-label">👁️ Watchers</span>
+                <span className="option-value">{watchers.length} watching</span>
               </div>
             )}
 
@@ -1071,6 +1111,46 @@ export default function HostRoomPage() {
 
         {/* Emergency SOS Overlay */}
         <SOSOverlay currentLocation={locations.find(loc => loc.userId === user?.userId)} />
+
+        {/* Watch Panel - Trip Mode Only */}
+        {showWatchPanel && (
+          <div className="watcher-list-panel">
+            <div className="watcher-list-header">
+              <span className="watcher-list-title">Watching Your Trip</span>
+              <button className="watcher-list-close" onClick={() => setShowWatchPanel(false)}>×</button>
+            </div>
+            
+            {watchers.length > 0 ? (
+              <div className="watcher-list">
+                {watchers.map((watcher) => (
+                  <div key={watcher.userId} className="watcher-list-item">
+                    <div className="watcher-avatar">
+                      {watcher.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="watcher-name">{watcher.name}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="watcher-empty">
+                No one is watching yet. Share the link below to let people watch your trip.
+              </div>
+            )}
+
+            <div className="watch-qr-section">
+              <span className="watch-qr-label">Share Watch Link</span>
+              {watchQrCode && (
+                <img src={watchQrCode} alt="Watch QR Code" className="watch-qr-code" />
+              )}
+              <button className="watch-link-btn" onClick={() => {
+                navigator.clipboard.writeText(watchUrl);
+                alert("Watch link copied!");
+              }}>
+                📋 Copy Watch Link
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

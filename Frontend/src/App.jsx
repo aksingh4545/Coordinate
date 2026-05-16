@@ -5,6 +5,7 @@ import HomePage from "./pages/HomePage";
 import HostRoomPage from "./pages/HostRoomPage";
 import JoinRoomPage from "./pages/JoinRoomPage";
 import MemberRoomPage from "./pages/MemberRoomPage";
+import WatchRoomPage from "./pages/WatchRoomPage";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/host/:roomId" element={<HostRoomPage />} />
           <Route path="/join/:roomId" element={<JoinRoomPage />} />
           <Route path="/room/:roomId" element={<MemberRoomPage />} />
+          <Route path="/watch/:roomId" element={<WatchRoomPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </MapProvider>

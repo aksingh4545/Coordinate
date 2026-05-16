@@ -296,7 +296,7 @@ app.post('/api/rooms/create', async (req, res) => {
 // Join a room (Mobile users)
 app.post('/api/rooms/join', async (req, res) => {
   try {
-    const { userId, userName } = req.body;
+    const { userId, userName, role } = req.body;
     const roomId = (req.body.roomId || "").toUpperCase();
     if (!roomId || !userId || !userName) {
       return res.status(400).json({ error: 'roomId, userId, and userName are required' });
@@ -327,15 +327,21 @@ app.post('/api/rooms/join', async (req, res) => {
       return res.status(400).json({ error: 'Room is no longer active' });
     }
 
+    const isTripMode = room.settings?.mode === 'trip';
+    const normalizedRole = isTripMode && userId !== room.hostId ? 'watcher' : 'member';
+    const requestedRole = role === 'watcher' && isTripMode ? 'watcher' : normalizedRole;
+
     // Check if user already in room
     let memberIndex = room.members.findIndex(m => m.userId === userId);
     if (memberIndex !== -1) {
       room.members[memberIndex].name = userName;
+      room.members[memberIndex].role = room.members[memberIndex].role || requestedRole;
       room.members[memberIndex].lastUpdate = Date.now();
     } else {
       room.members.push({
         userId,
         name: userName,
+        role: requestedRole,
         location: { lat: 0, lng: 0 },
         lastUpdate: Date.now(),
       });
@@ -362,6 +368,7 @@ app.post('/api/rooms/join', async (req, res) => {
         roomId: room.roomId,
         hostId: room.hostId,
         hostName: room.hostName,
+        role: requestedRole,
         settings: room.settings || getDefaultRoomSettings(),
       }
     });
@@ -401,6 +408,7 @@ app.get('/api/rooms/:roomId', async (req, res) => {
       name: member.name,
       location: member.location,
       lastUpdate: member.lastUpdate,
+      role: member.role || 'member',
     }));
 
     res.json({
@@ -487,6 +495,9 @@ io.on('connection', (socket) => {
     if (room) {
       // Update in cache
       let member = room.members.find(m => m.userId === userId);
+      if (member && member.role === 'watcher') {
+        return;
+      }
       if (member) {
         member.location = { lat, lng };
         member.lastUpdate = Date.now();
@@ -495,6 +506,7 @@ io.on('connection', (socket) => {
         room.members.push({
           userId,
           name,
+          role: userId === room.hostId ? 'host' : 'member',
           location: { lat, lng },
           lastUpdate: Date.now(),
         });
