@@ -109,28 +109,19 @@ export default function MemberRoomPage() {
     });
   };
 
-  const startLocationTracking = async () => {
-    if (!currentRoom || !user || watchIdRef.current !== null) return;
+  const startLocationTracking = () => {
+    if (!currentRoom || !user) {
+      setError("Room not joined yet");
+      return;
+    }
+
+    if (watchIdRef.current !== null) return;
 
     if (!navigator.geolocation) {
       setLocationStatus("error");
       setLocationError("Geolocation is not supported by your browser.");
       setError("Geolocation is not supported by your browser");
       return;
-    }
-
-    try {
-      if (navigator.permissions?.query) {
-        const status = await navigator.permissions.query({ name: "geolocation" });
-        if (status.state === "denied") {
-          setLocationStatus("error");
-          setLocationError("Location permission denied. Enable location in browser settings.");
-          setError("Location permission denied. Please enable location access.");
-          return;
-        }
-      }
-    } catch (err) {
-      console.warn("Unable to query geolocation permissions:", err);
     }
 
     setLocationStatus("prompt");
@@ -144,6 +135,7 @@ export default function MemberRoomPage() {
     };
 
     const onError = (error) => {
+      watchIdRef.current = null;
       let errorMsg = "Unable to get your location.";
       if (error.code === 1) {
         errorMsg = "Location permission denied. Please enable location access.";
@@ -156,12 +148,6 @@ export default function MemberRoomPage() {
       setLocationError(errorMsg);
       setError(errorMsg);
     };
-
-    navigator.geolocation.getCurrentPosition(onSuccess, onError, {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 0,
-    });
 
     watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
       enableHighAccuracy: true,

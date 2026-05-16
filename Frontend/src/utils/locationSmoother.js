@@ -35,6 +35,7 @@ export class LocationSmoother {
     this.positionHistory = [];
     this.maxHistorySize = options.maxHistorySize || 10;
     this.minAccuracy = options.minAccuracy || 50;
+    this.lastSmoothed = null;
     
     this.kalmanLat = new SimpleKalmanFilter(this.processNoise, this.measurementNoise);
     this.kalmanLng = new SimpleKalmanFilter(this.processNoise, this.measurementNoise);
@@ -43,12 +44,12 @@ export class LocationSmoother {
   filter(lat, lng, accuracy = null, speed = null) {
     if (accuracy && accuracy > this.minAccuracy) {
       console.log(`⚠️ Low accuracy (${accuracy}m), using previous estimate`);
-      return null;
+      return this.lastSmoothed || this.getWeightedAverage() || { lat, lng };
     }
 
     if (speed !== null && speed > 50) {
       console.log(`⚠️ Suspicious speed (${speed}m/s), ignoring`);
-      return null;
+      return this.lastSmoothed || this.getWeightedAverage() || { lat, lng };
     }
 
     const measurementNoise = this.calculateMeasurementNoise(accuracy);
@@ -63,7 +64,8 @@ export class LocationSmoother {
       this.positionHistory.shift();
     }
 
-    return { lat: smoothedLat, lng: smoothedLng };
+    this.lastSmoothed = { lat: smoothedLat, lng: smoothedLng };
+    return this.lastSmoothed;
   }
 
   calculateMeasurementNoise(accuracy) {
