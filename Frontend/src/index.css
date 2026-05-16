@@ -2157,6 +2157,24 @@ body {
   background: rgba(139, 92, 246, 0.2);
 }
 
+.debug-trip-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.debug-trip-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
 /* Mobile Watch Panel */
 @media (max-width: 640px) {
   .watcher-list-panel {

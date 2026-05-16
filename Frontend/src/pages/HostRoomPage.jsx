@@ -54,6 +54,7 @@ export default function HostRoomPage() {
   const [waitingForLogin, setWaitingForLogin] = useState(false);
   const [locationStatus, setLocationStatus] = useState("idle");
   const [locationError, setLocationError] = useState("");
+  const [debugMode, setDebugMode] = useState(false);
   const mapRef = useRef(null);
   const watchIdRef = useRef(null);
   const warningRef = useRef({ signature: null, sentAt: 0 });
@@ -611,6 +612,25 @@ export default function HostRoomPage() {
     }
   };
 
+  const handleSimulateTripComplete = () => {
+    if (!currentUserLocation || !roomSettings?.targetLocation) {
+      alert("Set a trip destination first!");
+      return;
+    }
+    tripStateRef.current.completed = true;
+    tripStateRef.current.active = false;
+    setPendingTrip({
+      roomId: currentRoom?.roomId,
+      startLocation: tripStateRef.current.startLocation || currentUserLocation,
+      endLocation: currentUserLocation,
+      targetLocation: roomSettings.targetLocation,
+      startedAt: Date.now() - 600000,
+      endedAt: Date.now(),
+      path: tripPath.length ? tripPath : [currentUserLocation],
+    });
+    setShowTripModal(true);
+  };
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(joinUrl);
     alert("Join link copied to clipboard!");
@@ -961,6 +981,18 @@ export default function HostRoomPage() {
                 Satellite
               </button>
             </div>
+
+            {roomSettings?.mode === "trip" && (
+              <div className="control-row" style={{ marginTop: "8px" }}>
+                <button
+                  type="button"
+                  className="debug-trip-btn"
+                  onClick={handleSimulateTripComplete}
+                >
+                  🧪 Simulate Arrival
+                </button>
+              </div>
+            )}
           </div>
         )}
 
