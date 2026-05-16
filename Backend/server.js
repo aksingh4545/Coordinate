@@ -101,6 +101,9 @@ app.post('/api/auth/google', async (req, res) => {
   }
 });
 
+// In-memory fallback for trips
+const tripsMemory = [];
+
 // Save trip route (requires Google ID token)
 app.post('/api/trips', async (req, res) => {
   try {
@@ -115,15 +118,6 @@ app.post('/api/trips', async (req, res) => {
 
     if (!payload) {
       return res.status(401).json({ error: 'Invalid token' });
-    }
-
-    if (!isDBConnected()) {
-      return res.status(503).json({ error: 'Database unavailable - please configure MongoDB' });
-    }
-
-    const tripsCollection = getTripsCollection();
-    if (!tripsCollection) {
-      return res.status(503).json({ error: 'Trips collection not available' });
     }
 
     const {
@@ -159,9 +153,26 @@ app.post('/api/trips', async (req, res) => {
       createdAt: new Date(),
     };
 
-    const result = await tripsCollection.insertOne(doc);
-    console.log('Trip saved successfully:', result.insertedId);
-    res.json({ success: true, tripId: result.insertedId });
+    // Try MongoDB first, fallback to in-memory
+    if (isDBConnected()) {
+      try {
+        const tripsCollection = getTripsCollection();
+        if (tripsCollection) {
+          const result = await tripsCollection.insertOne(doc);
+          console.log('Trip saved to MongoDB:', result.insertedId);
+          return res.json({ success: true, tripId: result.insertedId });
+        }
+      } catch (mongoErr) {
+        console.warn('MongoDB write failed, using in-memory fallback:', mongoErr.message);
+      }
+    }
+
+    // Fallback to in-memory storage
+    const tripId = 'mem_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    doc._id = tripId;
+    tripsMemory.push(doc);
+    console.log('Trip saved to in-memory storage:', tripId);
+    res.json({ success: true, tripId: tripId, isMemory: true });
   } catch (err) {
     console.error('Trip save error:', err.message, err.stack);
     res.status(500).json({ error: 'Failed to save trip: ' + err.message });
