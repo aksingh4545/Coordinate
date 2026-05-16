@@ -554,19 +554,6 @@ export default function HostRoomPage() {
               </button>
             </div>
 
-            <div className="control-row">
-              <label className="control-label" htmlFor="mapStyle">Map</label>
-              <select
-                id="mapStyle"
-                className="control-input"
-                value={roomSettings?.mapStyle || "osm"}
-                onChange={handleMapStyleChange}
-              >
-                <option value="osm">OSM Standard</option>
-                <option value="satellite">Satellite</option>
-              </select>
-            </div>
-
             {roomSettings?.mode === "tracking" && (
               <div className="control-row">
                 <label className="control-label" htmlFor="trackingRange">Range (m)</label>
@@ -598,6 +585,24 @@ export default function HostRoomPage() {
             {isTargeting && (
               <div className="control-hint">Click on map to place the target pin.</div>
             )}
+
+            <div className="control-divider"></div>
+
+            <div className="control-row map-row">
+              <span className="control-label">Map</span>
+              <button
+                className={`map-btn ${roomSettings?.mapStyle === "osm" ? "active" : ""}`}
+                onClick={() => updateRoomSettings({ mapStyle: "osm" })}
+              >
+                OSM Standard
+              </button>
+              <button
+                className={`map-btn ${roomSettings?.mapStyle === "satellite" ? "active" : ""}`}
+                onClick={() => updateRoomSettings({ mapStyle: "satellite" })}
+              >
+                Satellite
+              </button>
+            </div>
           </div>
         )}
 
