@@ -1,0 +1,5178 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {
+    "hyperedges": [
+      {
+        "nodes": [
+          "DEPLOYMENT_CHECKLIST",
+          "DEPLOY_QUICK",
+          "RENDER_FIX",
+          "RENDER_YAML"
+        ],
+        "relation": "deployment_config_group",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0
+      },
+      {
+        "nodes": [
+          "GIT_WORKFLOW_GUIDE",
+          "QUICK_GIT_GUIDE"
+        ],
+        "relation": "git_docs_group",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0
+      },
+      {
+        "nodes": [
+          "API_CREATE_ROOM",
+          "API_JOIN_ROOM",
+          "API_GET_ROOM",
+          "API_LEAVE_ROOM"
+        ],
+        "relation": "room_api_endpoints",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0
+      },
+      {
+        "nodes": [
+          "API_PLACES_NEARBY",
+          "API_PLACES_SEARCH",
+          "API_PLACES_DIRECTIONS",
+          "API_PLACES_DETAILS"
+        ],
+        "relation": "places_api_endpoints",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0
+      },
+      {
+        "nodes": [
+          "MAPVIEW",
+          "LIVECHAT",
+          "SOS_OVERLAY",
+          "SMART_MEETING"
+        ],
+        "relation": "frontend_components",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0
+      },
+      {
+        "nodes": [
+          "HOMEPAGE",
+          "HOST_ROOM_PAGE",
+          "MEMBER_ROOM_PAGE",
+          "JOIN_ROOM_PAGE"
+        ],
+        "relation": "frontend_pages",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0
+      },
+      {
+        "nodes": [
+          "MAIN_BRANCH",
+          "PRODUCTION_BRANCH",
+          "DEVELOP_BRANCH"
+        ],
+        "relation": "git_branches",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "label": "db.js",
+      "file_type": "code",
+      "source_file": "Backend/db.js",
+      "source_location": "L1",
+      "id": "backend_db_js",
+      "community": 0,
+      "norm_label": "db.js"
+    },
+    {
+      "label": "connectDB()",
+      "file_type": "code",
+      "source_file": "Backend/db.js",
+      "source_location": "L21",
+      "id": "backend_db_connectdb",
+      "community": 0,
+      "norm_label": "connectdb()"
+    },
+    {
+      "label": "getDB()",
+      "file_type": "code",
+      "source_file": "Backend/db.js",
+      "source_location": "L68",
+      "id": "backend_db_getdb",
+      "community": 0,
+      "norm_label": "getdb()"
+    },
+    {
+      "label": "getRoomsCollection()",
+      "file_type": "code",
+      "source_file": "Backend/db.js",
+      "source_location": "L72",
+      "id": "backend_db_getroomscollection",
+      "community": 0,
+      "norm_label": "getroomscollection()"
+    },
+    {
+      "label": "getUsersCollection()",
+      "file_type": "code",
+      "source_file": "Backend/db.js",
+      "source_location": "L79",
+      "id": "backend_db_getuserscollection",
+      "community": 0,
+      "norm_label": "getuserscollection()"
+    },
+    {
+      "label": "getTripsCollection()",
+      "file_type": "code",
+      "source_file": "Backend/db.js",
+      "source_location": "L86",
+      "id": "backend_db_gettripscollection",
+      "community": 0,
+      "norm_label": "gettripscollection()"
+    },
+    {
+      "label": "isDBConnected()",
+      "file_type": "code",
+      "source_file": "Backend/db.js",
+      "source_location": "L93",
+      "id": "backend_db_isdbconnected",
+      "community": 0,
+      "norm_label": "isdbconnected()"
+    },
+    {
+      "label": "closeDB()",
+      "file_type": "code",
+      "source_file": "Backend/db.js",
+      "source_location": "L97",
+      "id": "backend_db_closedb",
+      "community": 0,
+      "norm_label": "closedb()"
+    },
+    {
+      "label": "mongodb-test.js",
+      "file_type": "code",
+      "source_file": "Backend/mongodb-test.js",
+      "source_location": "L1",
+      "id": "backend_mongodb_test_js",
+      "community": 3,
+      "norm_label": "mongodb-test.js"
+    },
+    {
+      "label": "client",
+      "file_type": "code",
+      "source_file": "Backend/mongodb-test.js",
+      "source_location": "L4",
+      "id": "backend_mongodb_test_client",
+      "community": 3,
+      "norm_label": "client"
+    },
+    {
+      "label": "test()",
+      "file_type": "code",
+      "source_file": "Backend/mongodb-test.js",
+      "source_location": "L6",
+      "id": "backend_mongodb_test_test",
+      "community": 3,
+      "norm_label": "test()"
+    },
+    {
+      "label": "package.json",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L1",
+      "id": "backend_package_json",
+      "community": 6,
+      "norm_label": "package.json"
+    },
+    {
+      "label": "name",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L2",
+      "id": "backend_package_name",
+      "community": 6,
+      "norm_label": "name"
+    },
+    {
+      "label": "version",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L3",
+      "id": "backend_package_version",
+      "community": 6,
+      "norm_label": "version"
+    },
+    {
+      "label": "type",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L4",
+      "id": "backend_package_type",
+      "community": 6,
+      "norm_label": "type"
+    },
+    {
+      "label": "main",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L5",
+      "id": "backend_package_main",
+      "community": 6,
+      "norm_label": "main"
+    },
+    {
+      "label": "scripts",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L6",
+      "id": "backend_package_scripts",
+      "community": 6,
+      "norm_label": "scripts"
+    },
+    {
+      "label": "test",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L7",
+      "id": "backend_package_scripts_test",
+      "community": 6,
+      "norm_label": "test"
+    },
+    {
+      "label": "start",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L8",
+      "id": "backend_package_scripts_start",
+      "community": 6,
+      "norm_label": "start"
+    },
+    {
+      "label": "dev",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L9",
+      "id": "backend_package_scripts_dev",
+      "community": 6,
+      "norm_label": "dev"
+    },
+    {
+      "label": "keywords",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L11",
+      "id": "backend_package_keywords",
+      "community": 6,
+      "norm_label": "keywords"
+    },
+    {
+      "label": "author",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L12",
+      "id": "backend_package_author",
+      "community": 6,
+      "norm_label": "author"
+    },
+    {
+      "label": "license",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L13",
+      "id": "backend_package_license",
+      "community": 6,
+      "norm_label": "license"
+    },
+    {
+      "label": "description",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L14",
+      "id": "backend_package_description",
+      "community": 6,
+      "norm_label": "description"
+    },
+    {
+      "label": "dependencies",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L15",
+      "id": "backend_package_dependencies",
+      "community": 3,
+      "norm_label": "dependencies"
+    },
+    {
+      "label": "cors",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L16",
+      "id": "backend_package_dependencies_cors",
+      "community": 3,
+      "norm_label": "cors"
+    },
+    {
+      "label": "dotenv",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L17",
+      "id": "backend_package_dependencies_dotenv",
+      "community": 3,
+      "norm_label": "dotenv"
+    },
+    {
+      "label": "express",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L18",
+      "id": "backend_package_dependencies_express",
+      "community": 7,
+      "norm_label": "express"
+    },
+    {
+      "label": "google-auth-library",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L19",
+      "id": "backend_package_dependencies_google_auth_library",
+      "community": 3,
+      "norm_label": "google-auth-library"
+    },
+    {
+      "label": "mongodb",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L20",
+      "id": "backend_package_dependencies_mongodb",
+      "community": 3,
+      "norm_label": "mongodb"
+    },
+    {
+      "label": "qrcode",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L21",
+      "id": "backend_package_dependencies_qrcode",
+      "community": 7,
+      "norm_label": "qrcode"
+    },
+    {
+      "label": "socket.io",
+      "file_type": "code",
+      "source_file": "Backend/package.json",
+      "source_location": "L22",
+      "id": "backend_package_dependencies_socket_io",
+      "community": 3,
+      "norm_label": "socket.io"
+    },
+    {
+      "label": "render.js",
+      "file_type": "code",
+      "source_file": "Backend/render.js",
+      "source_location": "L1",
+      "id": "backend_render_js",
+      "community": 3,
+      "norm_label": "render.js"
+    },
+    {
+      "label": "testConnection()",
+      "file_type": "code",
+      "source_file": "Backend/render.js",
+      "source_location": "L10",
+      "id": "backend_render_testconnection",
+      "community": 3,
+      "norm_label": "testconnection()"
+    },
+    {
+      "label": "server.js",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L1",
+      "id": "backend_server_js",
+      "community": 0,
+      "norm_label": "server.js"
+    },
+    {
+      "label": "app",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L15",
+      "id": "backend_server_app",
+      "community": 0,
+      "norm_label": "app"
+    },
+    {
+      "label": "server",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L16",
+      "id": "backend_server_server",
+      "community": 0,
+      "norm_label": "server"
+    },
+    {
+      "label": "io",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L17",
+      "id": "backend_server_io",
+      "community": 0,
+      "norm_label": "io"
+    },
+    {
+      "label": "usersCollection",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L73",
+      "id": "backend_server_userscollection",
+      "community": 0,
+      "norm_label": "userscollection"
+    },
+    {
+      "label": "userDoc",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L74",
+      "id": "backend_server_userdoc",
+      "community": 0,
+      "norm_label": "userdoc"
+    },
+    {
+      "label": "tripsCollection",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L135",
+      "id": "backend_server_tripscollection",
+      "community": 0,
+      "norm_label": "tripscollection"
+    },
+    {
+      "label": "doc",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L137",
+      "id": "backend_server_doc",
+      "community": 0,
+      "norm_label": "doc"
+    },
+    {
+      "label": "rooms",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L161",
+      "id": "backend_server_rooms",
+      "community": 0,
+      "norm_label": "rooms"
+    },
+    {
+      "label": "userSockets",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L162",
+      "id": "backend_server_usersockets",
+      "community": 0,
+      "norm_label": "usersockets"
+    },
+    {
+      "label": "userRooms",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L163",
+      "id": "backend_server_userrooms",
+      "community": 0,
+      "norm_label": "userrooms"
+    },
+    {
+      "label": "googleClient",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L164",
+      "id": "backend_server_googleclient",
+      "community": 0,
+      "norm_label": "googleclient"
+    },
+    {
+      "label": "getDefaultRoomSettings()",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L166",
+      "id": "backend_server_getdefaultroomsettings",
+      "community": 0,
+      "norm_label": "getdefaultroomsettings()"
+    },
+    {
+      "label": "verifyGoogleToken()",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L176",
+      "id": "backend_server_verifygoogletoken",
+      "community": 0,
+      "norm_label": "verifygoogletoken()"
+    },
+    {
+      "label": "calculateDistance()",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L194",
+      "id": "backend_server_calculatedistance",
+      "community": 0,
+      "norm_label": "calculatedistance()"
+    },
+    {
+      "label": "safeMongoOperation()",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L210",
+      "id": "backend_server_safemongooperation",
+      "community": 0,
+      "norm_label": "safemongooperation()"
+    },
+    {
+      "label": "getRoomFromCacheOrDb()",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L223",
+      "id": "backend_server_getroomfromcacheordb",
+      "community": 0,
+      "norm_label": "getroomfromcacheordb()"
+    },
+    {
+      "label": "roomId",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L254",
+      "id": "backend_server_roomid",
+      "community": 0,
+      "norm_label": "roomid"
+    },
+    {
+      "label": "room",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L255",
+      "id": "backend_server_room",
+      "community": 0,
+      "norm_label": "room"
+    },
+    {
+      "label": "roomsCollection",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L268",
+      "id": "backend_server_roomscollection",
+      "community": 0,
+      "norm_label": "roomscollection"
+    },
+    {
+      "label": "memberIndex",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L335",
+      "id": "backend_server_memberindex",
+      "community": 0,
+      "norm_label": "memberindex"
+    },
+    {
+      "label": "membersWithLocation",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L406",
+      "id": "backend_server_memberswithlocation",
+      "community": 0,
+      "norm_label": "memberswithlocation"
+    },
+    {
+      "label": "normalizedRoomId",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L483",
+      "id": "backend_server_normalizedroomid",
+      "community": 0,
+      "norm_label": "normalizedroomid"
+    },
+    {
+      "label": "member",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L497",
+      "id": "backend_server_member",
+      "community": 0,
+      "norm_label": "member"
+    },
+    {
+      "label": "locations",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L563",
+      "id": "backend_server_locations",
+      "community": 0,
+      "norm_label": "locations"
+    },
+    {
+      "label": "allowedKeys",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L594",
+      "id": "backend_server_allowedkeys",
+      "community": 0,
+      "norm_label": "allowedkeys"
+    },
+    {
+      "label": "incomingKeys",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L595",
+      "id": "backend_server_incomingkeys",
+      "community": 0,
+      "norm_label": "incomingkeys"
+    },
+    {
+      "label": "hasInvalid",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L596",
+      "id": "backend_server_hasinvalid",
+      "community": 0,
+      "norm_label": "hasinvalid"
+    },
+    {
+      "label": "nextSettings",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L600",
+      "id": "backend_server_nextsettings",
+      "community": 0,
+      "norm_label": "nextsettings"
+    },
+    {
+      "label": "targetSocketId",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L657",
+      "id": "backend_server_targetsocketid",
+      "community": 0,
+      "norm_label": "targetsocketid"
+    },
+    {
+      "label": "startServer()",
+      "file_type": "code",
+      "source_file": "Backend/server.js",
+      "source_location": "L763",
+      "id": "backend_server_startserver",
+      "community": 0,
+      "norm_label": "startserver()"
+    },
+    {
+      "label": "vercel.json",
+      "file_type": "code",
+      "source_file": "Backend/vercel.json",
+      "source_location": "L1",
+      "id": "backend_vercel_json",
+      "community": 12,
+      "norm_label": "vercel.json"
+    },
+    {
+      "label": "version",
+      "file_type": "code",
+      "source_file": "Backend/vercel.json",
+      "source_location": "L2",
+      "id": "backend_vercel_version",
+      "community": 12,
+      "norm_label": "version"
+    },
+    {
+      "label": "builds",
+      "file_type": "code",
+      "source_file": "Backend/vercel.json",
+      "source_location": "L3",
+      "id": "backend_vercel_builds",
+      "community": 12,
+      "norm_label": "builds"
+    },
+    {
+      "label": "group.js",
+      "file_type": "code",
+      "source_file": "Backend/Routes/group.js",
+      "source_location": "L1",
+      "id": "backend_routes_group_js",
+      "community": 7,
+      "norm_label": "group.js"
+    },
+    {
+      "label": "router",
+      "file_type": "code",
+      "source_file": "Backend/Routes/group.js",
+      "source_location": "L7",
+      "id": "routes_group_router",
+      "community": 7,
+      "norm_label": "router"
+    },
+    {
+      "label": "group",
+      "file_type": "code",
+      "source_file": "Backend/Routes/group.js",
+      "source_location": "L20",
+      "id": "routes_group_group",
+      "community": 7,
+      "norm_label": "group"
+    },
+    {
+      "label": "places.js",
+      "file_type": "code",
+      "source_file": "Backend/Routes/places.js",
+      "source_location": "L1",
+      "id": "backend_routes_places_js",
+      "community": 7,
+      "norm_label": "places.js"
+    },
+    {
+      "label": "router",
+      "file_type": "code",
+      "source_file": "Backend/Routes/places.js",
+      "source_location": "L6",
+      "id": "routes_places_router",
+      "community": 7,
+      "norm_label": "router"
+    },
+    {
+      "label": "contentType",
+      "file_type": "code",
+      "source_file": "Backend/Routes/places.js",
+      "source_location": "L40",
+      "id": "routes_places_contenttype",
+      "community": 7,
+      "norm_label": "contenttype"
+    },
+    {
+      "label": "searchParams",
+      "file_type": "code",
+      "source_file": "Backend/Routes/places.js",
+      "source_location": "L66",
+      "id": "routes_places_searchparams",
+      "community": 7,
+      "norm_label": "searchparams"
+    },
+    {
+      "label": "results",
+      "file_type": "code",
+      "source_file": "Backend/Routes/places.js",
+      "source_location": "L91",
+      "id": "routes_places_results",
+      "community": 7,
+      "norm_label": "results"
+    },
+    {
+      "label": "eslint.config.js",
+      "file_type": "code",
+      "source_file": "Frontend/eslint.config.js",
+      "source_location": "L1",
+      "id": "frontend_eslint_config_js",
+      "community": 14,
+      "norm_label": "eslint.config.js"
+    },
+    {
+      "label": "package.json",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L1",
+      "id": "frontend_package_json",
+      "community": 4,
+      "norm_label": "package.json"
+    },
+    {
+      "label": "name",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L2",
+      "id": "frontend_package_name",
+      "community": 4,
+      "norm_label": "name"
+    },
+    {
+      "label": "private",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L3",
+      "id": "frontend_package_private",
+      "community": 4,
+      "norm_label": "private"
+    },
+    {
+      "label": "version",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L4",
+      "id": "frontend_package_version",
+      "community": 4,
+      "norm_label": "version"
+    },
+    {
+      "label": "type",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L5",
+      "id": "frontend_package_type",
+      "community": 4,
+      "norm_label": "type"
+    },
+    {
+      "label": "scripts",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L6",
+      "id": "frontend_package_scripts",
+      "community": 4,
+      "norm_label": "scripts"
+    },
+    {
+      "label": "dev",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L7",
+      "id": "frontend_package_scripts_dev",
+      "community": 4,
+      "norm_label": "dev"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L8",
+      "id": "frontend_package_scripts_build",
+      "community": 4,
+      "norm_label": "build"
+    },
+    {
+      "label": "lint",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L9",
+      "id": "frontend_package_scripts_lint",
+      "community": 4,
+      "norm_label": "lint"
+    },
+    {
+      "label": "preview",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L10",
+      "id": "frontend_package_scripts_preview",
+      "community": 4,
+      "norm_label": "preview"
+    },
+    {
+      "label": "dependencies",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L12",
+      "id": "frontend_package_dependencies",
+      "community": 5,
+      "norm_label": "dependencies"
+    },
+    {
+      "label": "@tailwindcss/vite",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L13",
+      "id": "frontend_package_dependencies_tailwindcss_vite",
+      "community": 5,
+      "norm_label": "@tailwindcss/vite"
+    },
+    {
+      "label": "axios",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L14",
+      "id": "frontend_package_dependencies_axios",
+      "community": 5,
+      "norm_label": "axios"
+    },
+    {
+      "label": "leaflet",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L15",
+      "id": "frontend_package_dependencies_leaflet",
+      "community": 5,
+      "norm_label": "leaflet"
+    },
+    {
+      "label": "lucide-react",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L16",
+      "id": "frontend_package_dependencies_lucide_react",
+      "community": 5,
+      "norm_label": "lucide-react"
+    },
+    {
+      "label": "qrcode",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L17",
+      "id": "frontend_package_dependencies_qrcode",
+      "community": 7,
+      "norm_label": "qrcode"
+    },
+    {
+      "label": "react",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L18",
+      "id": "frontend_package_dependencies_react",
+      "community": 5,
+      "norm_label": "react"
+    },
+    {
+      "label": "react-dom",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L19",
+      "id": "frontend_package_dependencies_react_dom",
+      "community": 5,
+      "norm_label": "react-dom"
+    },
+    {
+      "label": "react-leaflet",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L20",
+      "id": "frontend_package_dependencies_react_leaflet",
+      "community": 5,
+      "norm_label": "react-leaflet"
+    },
+    {
+      "label": "react-router-dom",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L21",
+      "id": "frontend_package_dependencies_react_router_dom",
+      "community": 5,
+      "norm_label": "react-router-dom"
+    },
+    {
+      "label": "socket.io-client",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L22",
+      "id": "frontend_package_dependencies_socket_io_client",
+      "community": 5,
+      "norm_label": "socket.io-client"
+    },
+    {
+      "label": "tailwindcss",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L23",
+      "id": "frontend_package_dependencies_tailwindcss",
+      "community": 5,
+      "norm_label": "tailwindcss"
+    },
+    {
+      "label": "uuid",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L24",
+      "id": "frontend_package_dependencies_uuid",
+      "community": 5,
+      "norm_label": "uuid"
+    },
+    {
+      "label": "devDependencies",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L26",
+      "id": "frontend_package_devdependencies",
+      "community": 4,
+      "norm_label": "devdependencies"
+    },
+    {
+      "label": "@eslint/js",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L27",
+      "id": "frontend_package_devdependencies_eslint_js",
+      "community": 4,
+      "norm_label": "@eslint/js"
+    },
+    {
+      "label": "@types/react",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L28",
+      "id": "frontend_package_devdependencies_types_react",
+      "community": 4,
+      "norm_label": "@types/react"
+    },
+    {
+      "label": "@types/react-dom",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L29",
+      "id": "frontend_package_devdependencies_types_react_dom",
+      "community": 4,
+      "norm_label": "@types/react-dom"
+    },
+    {
+      "label": "@vitejs/plugin-react",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L30",
+      "id": "frontend_package_devdependencies_vitejs_plugin_react",
+      "community": 4,
+      "norm_label": "@vitejs/plugin-react"
+    },
+    {
+      "label": "eslint",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L31",
+      "id": "frontend_package_devdependencies_eslint",
+      "community": 4,
+      "norm_label": "eslint"
+    },
+    {
+      "label": "eslint-plugin-react-hooks",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L32",
+      "id": "frontend_package_devdependencies_eslint_plugin_react_hooks",
+      "community": 4,
+      "norm_label": "eslint-plugin-react-hooks"
+    },
+    {
+      "label": "eslint-plugin-react-refresh",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L33",
+      "id": "frontend_package_devdependencies_eslint_plugin_react_refresh",
+      "community": 4,
+      "norm_label": "eslint-plugin-react-refresh"
+    },
+    {
+      "label": "globals",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L34",
+      "id": "frontend_package_devdependencies_globals",
+      "community": 4,
+      "norm_label": "globals"
+    },
+    {
+      "label": "vite",
+      "file_type": "code",
+      "source_file": "Frontend/package.json",
+      "source_location": "L35",
+      "id": "frontend_package_devdependencies_vite",
+      "community": 2,
+      "norm_label": "vite"
+    },
+    {
+      "label": "vercel.json",
+      "file_type": "code",
+      "source_file": "Frontend/vercel.json",
+      "source_location": "L1",
+      "id": "frontend_vercel_json",
+      "community": 13,
+      "norm_label": "vercel.json"
+    },
+    {
+      "label": "rewrites",
+      "file_type": "code",
+      "source_file": "Frontend/vercel.json",
+      "source_location": "L2",
+      "id": "frontend_vercel_rewrites",
+      "community": 13,
+      "norm_label": "rewrites"
+    },
+    {
+      "label": "vite.config.js",
+      "file_type": "code",
+      "source_file": "Frontend/vite.config.js",
+      "source_location": "L1",
+      "id": "frontend_vite_config_js",
+      "community": 2,
+      "norm_label": "vite.config.js"
+    },
+    {
+      "label": "App.jsx",
+      "file_type": "code",
+      "source_file": "Frontend/src/App.jsx",
+      "source_location": "L1",
+      "id": "frontend_src_app_jsx",
+      "community": 1,
+      "norm_label": "app.jsx"
+    },
+    {
+      "label": "App()",
+      "file_type": "code",
+      "source_file": "Frontend/src/App.jsx",
+      "source_location": "L10",
+      "id": "src_app_app",
+      "community": 1,
+      "norm_label": "app()"
+    },
+    {
+      "label": "main.jsx",
+      "file_type": "code",
+      "source_file": "Frontend/src/main.jsx",
+      "source_location": "L1",
+      "id": "frontend_src_main_jsx",
+      "community": 1,
+      "norm_label": "main.jsx"
+    },
+    {
+      "label": "CoordinatorLogo.jsx",
+      "file_type": "code",
+      "source_file": "Frontend/src/assets/CoordinatorLogo.jsx",
+      "source_location": "L1",
+      "id": "frontend_src_assets_coordinatorlogo_jsx",
+      "community": 1,
+      "norm_label": "coordinatorlogo.jsx"
+    },
+    {
+      "label": "CoordinatorLogo()",
+      "file_type": "code",
+      "source_file": "Frontend/src/assets/CoordinatorLogo.jsx",
+      "source_location": "L1",
+      "id": "assets_coordinatorlogo_coordinatorlogo",
+      "community": 1,
+      "norm_label": "coordinatorlogo()"
+    },
+    {
+      "label": "AuthMenu.jsx",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/AuthMenu.jsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_authmenu_jsx",
+      "community": 1,
+      "norm_label": "authmenu.jsx"
+    },
+    {
+      "label": "decodeJwt()",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/AuthMenu.jsx",
+      "source_location": "L7",
+      "id": "components_authmenu_decodejwt",
+      "community": 1,
+      "norm_label": "decodejwt()"
+    },
+    {
+      "label": "AuthMenu()",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/AuthMenu.jsx",
+      "source_location": "L17",
+      "id": "components_authmenu_authmenu",
+      "community": 1,
+      "norm_label": "authmenu()"
+    },
+    {
+      "label": "CallModal.jsx",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/CallModal.jsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_callmodal_jsx",
+      "community": 1,
+      "norm_label": "callmodal.jsx"
+    },
+    {
+      "label": "CallModal()",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/CallModal.jsx",
+      "source_location": "L4",
+      "id": "components_callmodal_callmodal",
+      "community": 1,
+      "norm_label": "callmodal()"
+    },
+    {
+      "label": "LiveChat.jsx",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/LiveChat.jsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_livechat_jsx",
+      "community": 1,
+      "norm_label": "livechat.jsx"
+    },
+    {
+      "label": "LiveChat()",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/LiveChat.jsx",
+      "source_location": "L5",
+      "id": "components_livechat_livechat",
+      "community": 1,
+      "norm_label": "livechat()"
+    },
+    {
+      "label": "MapView.jsx",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_mapview_jsx",
+      "community": 8,
+      "norm_label": "mapview.jsx"
+    },
+    {
+      "label": "MapUpdater()",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L8",
+      "id": "components_mapview_mapupdater",
+      "community": 8,
+      "norm_label": "mapupdater()"
+    },
+    {
+      "label": "MapClickHandler()",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L31",
+      "id": "components_mapview_mapclickhandler",
+      "community": 8,
+      "norm_label": "mapclickhandler()"
+    },
+    {
+      "label": "MapInteractionTracker()",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L43",
+      "id": "components_mapview_mapinteractiontracker",
+      "community": 8,
+      "norm_label": "mapinteractiontracker()"
+    },
+    {
+      "label": "ZoomHandler()",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L53",
+      "id": "components_mapview_zoomhandler",
+      "community": 8,
+      "norm_label": "zoomhandler()"
+    },
+    {
+      "label": "decodePolyline()",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L63",
+      "id": "components_mapview_decodepolyline",
+      "community": 8,
+      "norm_label": "decodepolyline()"
+    },
+    {
+      "label": "RouteUpdaterWithState()",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L101",
+      "id": "components_mapview_routeupdaterwithstate",
+      "community": 8,
+      "norm_label": "routeupdaterwithstate()"
+    },
+    {
+      "label": "createMarkerIcon()",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L146",
+      "id": "components_mapview_createmarkericon",
+      "community": 8,
+      "norm_label": "createmarkericon()"
+    },
+    {
+      "label": "createTargetIcon()",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L175",
+      "id": "components_mapview_createtargeticon",
+      "community": 8,
+      "norm_label": "createtargeticon()"
+    },
+    {
+      "label": "MapView",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L204",
+      "id": "components_mapview_mapview",
+      "community": 8,
+      "norm_label": "mapview"
+    },
+    {
+      "label": "SOSOverlay.jsx",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/SOSOverlay.jsx",
+      "source_location": "L1",
+      "id": "frontend_src_components_sosoverlay_jsx",
+      "community": 1,
+      "norm_label": "sosoverlay.jsx"
+    },
+    {
+      "label": "SOSOverlay()",
+      "file_type": "code",
+      "source_file": "Frontend/src/components/SOSOverlay.jsx",
+      "source_location": "L4",
+      "id": "components_sosoverlay_sosoverlay",
+      "community": 1,
+      "norm_label": "sosoverlay()"
+    },
+    {
+      "label": "MapContext.jsx",
+      "file_type": "code",
+      "source_file": "Frontend/src/context/MapContext.jsx",
+      "source_location": "L1",
+      "id": "frontend_src_context_mapcontext_jsx",
+      "community": 1,
+      "norm_label": "mapcontext.jsx"
+    },
+    {
+      "label": "MapContext",
+      "file_type": "code",
+      "source_file": "Frontend/src/context/MapContext.jsx",
+      "source_location": "L4",
+      "id": "context_mapcontext_mapcontext",
+      "community": 1,
+      "norm_label": "mapcontext"
+    },
+    {
+      "label": "MapProvider()",
+      "file_type": "code",
+      "source_file": "Frontend/src/context/MapContext.jsx",
+      "source_location": "L8",
+      "id": "context_mapcontext_mapprovider",
+      "community": 1,
+      "norm_label": "mapprovider()"
+    },
+    {
+      "label": "useMap()",
+      "file_type": "code",
+      "source_file": "Frontend/src/context/MapContext.jsx",
+      "source_location": "L528",
+      "id": "context_mapcontext_usemap",
+      "community": 1,
+      "norm_label": "usemap()"
+    },
+    {
+      "label": "HomePage.jsx",
+      "file_type": "code",
+      "source_file": "Frontend/src/pages/HomePage.jsx",
+      "source_location": "L1",
+      "id": "frontend_src_pages_homepage_jsx",
+      "community": 1,
+      "norm_label": "homepage.jsx"
+    },
+    {
+      "label": "HomePage()",
+      "file_type": "code",
+      "source_file": "Frontend/src/pages/HomePage.jsx",
+      "source_location": "L7",
+      "id": "pages_homepage_homepage",
+      "community": 1,
+      "norm_label": "homepage()"
+    },
+    {
+      "label": "HostRoomPage.jsx",
+      "file_type": "code",
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L1",
+      "id": "frontend_src_pages_hostroompage_jsx",
+      "community": 1,
+      "norm_label": "hostroompage.jsx"
+    },
+    {
+      "label": "HostRoomPage()",
+      "file_type": "code",
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L13",
+      "id": "pages_hostroompage_hostroompage",
+      "community": 1,
+      "norm_label": "hostroompage()"
+    },
+    {
+      "label": "JoinRoomPage.jsx",
+      "file_type": "code",
+      "source_file": "Frontend/src/pages/JoinRoomPage.jsx",
+      "source_location": "L1",
+      "id": "frontend_src_pages_joinroompage_jsx",
+      "community": 1,
+      "norm_label": "joinroompage.jsx"
+    },
+    {
+      "label": "JoinRoomPage()",
+      "file_type": "code",
+      "source_file": "Frontend/src/pages/JoinRoomPage.jsx",
+      "source_location": "L6",
+      "id": "pages_joinroompage_joinroompage",
+      "community": 1,
+      "norm_label": "joinroompage()"
+    },
+    {
+      "label": "MemberRoomPage.jsx",
+      "file_type": "code",
+      "source_file": "Frontend/src/pages/MemberRoomPage.jsx",
+      "source_location": "L1",
+      "id": "frontend_src_pages_memberroompage_jsx",
+      "community": 1,
+      "norm_label": "memberroompage.jsx"
+    },
+    {
+      "label": "MemberRoomPage()",
+      "file_type": "code",
+      "source_file": "Frontend/src/pages/MemberRoomPage.jsx",
+      "source_location": "L12",
+      "id": "pages_memberroompage_memberroompage",
+      "community": 1,
+      "norm_label": "memberroompage()"
+    },
+    {
+      "label": "WatchRoomPage.jsx",
+      "file_type": "code",
+      "source_file": "Frontend/src/pages/WatchRoomPage.jsx",
+      "source_location": "L1",
+      "id": "frontend_src_pages_watchroompage_jsx",
+      "community": 1,
+      "norm_label": "watchroompage.jsx"
+    },
+    {
+      "label": "WatchRoomPage()",
+      "file_type": "code",
+      "source_file": "Frontend/src/pages/WatchRoomPage.jsx",
+      "source_location": "L9",
+      "id": "pages_watchroompage_watchroompage",
+      "community": 1,
+      "norm_label": "watchroompage()"
+    },
+    {
+      "label": "authStorage.js",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/authStorage.js",
+      "source_location": "L1",
+      "id": "frontend_src_utils_authstorage_js",
+      "community": 1,
+      "norm_label": "authstorage.js"
+    },
+    {
+      "label": "getAuthUser()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/authStorage.js",
+      "source_location": "L3",
+      "id": "utils_authstorage_getauthuser",
+      "community": 1,
+      "norm_label": "getauthuser()"
+    },
+    {
+      "label": "setAuthUser()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/authStorage.js",
+      "source_location": "L12",
+      "id": "utils_authstorage_setauthuser",
+      "community": 1,
+      "norm_label": "setauthuser()"
+    },
+    {
+      "label": "clearAuthUser()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/authStorage.js",
+      "source_location": "L20",
+      "id": "utils_authstorage_clearauthuser",
+      "community": 1,
+      "norm_label": "clearauthuser()"
+    },
+    {
+      "label": "locationSmoother.js",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L1",
+      "id": "frontend_src_utils_locationsmoother_js",
+      "community": 1,
+      "norm_label": "locationsmoother.js"
+    },
+    {
+      "label": "SimpleKalmanFilter",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L1",
+      "id": "utils_locationsmoother_simplekalmanfilter",
+      "community": 11,
+      "norm_label": "simplekalmanfilter"
+    },
+    {
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L2",
+      "id": "utils_locationsmoother_simplekalmanfilter_constructor",
+      "community": 11,
+      "norm_label": ".constructor()"
+    },
+    {
+      "label": ".filter()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L9",
+      "id": "utils_locationsmoother_simplekalmanfilter_filter",
+      "community": 11,
+      "norm_label": ".filter()"
+    },
+    {
+      "label": ".reset()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L24",
+      "id": "utils_locationsmoother_simplekalmanfilter_reset",
+      "community": 11,
+      "norm_label": ".reset()"
+    },
+    {
+      "label": "LocationSmoother",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L30",
+      "id": "utils_locationsmoother_locationsmoother",
+      "community": 10,
+      "norm_label": "locationsmoother"
+    },
+    {
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L31",
+      "id": "utils_locationsmoother_locationsmoother_constructor",
+      "community": 10,
+      "norm_label": ".constructor()"
+    },
+    {
+      "label": ".filter()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L44",
+      "id": "utils_locationsmoother_locationsmoother_filter",
+      "community": 10,
+      "norm_label": ".filter()"
+    },
+    {
+      "label": ".calculateMeasurementNoise()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L71",
+      "id": "utils_locationsmoother_locationsmoother_calculatemeasurementnoise",
+      "community": 10,
+      "norm_label": ".calculatemeasurementnoise()"
+    },
+    {
+      "label": ".getWeightedAverage()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L80",
+      "id": "utils_locationsmoother_locationsmoother_getweightedaverage",
+      "community": 10,
+      "norm_label": ".getweightedaverage()"
+    },
+    {
+      "label": ".reset()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L100",
+      "id": "utils_locationsmoother_locationsmoother_reset",
+      "community": 10,
+      "norm_label": ".reset()"
+    },
+    {
+      "label": "calculateAccuracy()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L107",
+      "id": "utils_locationsmoother_calculateaccuracy",
+      "community": 1,
+      "norm_label": "calculateaccuracy()"
+    },
+    {
+      "label": "GpsAccuracyManager",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L114",
+      "id": "utils_locationsmoother_gpsaccuracymanager",
+      "community": 9,
+      "norm_label": "gpsaccuracymanager"
+    },
+    {
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L115",
+      "id": "utils_locationsmoother_gpsaccuracymanager_constructor",
+      "community": 9,
+      "norm_label": ".constructor()"
+    },
+    {
+      "label": ".addReading()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L120",
+      "id": "utils_locationsmoother_gpsaccuracymanager_addreading",
+      "community": 9,
+      "norm_label": ".addreading()"
+    },
+    {
+      "label": ".getBestAccuracy()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L127",
+      "id": "utils_locationsmoother_gpsaccuracymanager_getbestaccuracy",
+      "community": 9,
+      "norm_label": ".getbestaccuracy()"
+    },
+    {
+      "label": ".getAverageAccuracy()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L132",
+      "id": "utils_locationsmoother_gpsaccuracymanager_getaverageaccuracy",
+      "community": 9,
+      "norm_label": ".getaverageaccuracy()"
+    },
+    {
+      "label": ".isReliable()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L138",
+      "id": "utils_locationsmoother_gpsaccuracymanager_isreliable",
+      "community": 9,
+      "norm_label": ".isreliable()"
+    },
+    {
+      "label": "placesService.js",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/placesService.js",
+      "source_location": "L1",
+      "id": "frontend_src_utils_placesservice_js",
+      "community": 1,
+      "norm_label": "placesservice.js"
+    },
+    {
+      "label": "placesService",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/placesService.js",
+      "source_location": "L4",
+      "id": "utils_placesservice_placesservice",
+      "community": 1,
+      "norm_label": "placesservice"
+    },
+    {
+      "label": "calculateMeetingPoint()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/placesService.js",
+      "source_location": "L197",
+      "id": "utils_placesservice_calculatemeetingpoint",
+      "community": 1,
+      "norm_label": "calculatemeetingpoint()"
+    },
+    {
+      "label": "calculateHaversineDistance()",
+      "file_type": "code",
+      "source_file": "Frontend/src/utils/placesService.js",
+      "source_location": "L233",
+      "id": "utils_placesservice_calculatehaversinedistance",
+      "community": 1,
+      "norm_label": "calculatehaversinedistance()"
+    },
+    {
+      "label": "Deployment Checklist",
+      "file_type": "document",
+      "id": "DEPLOYMENT_CHECKLIST",
+      "community": 3,
+      "norm_label": "deployment checklist"
+    },
+    {
+      "label": "Deploy Quick Guide",
+      "file_type": "document",
+      "id": "DEPLOY_QUICK",
+      "community": 3,
+      "norm_label": "deploy quick guide"
+    },
+    {
+      "label": "Git Workflow Guide",
+      "file_type": "document",
+      "id": "GIT_WORKFLOW_GUIDE",
+      "community": 3,
+      "norm_label": "git workflow guide"
+    },
+    {
+      "label": "Quick Git Guide",
+      "file_type": "document",
+      "id": "QUICK_GIT_GUIDE",
+      "community": 3,
+      "norm_label": "quick git guide"
+    },
+    {
+      "label": "Coordinator Project README",
+      "file_type": "document",
+      "id": "README",
+      "community": 2,
+      "norm_label": "coordinator project readme"
+    },
+    {
+      "label": "GitHub Actions Deploy Frontend",
+      "file_type": "document",
+      "id": "DEPLOY_FRONTEND_YML",
+      "community": 3,
+      "norm_label": "github actions deploy frontend"
+    },
+    {
+      "label": "Render Backend Config",
+      "file_type": "document",
+      "id": "RENDER_YAML",
+      "community": 2,
+      "norm_label": "render backend config"
+    },
+    {
+      "label": "Render Fix Guide",
+      "file_type": "document",
+      "id": "RENDER_FIX",
+      "community": 3,
+      "norm_label": "render fix guide"
+    },
+    {
+      "label": "Frontend index.html",
+      "file_type": "document",
+      "id": "INDEX_HTML",
+      "community": 2,
+      "norm_label": "frontend index.html"
+    },
+    {
+      "label": "Frontend README",
+      "file_type": "document",
+      "id": "FRONTEND_README",
+      "community": 15,
+      "norm_label": "frontend readme"
+    },
+    {
+      "label": "Vite Favicon",
+      "file_type": "image",
+      "id": "VITE_SVG",
+      "community": 2,
+      "norm_label": "vite favicon"
+    },
+    {
+      "label": "World Map Background",
+      "file_type": "image",
+      "id": "WORLDMAP_JPG",
+      "community": 5,
+      "norm_label": "world map background"
+    },
+    {
+      "label": "React Logo",
+      "file_type": "image",
+      "id": "REACT_SVG",
+      "community": 16,
+      "norm_label": "react logo"
+    },
+    {
+      "label": "MERN Stack",
+      "file_type": "rationale",
+      "id": "MERN_STACK",
+      "community": 2,
+      "norm_label": "mern stack"
+    },
+    {
+      "label": "Socket.io",
+      "file_type": "rationale",
+      "id": "SOCKET_IO",
+      "community": 3,
+      "norm_label": "socket.io"
+    },
+    {
+      "label": "Vite",
+      "file_type": "rationale",
+      "id": "VITE",
+      "community": 2,
+      "norm_label": "vite"
+    },
+    {
+      "label": "React 19",
+      "file_type": "rationale",
+      "id": "REACT_19",
+      "community": 2,
+      "norm_label": "react 19"
+    },
+    {
+      "label": "Tailwind CSS 4",
+      "file_type": "rationale",
+      "id": "TAILWIND_CSS",
+      "community": 2,
+      "norm_label": "tailwind css 4"
+    },
+    {
+      "label": "React Leaflet",
+      "file_type": "rationale",
+      "id": "REACT_LEAFLET",
+      "community": 5,
+      "norm_label": "react leaflet"
+    },
+    {
+      "label": "React Router",
+      "file_type": "rationale",
+      "id": "REACT_ROUTER",
+      "community": 2,
+      "norm_label": "react router"
+    },
+    {
+      "label": "Node.js",
+      "file_type": "rationale",
+      "id": "NODE_JS",
+      "community": 2,
+      "norm_label": "node.js"
+    },
+    {
+      "label": "Express",
+      "file_type": "rationale",
+      "id": "EXPRESS",
+      "community": 7,
+      "norm_label": "express"
+    },
+    {
+      "label": "MongoDB",
+      "file_type": "rationale",
+      "id": "MONGODB",
+      "community": 3,
+      "norm_label": "mongodb"
+    },
+    {
+      "label": "Google Places API",
+      "file_type": "rationale",
+      "id": "GOOGLE_PLACES_API",
+      "community": 2,
+      "norm_label": "google places api"
+    },
+    {
+      "label": "QRCode Library",
+      "file_type": "rationale",
+      "id": "QRCODE",
+      "community": 7,
+      "norm_label": "qrcode library"
+    },
+    {
+      "label": "Kalman Filter",
+      "file_type": "rationale",
+      "id": "KALMAN_FILTER",
+      "community": 2,
+      "norm_label": "kalman filter"
+    },
+    {
+      "label": "Vercel",
+      "file_type": "rationale",
+      "id": "VERCEL",
+      "community": 3,
+      "norm_label": "vercel"
+    },
+    {
+      "label": "Render",
+      "file_type": "rationale",
+      "id": "RENDER",
+      "community": 3,
+      "norm_label": "render"
+    },
+    {
+      "label": "GitHub Actions",
+      "file_type": "rationale",
+      "id": "GITHUB_ACTIONS",
+      "community": 3,
+      "norm_label": "github actions"
+    },
+    {
+      "label": "POST /api/rooms/create",
+      "file_type": "rationale",
+      "id": "API_CREATE_ROOM",
+      "community": 3,
+      "norm_label": "post /api/rooms/create"
+    },
+    {
+      "label": "POST /api/rooms/join",
+      "file_type": "rationale",
+      "id": "API_JOIN_ROOM",
+      "community": 2,
+      "norm_label": "post /api/rooms/join"
+    },
+    {
+      "label": "GET /api/rooms/:roomId",
+      "file_type": "rationale",
+      "id": "API_GET_ROOM",
+      "community": 2,
+      "norm_label": "get /api/rooms/:roomid"
+    },
+    {
+      "label": "POST /api/rooms/:roomId/leave",
+      "file_type": "rationale",
+      "id": "API_LEAVE_ROOM",
+      "community": 2,
+      "norm_label": "post /api/rooms/:roomid/leave"
+    },
+    {
+      "label": "GET /api/places/nearby",
+      "file_type": "rationale",
+      "id": "API_PLACES_NEARBY",
+      "community": 2,
+      "norm_label": "get /api/places/nearby"
+    },
+    {
+      "label": "GET /api/places/search",
+      "file_type": "rationale",
+      "id": "API_PLACES_SEARCH",
+      "community": 2,
+      "norm_label": "get /api/places/search"
+    },
+    {
+      "label": "GET /api/places/directions",
+      "file_type": "rationale",
+      "id": "API_PLACES_DIRECTIONS",
+      "community": 2,
+      "norm_label": "get /api/places/directions"
+    },
+    {
+      "label": "GET /api/places/details",
+      "file_type": "rationale",
+      "id": "API_PLACES_DETAILS",
+      "community": 2,
+      "norm_label": "get /api/places/details"
+    },
+    {
+      "label": "MapView.jsx Component",
+      "file_type": "rationale",
+      "id": "MAPVIEW",
+      "community": 2,
+      "norm_label": "mapview.jsx component"
+    },
+    {
+      "label": "LiveChat.jsx Component",
+      "file_type": "rationale",
+      "id": "LIVECHAT",
+      "community": 2,
+      "norm_label": "livechat.jsx component"
+    },
+    {
+      "label": "SOSOverlay.jsx Component",
+      "file_type": "rationale",
+      "id": "SOS_OVERLAY",
+      "community": 2,
+      "norm_label": "sosoverlay.jsx component"
+    },
+    {
+      "label": "SmartMeetingPoint.jsx Component",
+      "file_type": "rationale",
+      "id": "SMART_MEETING",
+      "community": 2,
+      "norm_label": "smartmeetingpoint.jsx component"
+    },
+    {
+      "label": "HomePage.jsx Page",
+      "file_type": "rationale",
+      "id": "HOMEPAGE",
+      "community": 2,
+      "norm_label": "homepage.jsx page"
+    },
+    {
+      "label": "HostRoomPage.jsx Page",
+      "file_type": "rationale",
+      "id": "HOST_ROOM_PAGE",
+      "community": 2,
+      "norm_label": "hostroompage.jsx page"
+    },
+    {
+      "label": "MemberRoomPage.jsx Page",
+      "file_type": "rationale",
+      "id": "MEMBER_ROOM_PAGE",
+      "community": 2,
+      "norm_label": "memberroompage.jsx page"
+    },
+    {
+      "label": "JoinRoomPage.jsx Page",
+      "file_type": "rationale",
+      "id": "JOIN_ROOM_PAGE",
+      "community": 2,
+      "norm_label": "joinroompage.jsx page"
+    },
+    {
+      "label": "MapContext.jsx Context",
+      "file_type": "rationale",
+      "id": "MAP_CONTEXT",
+      "community": 2,
+      "norm_label": "mapcontext.jsx context"
+    },
+    {
+      "label": "locationSmoother.js Utility",
+      "file_type": "rationale",
+      "id": "LOCATION_SMOOTHER",
+      "community": 2,
+      "norm_label": "locationsmoother.js utility"
+    },
+    {
+      "label": "placesService.js Utility",
+      "file_type": "rationale",
+      "id": "PLACES_SERVICE",
+      "community": 2,
+      "norm_label": "placesservice.js utility"
+    },
+    {
+      "label": "server.js Backend Entry",
+      "file_type": "rationale",
+      "id": "SERVER_JS",
+      "community": 2,
+      "norm_label": "server.js backend entry"
+    },
+    {
+      "label": "db.js MongoDB Operations",
+      "file_type": "rationale",
+      "id": "DB_JS",
+      "community": 2,
+      "norm_label": "db.js mongodb operations"
+    },
+    {
+      "label": "group.js Routes",
+      "file_type": "rationale",
+      "id": "GROUP_ROUTES",
+      "community": 2,
+      "norm_label": "group.js routes"
+    },
+    {
+      "label": "places.js Routes",
+      "file_type": "rationale",
+      "id": "PLACES_ROUTES",
+      "community": 2,
+      "norm_label": "places.js routes"
+    },
+    {
+      "label": "main Branch",
+      "file_type": "rationale",
+      "id": "MAIN_BRANCH",
+      "community": 3,
+      "norm_label": "main branch"
+    },
+    {
+      "label": "production Branch",
+      "file_type": "rationale",
+      "id": "PRODUCTION_BRANCH",
+      "community": 3,
+      "norm_label": "production branch"
+    },
+    {
+      "label": "develop Branch",
+      "file_type": "rationale",
+      "id": "DEVELOP_BRANCH",
+      "community": 3,
+      "norm_label": "develop branch"
+    }
+  ],
+  "links": [
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/db.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "backend_db_js",
+      "target": "MONGODB",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/db.js",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "backend_db_js",
+      "target": "backend_db_connectdb",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/db.js",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "backend_db_js",
+      "target": "backend_db_getdb",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/db.js",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "backend_db_js",
+      "target": "backend_db_getroomscollection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/db.js",
+      "source_location": "L79",
+      "weight": 1.0,
+      "source": "backend_db_js",
+      "target": "backend_db_getuserscollection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/db.js",
+      "source_location": "L86",
+      "weight": 1.0,
+      "source": "backend_db_js",
+      "target": "backend_db_gettripscollection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/db.js",
+      "source_location": "L93",
+      "weight": 1.0,
+      "source": "backend_db_js",
+      "target": "backend_db_isdbconnected",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/db.js",
+      "source_location": "L97",
+      "weight": 1.0,
+      "source": "backend_db_js",
+      "target": "backend_db_closedb",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_db_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_db_connectdb",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "Backend/server.js",
+      "source_location": "L765",
+      "weight": 1.0,
+      "source": "backend_server_startserver",
+      "target": "backend_db_connectdb"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_db_getroomscollection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_db_getuserscollection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_db_gettripscollection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_db_isdbconnected",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "Backend/server.js",
+      "source_location": "L211",
+      "weight": 1.0,
+      "source": "backend_server_safemongooperation",
+      "target": "backend_db_isdbconnected"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/mongodb-test.js",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "backend_mongodb_test_js",
+      "target": "MONGODB",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/mongodb-test.js",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "backend_mongodb_test_js",
+      "target": "backend_mongodb_test_client",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/mongodb-test.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "backend_mongodb_test_js",
+      "target": "backend_mongodb_test_test",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "backend_package_json",
+      "target": "backend_package_name",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "backend_package_json",
+      "target": "backend_package_version",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "backend_package_json",
+      "target": "backend_package_type",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "backend_package_json",
+      "target": "backend_package_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "backend_package_json",
+      "target": "backend_package_scripts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "backend_package_json",
+      "target": "backend_package_keywords",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "backend_package_json",
+      "target": "backend_package_author",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "backend_package_json",
+      "target": "backend_package_license",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "backend_package_json",
+      "target": "backend_package_description",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "backend_package_json",
+      "target": "backend_package_dependencies",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "backend_package_scripts",
+      "target": "backend_package_scripts_test",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "backend_package_scripts",
+      "target": "backend_package_scripts_start",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "backend_package_scripts",
+      "target": "backend_package_scripts_dev",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "backend_package_dependencies",
+      "target": "backend_package_dependencies_cors",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "backend_package_dependencies",
+      "target": "backend_package_dependencies_dotenv",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "backend_package_dependencies",
+      "target": "backend_package_dependencies_express",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "backend_package_dependencies",
+      "target": "backend_package_dependencies_google_auth_library",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "backend_package_dependencies",
+      "target": "backend_package_dependencies_mongodb",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "backend_package_dependencies",
+      "target": "backend_package_dependencies_qrcode",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "backend_package_dependencies",
+      "target": "backend_package_dependencies_socket_io",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L18",
+      "weight": 1.0,
+      "context": "import",
+      "source": "backend_package_dependencies_express",
+      "target": "EXPRESS",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L20",
+      "weight": 1.0,
+      "context": "import",
+      "source": "backend_package_dependencies_mongodb",
+      "target": "MONGODB",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L21",
+      "weight": 1.0,
+      "context": "import",
+      "source": "backend_package_dependencies_qrcode",
+      "target": "QRCODE",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/package.json",
+      "source_location": "L22",
+      "weight": 1.0,
+      "context": "import",
+      "source": "backend_package_dependencies_socket_io",
+      "target": "SOCKET_IO",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/render.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "backend_render_js",
+      "target": "MONGODB",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/render.js",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "backend_render_js",
+      "target": "backend_render_testconnection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "EXPRESS",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "SOCKET_IO",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "QRCODE",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_routes_places_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_app",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_server",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_io",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L73",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_userscollection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L74",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_userdoc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L135",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_tripscollection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L137",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_doc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L161",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_rooms",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L162",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_usersockets",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L163",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_userrooms",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L164",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_googleclient",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L166",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_getdefaultroomsettings",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L176",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_verifygoogletoken",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L194",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_calculatedistance",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L210",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_safemongooperation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L223",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_getroomfromcacheordb",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L714",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_roomid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L717",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_room",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L736",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_roomscollection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L335",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_memberindex",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L406",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_memberswithlocation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L700",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_normalizedroomid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L497",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_member",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L563",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_locations",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L594",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_allowedkeys",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L595",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_incomingkeys",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L596",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_hasinvalid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L600",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_nextsettings",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L669",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_targetsocketid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L763",
+      "weight": 1.0,
+      "source": "backend_server_js",
+      "target": "backend_server_startserver",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/server.js",
+      "source_location": "L227",
+      "weight": 1.0,
+      "source": "backend_server_getroomfromcacheordb",
+      "target": "backend_server_safemongooperation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/vercel.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "backend_vercel_json",
+      "target": "backend_vercel_version",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/vercel.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "backend_vercel_json",
+      "target": "backend_vercel_builds",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/Routes/group.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "backend_routes_group_js",
+      "target": "EXPRESS",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/Routes/group.js",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "backend_routes_group_js",
+      "target": "QRCODE",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/Routes/group.js",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "backend_routes_group_js",
+      "target": "routes_group_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/Routes/group.js",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "backend_routes_group_js",
+      "target": "routes_group_group",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/Routes/places.js",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "backend_routes_places_js",
+      "target": "EXPRESS",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/Routes/places.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "backend_routes_places_js",
+      "target": "routes_places_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/Routes/places.js",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "backend_routes_places_js",
+      "target": "routes_places_contenttype",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/Routes/places.js",
+      "source_location": "L66",
+      "weight": 1.0,
+      "source": "backend_routes_places_js",
+      "target": "routes_places_searchparams",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Backend/Routes/places.js",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "backend_routes_places_js",
+      "target": "routes_places_results",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "frontend_package_json",
+      "target": "frontend_package_name",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_package_json",
+      "target": "frontend_package_private",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "frontend_package_json",
+      "target": "frontend_package_version",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "frontend_package_json",
+      "target": "frontend_package_type",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "frontend_package_json",
+      "target": "frontend_package_scripts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "frontend_package_json",
+      "target": "frontend_package_dependencies",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "frontend_package_json",
+      "target": "frontend_package_devdependencies",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "frontend_package_scripts",
+      "target": "frontend_package_scripts_dev",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "frontend_package_scripts",
+      "target": "frontend_package_scripts_build",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "frontend_package_scripts",
+      "target": "frontend_package_scripts_lint",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "frontend_package_scripts",
+      "target": "frontend_package_scripts_preview",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "frontend_package_dependencies",
+      "target": "frontend_package_dependencies_tailwindcss_vite",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "frontend_package_dependencies",
+      "target": "frontend_package_dependencies_axios",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "frontend_package_dependencies",
+      "target": "frontend_package_dependencies_leaflet",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "frontend_package_dependencies",
+      "target": "frontend_package_dependencies_lucide_react",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "frontend_package_dependencies",
+      "target": "frontend_package_dependencies_qrcode",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "frontend_package_dependencies",
+      "target": "frontend_package_dependencies_react",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "frontend_package_dependencies",
+      "target": "frontend_package_dependencies_react_dom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "frontend_package_dependencies",
+      "target": "frontend_package_dependencies_react_leaflet",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "frontend_package_dependencies",
+      "target": "frontend_package_dependencies_react_router_dom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "frontend_package_dependencies",
+      "target": "frontend_package_dependencies_socket_io_client",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "frontend_package_dependencies",
+      "target": "frontend_package_dependencies_tailwindcss",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "frontend_package_dependencies",
+      "target": "frontend_package_dependencies_uuid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L17",
+      "weight": 1.0,
+      "context": "import",
+      "source": "frontend_package_dependencies_qrcode",
+      "target": "QRCODE",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L20",
+      "weight": 1.0,
+      "context": "import",
+      "source": "frontend_package_dependencies_react_leaflet",
+      "target": "REACT_LEAFLET",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "frontend_package_devdependencies",
+      "target": "frontend_package_devdependencies_eslint_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "frontend_package_devdependencies",
+      "target": "frontend_package_devdependencies_types_react",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "frontend_package_devdependencies",
+      "target": "frontend_package_devdependencies_types_react_dom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "frontend_package_devdependencies",
+      "target": "frontend_package_devdependencies_vitejs_plugin_react",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "frontend_package_devdependencies",
+      "target": "frontend_package_devdependencies_eslint",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "frontend_package_devdependencies",
+      "target": "frontend_package_devdependencies_eslint_plugin_react_hooks",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "frontend_package_devdependencies",
+      "target": "frontend_package_devdependencies_eslint_plugin_react_refresh",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "frontend_package_devdependencies",
+      "target": "frontend_package_devdependencies_globals",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "frontend_package_devdependencies",
+      "target": "frontend_package_devdependencies_vite",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/package.json",
+      "source_location": "L35",
+      "weight": 1.0,
+      "context": "import",
+      "source": "frontend_package_devdependencies_vite",
+      "target": "VITE",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/vercel.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "frontend_vercel_json",
+      "target": "frontend_vercel_rewrites",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/vite.config.js",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_vite_config_js",
+      "target": "VITE",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/App.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_src_app_jsx",
+      "target": "frontend_src_context_mapcontext_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/App.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_src_app_jsx",
+      "target": "context_mapcontext_mapprovider",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/App.jsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "frontend_src_app_jsx",
+      "target": "frontend_src_pages_homepage_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/App.jsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "frontend_src_app_jsx",
+      "target": "frontend_src_pages_hostroompage_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/App.jsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "frontend_src_app_jsx",
+      "target": "frontend_src_pages_joinroompage_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/App.jsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "frontend_src_app_jsx",
+      "target": "frontend_src_pages_memberroompage_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/App.jsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "frontend_src_app_jsx",
+      "target": "frontend_src_pages_watchroompage_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/App.jsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "frontend_src_app_jsx",
+      "target": "src_app_app",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/main.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_src_main_jsx",
+      "target": "frontend_src_app_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/assets/CoordinatorLogo.jsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "frontend_src_assets_coordinatorlogo_jsx",
+      "target": "assets_coordinatorlogo_coordinatorlogo",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HomePage.jsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "frontend_src_pages_homepage_jsx",
+      "target": "frontend_src_assets_coordinatorlogo_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/AuthMenu.jsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "frontend_src_components_authmenu_jsx",
+      "target": "frontend_src_utils_authstorage_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/AuthMenu.jsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "frontend_src_components_authmenu_jsx",
+      "target": "utils_authstorage_clearauthuser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/AuthMenu.jsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "frontend_src_components_authmenu_jsx",
+      "target": "utils_authstorage_getauthuser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/AuthMenu.jsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "frontend_src_components_authmenu_jsx",
+      "target": "utils_authstorage_setauthuser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/AuthMenu.jsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "frontend_src_components_authmenu_jsx",
+      "target": "components_authmenu_decodejwt",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/AuthMenu.jsx",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "frontend_src_components_authmenu_jsx",
+      "target": "components_authmenu_authmenu",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HomePage.jsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "frontend_src_pages_homepage_jsx",
+      "target": "frontend_src_components_authmenu_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/JoinRoomPage.jsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "frontend_src_pages_joinroompage_jsx",
+      "target": "frontend_src_components_authmenu_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/CallModal.jsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "frontend_src_components_callmodal_jsx",
+      "target": "frontend_src_context_mapcontext_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/CallModal.jsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "frontend_src_components_callmodal_jsx",
+      "target": "context_mapcontext_usemap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/CallModal.jsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "frontend_src_components_callmodal_jsx",
+      "target": "components_callmodal_callmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "Frontend/src/components/CallModal.jsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_callmodal_callmodal",
+      "target": "context_mapcontext_usemap"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/LiveChat.jsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "frontend_src_components_livechat_jsx",
+      "target": "frontend_src_context_mapcontext_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/LiveChat.jsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "frontend_src_components_livechat_jsx",
+      "target": "context_mapcontext_usemap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/LiveChat.jsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "frontend_src_components_livechat_jsx",
+      "target": "components_livechat_livechat",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "frontend_src_pages_hostroompage_jsx",
+      "target": "frontend_src_components_livechat_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/MemberRoomPage.jsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "frontend_src_pages_memberroompage_jsx",
+      "target": "frontend_src_components_livechat_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "Frontend/src/components/LiveChat.jsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "components_livechat_livechat",
+      "target": "context_mapcontext_usemap"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "frontend_src_components_mapview_jsx",
+      "target": "REACT_LEAFLET",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "frontend_src_components_mapview_jsx",
+      "target": "frontend_src_context_mapcontext_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "frontend_src_components_mapview_jsx",
+      "target": "context_mapcontext_usemap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "frontend_src_components_mapview_jsx",
+      "target": "components_mapview_mapupdater",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "frontend_src_components_mapview_jsx",
+      "target": "components_mapview_mapclickhandler",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "frontend_src_components_mapview_jsx",
+      "target": "components_mapview_mapinteractiontracker",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "frontend_src_components_mapview_jsx",
+      "target": "components_mapview_zoomhandler",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "frontend_src_components_mapview_jsx",
+      "target": "components_mapview_decodepolyline",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "frontend_src_components_mapview_jsx",
+      "target": "components_mapview_routeupdaterwithstate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L146",
+      "weight": 1.0,
+      "source": "frontend_src_components_mapview_jsx",
+      "target": "components_mapview_createmarkericon",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L175",
+      "weight": 1.0,
+      "source": "frontend_src_components_mapview_jsx",
+      "target": "components_mapview_createtargeticon",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L204",
+      "weight": 1.0,
+      "source": "frontend_src_components_mapview_jsx",
+      "target": "components_mapview_mapview",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "frontend_src_pages_hostroompage_jsx",
+      "target": "frontend_src_components_mapview_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/MemberRoomPage.jsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "frontend_src_pages_memberroompage_jsx",
+      "target": "frontend_src_components_mapview_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/WatchRoomPage.jsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "frontend_src_pages_watchroompage_jsx",
+      "target": "frontend_src_components_mapview_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "Frontend/src/components/MapView.jsx",
+      "source_location": "L102",
+      "weight": 1.0,
+      "source": "components_mapview_routeupdaterwithstate",
+      "target": "context_mapcontext_usemap"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/SOSOverlay.jsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "frontend_src_components_sosoverlay_jsx",
+      "target": "frontend_src_context_mapcontext_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/SOSOverlay.jsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "frontend_src_components_sosoverlay_jsx",
+      "target": "context_mapcontext_usemap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/components/SOSOverlay.jsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "frontend_src_components_sosoverlay_jsx",
+      "target": "components_sosoverlay_sosoverlay",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "frontend_src_pages_hostroompage_jsx",
+      "target": "frontend_src_components_sosoverlay_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/MemberRoomPage.jsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "frontend_src_pages_memberroompage_jsx",
+      "target": "frontend_src_components_sosoverlay_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "Frontend/src/components/SOSOverlay.jsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "components_sosoverlay_sosoverlay",
+      "target": "context_mapcontext_usemap"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/context/MapContext.jsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "frontend_src_context_mapcontext_jsx",
+      "target": "context_mapcontext_mapcontext",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/context/MapContext.jsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "frontend_src_context_mapcontext_jsx",
+      "target": "context_mapcontext_mapprovider",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/context/MapContext.jsx",
+      "source_location": "L528",
+      "weight": 1.0,
+      "source": "frontend_src_context_mapcontext_jsx",
+      "target": "context_mapcontext_usemap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HomePage.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_src_pages_homepage_jsx",
+      "target": "frontend_src_context_mapcontext_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_src_pages_hostroompage_jsx",
+      "target": "frontend_src_context_mapcontext_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/JoinRoomPage.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_src_pages_joinroompage_jsx",
+      "target": "frontend_src_context_mapcontext_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/MemberRoomPage.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_src_pages_memberroompage_jsx",
+      "target": "frontend_src_context_mapcontext_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/WatchRoomPage.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_src_pages_watchroompage_jsx",
+      "target": "frontend_src_context_mapcontext_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HomePage.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_src_pages_homepage_jsx",
+      "target": "context_mapcontext_usemap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_src_pages_hostroompage_jsx",
+      "target": "context_mapcontext_usemap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/JoinRoomPage.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_src_pages_joinroompage_jsx",
+      "target": "context_mapcontext_usemap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/MemberRoomPage.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_src_pages_memberroompage_jsx",
+      "target": "context_mapcontext_usemap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/WatchRoomPage.jsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_src_pages_watchroompage_jsx",
+      "target": "context_mapcontext_usemap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "Frontend/src/pages/HomePage.jsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "pages_homepage_homepage",
+      "target": "context_mapcontext_usemap"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "pages_hostroompage_hostroompage",
+      "target": "context_mapcontext_usemap"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "Frontend/src/pages/JoinRoomPage.jsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "pages_joinroompage_joinroompage",
+      "target": "context_mapcontext_usemap"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "Frontend/src/pages/MemberRoomPage.jsx",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "pages_memberroompage_memberroompage",
+      "target": "context_mapcontext_usemap"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "Frontend/src/pages/WatchRoomPage.jsx",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "pages_watchroompage_watchroompage",
+      "target": "context_mapcontext_usemap"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HomePage.jsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "frontend_src_pages_homepage_jsx",
+      "target": "pages_homepage_homepage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "frontend_src_pages_hostroompage_jsx",
+      "target": "frontend_src_utils_locationsmoother_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "frontend_src_pages_hostroompage_jsx",
+      "target": "utils_locationsmoother_locationsmoother",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "frontend_src_pages_hostroompage_jsx",
+      "target": "utils_locationsmoother_gpsaccuracymanager",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "frontend_src_pages_hostroompage_jsx",
+      "target": "frontend_src_utils_placesservice_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "frontend_src_pages_hostroompage_jsx",
+      "target": "utils_placesservice_placesservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "frontend_src_pages_hostroompage_jsx",
+      "target": "frontend_src_utils_authstorage_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "frontend_src_pages_hostroompage_jsx",
+      "target": "utils_authstorage_getauthuser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "frontend_src_pages_hostroompage_jsx",
+      "target": "QRCODE",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/HostRoomPage.jsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "frontend_src_pages_hostroompage_jsx",
+      "target": "pages_hostroompage_hostroompage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/JoinRoomPage.jsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "frontend_src_pages_joinroompage_jsx",
+      "target": "pages_joinroompage_joinroompage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/MemberRoomPage.jsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "frontend_src_pages_memberroompage_jsx",
+      "target": "frontend_src_utils_locationsmoother_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/MemberRoomPage.jsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "frontend_src_pages_memberroompage_jsx",
+      "target": "utils_locationsmoother_locationsmoother",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/MemberRoomPage.jsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "frontend_src_pages_memberroompage_jsx",
+      "target": "frontend_src_utils_placesservice_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/MemberRoomPage.jsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "frontend_src_pages_memberroompage_jsx",
+      "target": "utils_placesservice_placesservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/MemberRoomPage.jsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "frontend_src_pages_memberroompage_jsx",
+      "target": "frontend_src_utils_authstorage_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/MemberRoomPage.jsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "frontend_src_pages_memberroompage_jsx",
+      "target": "utils_authstorage_getauthuser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/MemberRoomPage.jsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "frontend_src_pages_memberroompage_jsx",
+      "target": "pages_memberroompage_memberroompage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/WatchRoomPage.jsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "frontend_src_pages_watchroompage_jsx",
+      "target": "frontend_src_utils_authstorage_js",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/WatchRoomPage.jsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "frontend_src_pages_watchroompage_jsx",
+      "target": "utils_authstorage_getauthuser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/WatchRoomPage.jsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "frontend_src_pages_watchroompage_jsx",
+      "target": "QRCODE",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/pages/WatchRoomPage.jsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "frontend_src_pages_watchroompage_jsx",
+      "target": "pages_watchroompage_watchroompage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/authStorage.js",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "frontend_src_utils_authstorage_js",
+      "target": "utils_authstorage_getauthuser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/authStorage.js",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "frontend_src_utils_authstorage_js",
+      "target": "utils_authstorage_setauthuser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/authStorage.js",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "frontend_src_utils_authstorage_js",
+      "target": "utils_authstorage_clearauthuser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "frontend_src_utils_locationsmoother_js",
+      "target": "utils_locationsmoother_simplekalmanfilter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "frontend_src_utils_locationsmoother_js",
+      "target": "utils_locationsmoother_locationsmoother",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L107",
+      "weight": 1.0,
+      "source": "frontend_src_utils_locationsmoother_js",
+      "target": "utils_locationsmoother_calculateaccuracy",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L114",
+      "weight": 1.0,
+      "source": "frontend_src_utils_locationsmoother_js",
+      "target": "utils_locationsmoother_gpsaccuracymanager",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "utils_locationsmoother_simplekalmanfilter",
+      "target": "utils_locationsmoother_simplekalmanfilter_constructor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "utils_locationsmoother_simplekalmanfilter",
+      "target": "utils_locationsmoother_simplekalmanfilter_filter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "utils_locationsmoother_simplekalmanfilter",
+      "target": "utils_locationsmoother_simplekalmanfilter_reset",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "utils_locationsmoother_locationsmoother",
+      "target": "utils_locationsmoother_locationsmoother_constructor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "utils_locationsmoother_locationsmoother",
+      "target": "utils_locationsmoother_locationsmoother_filter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L71",
+      "weight": 1.0,
+      "source": "utils_locationsmoother_locationsmoother",
+      "target": "utils_locationsmoother_locationsmoother_calculatemeasurementnoise",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "utils_locationsmoother_locationsmoother",
+      "target": "utils_locationsmoother_locationsmoother_getweightedaverage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L100",
+      "weight": 1.0,
+      "source": "utils_locationsmoother_locationsmoother",
+      "target": "utils_locationsmoother_locationsmoother_reset",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L47",
+      "weight": 1.0,
+      "source": "utils_locationsmoother_locationsmoother_filter",
+      "target": "utils_locationsmoother_locationsmoother_getweightedaverage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "utils_locationsmoother_locationsmoother_filter",
+      "target": "utils_locationsmoother_locationsmoother_calculatemeasurementnoise",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L115",
+      "weight": 1.0,
+      "source": "utils_locationsmoother_gpsaccuracymanager",
+      "target": "utils_locationsmoother_gpsaccuracymanager_constructor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L120",
+      "weight": 1.0,
+      "source": "utils_locationsmoother_gpsaccuracymanager",
+      "target": "utils_locationsmoother_gpsaccuracymanager_addreading",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L127",
+      "weight": 1.0,
+      "source": "utils_locationsmoother_gpsaccuracymanager",
+      "target": "utils_locationsmoother_gpsaccuracymanager_getbestaccuracy",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L132",
+      "weight": 1.0,
+      "source": "utils_locationsmoother_gpsaccuracymanager",
+      "target": "utils_locationsmoother_gpsaccuracymanager_getaverageaccuracy",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L138",
+      "weight": 1.0,
+      "source": "utils_locationsmoother_gpsaccuracymanager",
+      "target": "utils_locationsmoother_gpsaccuracymanager_isreliable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/locationSmoother.js",
+      "source_location": "L139",
+      "weight": 1.0,
+      "source": "utils_locationsmoother_gpsaccuracymanager_isreliable",
+      "target": "utils_locationsmoother_gpsaccuracymanager_getaverageaccuracy",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/placesService.js",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "frontend_src_utils_placesservice_js",
+      "target": "utils_placesservice_placesservice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/placesService.js",
+      "source_location": "L197",
+      "weight": 1.0,
+      "source": "frontend_src_utils_placesservice_js",
+      "target": "utils_placesservice_calculatemeetingpoint",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "Frontend/src/utils/placesService.js",
+      "source_location": "L233",
+      "weight": 1.0,
+      "source": "frontend_src_utils_placesservice_js",
+      "target": "utils_placesservice_calculatehaversinedistance",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "DEPLOYMENT_CHECKLIST",
+      "target": "RENDER"
+    },
+    {
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "DEPLOYMENT_CHECKLIST",
+      "target": "VERCEL"
+    },
+    {
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "DEPLOYMENT_CHECKLIST",
+      "target": "MONGODB"
+    },
+    {
+      "relation": "tests",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "DEPLOYMENT_CHECKLIST",
+      "target": "API_CREATE_ROOM"
+    },
+    {
+      "relation": "deploys_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "DEPLOY_QUICK",
+      "target": "VERCEL"
+    },
+    {
+      "relation": "deploys_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "DEPLOY_QUICK",
+      "target": "RENDER"
+    },
+    {
+      "relation": "mentions",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "DEPLOY_QUICK",
+      "target": "GITHUB_ACTIONS"
+    },
+    {
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "GIT_WORKFLOW_GUIDE",
+      "target": "MAIN_BRANCH"
+    },
+    {
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "GIT_WORKFLOW_GUIDE",
+      "target": "PRODUCTION_BRANCH"
+    },
+    {
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "GIT_WORKFLOW_GUIDE",
+      "target": "DEVELOP_BRANCH"
+    },
+    {
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "QUICK_GIT_GUIDE",
+      "target": "MAIN_BRANCH"
+    },
+    {
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "QUICK_GIT_GUIDE",
+      "target": "PRODUCTION_BRANCH"
+    },
+    {
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "QUICK_GIT_GUIDE",
+      "target": "DEVELOP_BRANCH"
+    },
+    {
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "MERN_STACK"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "SOCKET_IO"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "REACT_19"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "VITE"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "TAILWIND_CSS"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "REACT_LEAFLET"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "REACT_ROUTER"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "NODE_JS"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "EXPRESS"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "MONGODB"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "GOOGLE_PLACES_API"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "QRCODE"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "KALMAN_FILTER"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "API_CREATE_ROOM"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "API_JOIN_ROOM"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "API_GET_ROOM"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "API_LEAVE_ROOM"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "API_PLACES_NEARBY"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "API_PLACES_SEARCH"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "API_PLACES_DIRECTIONS"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "API_PLACES_DETAILS"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "MAPVIEW"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "LIVECHAT"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "SOS_OVERLAY"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "SMART_MEETING"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "HOMEPAGE"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "HOST_ROOM_PAGE"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "MEMBER_ROOM_PAGE"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "JOIN_ROOM_PAGE"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "MAP_CONTEXT"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "LOCATION_SMOOTHER"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "PLACES_SERVICE"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "SERVER_JS"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "DB_JS"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "GROUP_ROUTES"
+    },
+    {
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "PLACES_ROUTES"
+    },
+    {
+      "relation": "deploys_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "VERCEL"
+    },
+    {
+      "relation": "deploys_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "README",
+      "target": "RENDER"
+    },
+    {
+      "relation": "deploys_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "DEPLOY_FRONTEND_YML",
+      "target": "VERCEL"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "DEPLOY_FRONTEND_YML",
+      "target": "GITHUB_ACTIONS"
+    },
+    {
+      "relation": "triggers_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "DEPLOY_FRONTEND_YML",
+      "target": "PRODUCTION_BRANCH"
+    },
+    {
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "RENDER_YAML",
+      "target": "RENDER"
+    },
+    {
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "RENDER_YAML",
+      "target": "NODE_JS"
+    },
+    {
+      "relation": "starts",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "RENDER_YAML",
+      "target": "SERVER_JS"
+    },
+    {
+      "relation": "fixes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "RENDER_FIX",
+      "target": "RENDER"
+    },
+    {
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "RENDER_FIX",
+      "target": "MONGODB"
+    },
+    {
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "RENDER_FIX",
+      "target": "VERCEL"
+    },
+    {
+      "relation": "loads",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "INDEX_HTML",
+      "target": "REACT_19"
+    },
+    {
+      "relation": "configured_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "INDEX_HTML",
+      "target": "VITE"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "INDEX_HTML",
+      "target": "VITE_SVG"
+    },
+    {
+      "relation": "may_use",
+      "confidence": "INFERRED",
+      "confidence_score": 0.6,
+      "source": "REACT_LEAFLET",
+      "target": "WORLDMAP_JPG"
+    },
+    {
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "MERN_STACK",
+      "target": "MONGODB"
+    },
+    {
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "MERN_STACK",
+      "target": "EXPRESS"
+    },
+    {
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "MERN_STACK",
+      "target": "REACT_19"
+    },
+    {
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source": "MERN_STACK",
+      "target": "NODE_JS"
+    },
+    {
+      "relation": "runs_on",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source": "SOCKET_IO",
+      "target": "RENDER"
+    },
+    {
+      "relation": "connects_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source": "SOCKET_IO",
+      "target": "VERCEL"
+    }
+  ],
+  "hyperedges": [
+    {
+      "nodes": [
+        "DEPLOYMENT_CHECKLIST",
+        "DEPLOY_QUICK",
+        "RENDER_FIX",
+        "RENDER_YAML"
+      ],
+      "relation": "deployment_config_group",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "nodes": [
+        "GIT_WORKFLOW_GUIDE",
+        "QUICK_GIT_GUIDE"
+      ],
+      "relation": "git_docs_group",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "nodes": [
+        "API_CREATE_ROOM",
+        "API_JOIN_ROOM",
+        "API_GET_ROOM",
+        "API_LEAVE_ROOM"
+      ],
+      "relation": "room_api_endpoints",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "nodes": [
+        "API_PLACES_NEARBY",
+        "API_PLACES_SEARCH",
+        "API_PLACES_DIRECTIONS",
+        "API_PLACES_DETAILS"
+      ],
+      "relation": "places_api_endpoints",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "nodes": [
+        "MAPVIEW",
+        "LIVECHAT",
+        "SOS_OVERLAY",
+        "SMART_MEETING"
+      ],
+      "relation": "frontend_components",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "nodes": [
+        "HOMEPAGE",
+        "HOST_ROOM_PAGE",
+        "MEMBER_ROOM_PAGE",
+        "JOIN_ROOM_PAGE"
+      ],
+      "relation": "frontend_pages",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "nodes": [
+        "MAIN_BRANCH",
+        "PRODUCTION_BRANCH",
+        "DEVELOP_BRANCH"
+      ],
+      "relation": "git_branches",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    }
+  ],
+  "built_at_commit": "b61f5cffe450f39a2f7af2d4457b906040886867"
+}
