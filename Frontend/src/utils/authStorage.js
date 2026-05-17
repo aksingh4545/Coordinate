@@ -24,3 +24,13 @@ export const clearAuthUser = () => {
     // ignore
   }
 };
+
+export const getAuthToken = () => {
+  const user = getAuthUser();
+  return user?.idToken || null;
+};
+
+export const getAuthHeaders = () => {
+  const token = getAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};

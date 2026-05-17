@@ -6,7 +6,7 @@ import LiveChat from "../components/LiveChat";
 import SOSOverlay from "../components/SOSOverlay";
 import { LocationSmoother, GpsAccuracyManager } from "../utils/locationSmoother";
 import { placesService } from "../utils/placesService";
-import { getAuthUser } from "../utils/authStorage";
+import { getAuthHeaders, getAuthUser } from "../utils/authStorage";
 import QRCode from "qrcode";
 import "./MemberRoomPage.css";
 
@@ -48,6 +48,8 @@ export default function HostRoomPage() {
   const [isTripSearching, setIsTripSearching] = useState(false);
   const [tripSearchError, setTripSearchError] = useState("");
   const [tripPath, setTripPath] = useState([]);
+  const [controlsPanelOpen, setControlsPanelOpen] = useState(true);
+  const [targetNavPanelOpen, setTargetNavPanelOpen] = useState(true);
   const [showTripModal, setShowTripModal] = useState(false);
   const [tripName, setTripName] = useState("");
   const [pendingTrip, setPendingTrip] = useState(null);
@@ -106,7 +108,9 @@ export default function HostRoomPage() {
 
     const restoreRoom = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/rooms/${roomId.toUpperCase()}`);
+        const response = await fetch(`${API_URL}/api/rooms/${roomId.toUpperCase()}`, {
+          headers: { ...getAuthHeaders() },
+        });
         const data = await response.json();
         if (!data.success) return;
 
@@ -149,7 +153,9 @@ export default function HostRoomPage() {
     const fetchWatchers = async () => {
       try {
         const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
-        const response = await fetch(`${API_URL}/api/rooms/${roomId.toUpperCase()}`);
+        const response = await fetch(`${API_URL}/api/rooms/${roomId.toUpperCase()}`, {
+          headers: { ...getAuthHeaders() },
+        });
         const data = await response.json();
         if (data.success && data.room.members) {
           const watchersList = data.room.members.filter(m => m.role === "watcher");
@@ -725,10 +731,46 @@ export default function HostRoomPage() {
                     <span className="trip-suggestion-name">{place.name}</span>
                     <span className="trip-suggestion-address">{place.address}</span>
                   </button>
-                ))}
+))}
               </div>
             )}
-          </div>
+
+          {/* Target Navigation Panel */}
+          {roomSettings?.targetLocation && targetInfo && (
+            <div className={`target-nav-panel ${targetNavPanelOpen ? "" : "collapsed"}`}>
+              <div className="target-nav-panel-toggle" onClick={() => setTargetNavPanelOpen(!targetNavPanelOpen)}>
+                <span className="control-label">{targetNavPanelOpen ? "▼" : "▶"} Target Navigation</span>
+              </div>
+              {targetNavPanelOpen && (
+              <>
+              <div className="target-nav-head">
+                <span className="control-hint">Live direction to destination</span>
+              </div>
+              <div className="target-nav-grid target-nav-desktop">
+                <div>
+                  <div className="target-nav-label">Distance</div>
+                  <div className="target-nav-value">{formatDistance(targetInfo.distance)}</div>
+                </div>
+                <div>
+                  <div className="target-nav-label">Bearing</div>
+                  <div className="target-nav-value">{targetInfo.bearingLabel}</div>
+                </div>
+                <div>
+                  <div className="target-nav-label">ETA</div>
+                  <div className="target-nav-value">~{targetInfo.etaMinutes} min</div>
+                </div>
+              </div>
+              <div className="target-nav-mini">
+                <span>Target</span>
+                <span>{formatDistance(targetInfo.distance)}</span>
+                <span>{targetInfo.bearingLabel}</span>
+                <span>~{targetInfo.etaMinutes} min</span>
+              </div>
+              </>
+              )}
+            </div>
+          )}
+        </div>
         )}
 
         {/* Mobile Options Panel */}
@@ -882,149 +924,162 @@ export default function HostRoomPage() {
           </div>
         )}
 
-        {/* Desktop controls panel */}
+        {/* Desktop controls wrapper */}
         {!isMobile && (
-          <div className="room-controls-panel">
-            <div className="control-row">
-              <span className="control-label">Mode</span>
-              <span className="control-hint">{modeLabel}</span>
-            </div>
+          <>
+            <div className="panels-wrapper">
+              <div className={`room-controls-panel ${controlsPanelOpen ? "" : "collapsed"}`}>
+                <div
+                  className="controls-panel-toggle"
+                  onClick={() => setControlsPanelOpen(!controlsPanelOpen)}
+                >
+                  <span className="control-label">{controlsPanelOpen ? "▼" : "▶"} Room Controls</span>
+                </div>
+                {controlsPanelOpen && (
+                  <>
+                    <div className="control-row">
+                      <span className="control-label">Mode</span>
+                      <span className="control-hint">{modeLabel}</span>
+                    </div>
 
-            {roomSettings?.mode === "tracking" && (
-              <div className="control-row">
-                <label className="control-label" htmlFor="trackingRange">Range (m)</label>
-                <input
-                  id="trackingRange"
-                  type="number"
-                  min={5}
-                  max={200}
-                  step={1}
-                  value={roomSettings.trackingRange ?? 30}
-                  onChange={handleRangeChange}
-                  className="control-input"
-                />
-                <span className="control-hint">Nearest member rule</span>
+                    {roomSettings?.mode === "tracking" && (
+                      <div className="control-row">
+                        <label className="control-label" htmlFor="trackingRange">Range (m)</label>
+                        <input
+                          id="trackingRange"
+                          type="number"
+                          min={5}
+                          max={200}
+                          step={1}
+                          value={roomSettings.trackingRange ?? 30}
+                          onChange={handleRangeChange}
+                          className="control-input"
+                        />
+                        <span className="control-hint">Nearest member rule</span>
+                      </div>
+                    )}
+
+                    {roomSettings?.mode !== "trip" && (
+                      <>
+                        <div className="control-row">
+                          <button type="button" className="soft-pill-btn target" onClick={handleSetTarget}>
+                            Set Target
+                          </button>
+                          {roomSettings?.targetLocation && (
+                            <button type="button" className="soft-pill-btn target-clear" onClick={handleClearTarget}>
+                              Clear
+                            </button>
+                          )}
+                        </div>
+
+                        {isTargeting && (
+                          <div className="control-hint">Click on map to place the target pin.</div>
+                        )}
+                      </>
+                    )}
+
+                    {roomSettings?.mode === "trip" && (
+                      <div className="control-row trip-search">
+                        <label className="control-label">Trip Destination</label>
+                        <div className="trip-search-row">
+                          <input
+                            type="text"
+                            className="control-input"
+                            value={tripQuery}
+                            onChange={(e) => setTripQuery(e.target.value)}
+                            placeholder="Type a place or address"
+                          />
+                          <button
+                            type="button"
+                            className="soft-pill-btn target"
+                            onClick={handleTripSearch}
+                            disabled={isTripSearching}
+                          >
+                            {isTripSearching ? "Searching" : "Search"}
+                          </button>
+                        </div>
+                        {tripSearchError && <span className="control-hint">{tripSearchError}</span>}
+                        {tripSuggestions.length > 0 && (
+                          <div className="trip-suggestions">
+                            {tripSuggestions.map((place) => (
+                              <button
+                                key={place.placeId}
+                                type="button"
+                                className="trip-suggestion"
+                                onClick={() => handleSelectTripPlace(place)}
+                              >
+                                <span className="trip-suggestion-name">{place.name}</span>
+                                <span className="trip-suggestion-address">{place.address}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="control-divider"></div>
+
+                    <div className="control-row map-row">
+                      <span className="control-label">Map</span>
+                      <button
+                        className={`map-btn ${roomSettings?.mapStyle === "osm" ? "active" : ""}`}
+                        onClick={() => updateRoomSettings({ mapStyle: "osm" })}
+                      >
+                        OSM Standard
+                      </button>
+                      <button
+                        className={`map-btn ${roomSettings?.mapStyle === "satellite" ? "active" : ""}`}
+                        onClick={() => updateRoomSettings({ mapStyle: "satellite" })}
+                      >
+                        Satellite
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
-            )}
 
-            {roomSettings?.mode !== "trip" && (
-              <>
-                <div className="control-row">
-                  <button type="button" className="soft-pill-btn target" onClick={handleSetTarget}>
-                    Set Target
-                  </button>
-                  {roomSettings?.targetLocation && (
-                    <button type="button" className="soft-pill-btn target-clear" onClick={handleClearTarget}>
-                      Clear
-                    </button>
+              {/* Target Navigation Panel */}
+              {roomSettings?.targetLocation && targetInfo && (
+                <div className={`target-nav-panel ${targetNavPanelOpen ? "" : "collapsed"}`}>
+                  <div
+                    className="target-nav-panel-toggle"
+                    onClick={() => setTargetNavPanelOpen(!targetNavPanelOpen)}
+                  >
+                    <span className="control-label">
+                      {targetNavPanelOpen ? "▼" : "▶"} Target Navigation
+                    </span>
+                  </div>
+                  {targetNavPanelOpen && (
+                    <>
+                      <div className="target-nav-head">
+                        <span className="control-hint">Live direction to destination</span>
+                      </div>
+                      <div className="target-nav-grid target-nav-desktop">
+                        <div>
+                          <div className="target-nav-label">Distance</div>
+                          <div className="target-nav-value">{formatDistance(targetInfo.distance)}</div>
+                        </div>
+                        <div>
+                          <div className="target-nav-label">Bearing</div>
+                          <div className="target-nav-value">{targetInfo.bearingLabel}</div>
+                        </div>
+                        <div>
+                          <div className="target-nav-label">ETA</div>
+                          <div className="target-nav-value">~{targetInfo.etaMinutes} min</div>
+                        </div>
+                      </div>
+                      <div className="target-nav-mini">
+                        <span>Target</span>
+                        <span>{formatDistance(targetInfo.distance)}</span>
+                        <span>{targetInfo.bearingLabel}</span>
+                        <span>~{targetInfo.etaMinutes} min</span>
+                      </div>
+                    </>
                   )}
                 </div>
-
-                {isTargeting && (
-                  <div className="control-hint">Click on map to place the target pin.</div>
-                )}
-              </>
-            )}
-
-            {roomSettings?.mode === "trip" && (
-              <div className="control-row trip-search">
-                <label className="control-label">Trip Destination</label>
-                <div className="trip-search-row">
-                  <input
-                    type="text"
-                    className="control-input"
-                    value={tripQuery}
-                    onChange={(e) => setTripQuery(e.target.value)}
-                    placeholder="Type a place or address"
-                  />
-                  <button
-                    type="button"
-                    className="soft-pill-btn target"
-                    onClick={handleTripSearch}
-                    disabled={isTripSearching}
-                  >
-                    {isTripSearching ? "Searching" : "Search"}
-                  </button>
-                </div>
-                {tripSearchError && <span className="control-hint">{tripSearchError}</span>}
-                {tripSuggestions.length > 0 && (
-                  <div className="trip-suggestions">
-                    {tripSuggestions.map((place) => (
-                      <button
-                        key={place.placeId}
-                        type="button"
-                        className="trip-suggestion"
-                        onClick={() => handleSelectTripPlace(place)}
-                      >
-                        <span className="trip-suggestion-name">{place.name}</span>
-                        <span className="trip-suggestion-address">{place.address}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="control-divider"></div>
-
-            <div className="control-row map-row">
-              <span className="control-label">Map</span>
-              <button
-                className={`map-btn ${roomSettings?.mapStyle === "osm" ? "active" : ""}`}
-                onClick={() => updateRoomSettings({ mapStyle: "osm" })}
-              >
-                OSM Standard
-              </button>
-              <button
-                className={`map-btn ${roomSettings?.mapStyle === "satellite" ? "active" : ""}`}
-                onClick={() => updateRoomSettings({ mapStyle: "satellite" })}
-              >
-                Satellite
-              </button>
+              )}
             </div>
-
-            {roomSettings?.mode === "trip" && (
-              <div className="control-row" style={{ marginTop: "8px" }}>
-                <button
-                  type="button"
-                  className="debug-trip-btn"
-                  onClick={handleSimulateTripComplete}
-                >
-                  🧪 Simulate Arrival
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Desktop target nav panel */}
-        {!isMobile && roomSettings?.targetLocation && targetInfo && (
-          <div className="target-nav-panel">
-            <div className="target-nav-head glass-card-header">
-              <span className="glass-card-title">Target Navigation</span>
-              <span className="glass-card-subtitle">Live direction to destination</span>
-            </div>
-            <div className="target-nav-grid target-nav-desktop">
-              <div>
-                <div className="target-nav-label">Distance</div>
-                <div className="target-nav-value">{formatDistance(targetInfo.distance)}</div>
-              </div>
-              <div>
-                <div className="target-nav-label">Bearing</div>
-                <div className="target-nav-value">{targetInfo.bearingLabel}</div>
-              </div>
-              <div>
-                <div className="target-nav-label">ETA</div>
-                <div className="target-nav-value">~{targetInfo.etaMinutes} min</div>
-              </div>
-            </div>
-            <div className="target-nav-mini">
-              <span>Target</span>
-              <span>{formatDistance(targetInfo.distance)}</span>
-              <span>{targetInfo.bearingLabel}</span>
-              <span>~{targetInfo.etaMinutes} min</span>
-            </div>
-          </div>
+          </>
         )}
 
         {/* Map */}

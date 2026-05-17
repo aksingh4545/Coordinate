@@ -1,0 +1,849 @@
+{
+  "nodes": [
+    {
+      "id": "DEPLOYMENT_CHECKLIST",
+      "label": "Deployment Checklist",
+      "file_type": "document"
+    },
+    {
+      "id": "DEPLOY_QUICK",
+      "label": "Deploy Quick Guide",
+      "file_type": "document"
+    },
+    {
+      "id": "GIT_WORKFLOW_GUIDE",
+      "label": "Git Workflow Guide",
+      "file_type": "document"
+    },
+    {
+      "id": "QUICK_GIT_GUIDE",
+      "label": "Quick Git Guide",
+      "file_type": "document"
+    },
+    {
+      "id": "README",
+      "label": "Coordinator Project README",
+      "file_type": "document"
+    },
+    {
+      "id": "DEPLOY_FRONTEND_YML",
+      "label": "GitHub Actions Deploy Frontend",
+      "file_type": "document"
+    },
+    {
+      "id": "RENDER_YAML",
+      "label": "Render Backend Config",
+      "file_type": "document"
+    },
+    {
+      "id": "RENDER_FIX",
+      "label": "Render Fix Guide",
+      "file_type": "document"
+    },
+    {
+      "id": "INDEX_HTML",
+      "label": "Frontend index.html",
+      "file_type": "document"
+    },
+    {
+      "id": "FRONTEND_README",
+      "label": "Frontend README",
+      "file_type": "document"
+    },
+    {
+      "id": "VITE_SVG",
+      "label": "Vite Favicon",
+      "file_type": "image"
+    },
+    {
+      "id": "WORLDMAP_JPG",
+      "label": "World Map Background",
+      "file_type": "image"
+    },
+    {
+      "id": "REACT_SVG",
+      "label": "React Logo",
+      "file_type": "image"
+    },
+    {
+      "id": "MERN_STACK",
+      "label": "MERN Stack",
+      "file_type": "rationale"
+    },
+    {
+      "id": "SOCKET_IO",
+      "label": "Socket.io",
+      "file_type": "rationale"
+    },
+    {
+      "id": "VITE",
+      "label": "Vite",
+      "file_type": "rationale"
+    },
+    {
+      "id": "REACT_19",
+      "label": "React 19",
+      "file_type": "rationale"
+    },
+    {
+      "id": "TAILWIND_CSS",
+      "label": "Tailwind CSS 4",
+      "file_type": "rationale"
+    },
+    {
+      "id": "REACT_LEAFLET",
+      "label": "React Leaflet",
+      "file_type": "rationale"
+    },
+    {
+      "id": "REACT_ROUTER",
+      "label": "React Router",
+      "file_type": "rationale"
+    },
+    {
+      "id": "NODE_JS",
+      "label": "Node.js",
+      "file_type": "rationale"
+    },
+    {
+      "id": "EXPRESS",
+      "label": "Express",
+      "file_type": "rationale"
+    },
+    {
+      "id": "MONGODB",
+      "label": "MongoDB",
+      "file_type": "rationale"
+    },
+    {
+      "id": "GOOGLE_PLACES_API",
+      "label": "Google Places API",
+      "file_type": "rationale"
+    },
+    {
+      "id": "QRCODE",
+      "label": "QRCode Library",
+      "file_type": "rationale"
+    },
+    {
+      "id": "KALMAN_FILTER",
+      "label": "Kalman Filter",
+      "file_type": "rationale"
+    },
+    {
+      "id": "VERCEL",
+      "label": "Vercel",
+      "file_type": "rationale"
+    },
+    {
+      "id": "RENDER",
+      "label": "Render",
+      "file_type": "rationale"
+    },
+    {
+      "id": "GITHUB_ACTIONS",
+      "label": "GitHub Actions",
+      "file_type": "rationale"
+    },
+    {
+      "id": "API_CREATE_ROOM",
+      "label": "POST /api/rooms/create",
+      "file_type": "rationale"
+    },
+    {
+      "id": "API_JOIN_ROOM",
+      "label": "POST /api/rooms/join",
+      "file_type": "rationale"
+    },
+    {
+      "id": "API_GET_ROOM",
+      "label": "GET /api/rooms/:roomId",
+      "file_type": "rationale"
+    },
+    {
+      "id": "API_LEAVE_ROOM",
+      "label": "POST /api/rooms/:roomId/leave",
+      "file_type": "rationale"
+    },
+    {
+      "id": "API_PLACES_NEARBY",
+      "label": "GET /api/places/nearby",
+      "file_type": "rationale"
+    },
+    {
+      "id": "API_PLACES_SEARCH",
+      "label": "GET /api/places/search",
+      "file_type": "rationale"
+    },
+    {
+      "id": "API_PLACES_DIRECTIONS",
+      "label": "GET /api/places/directions",
+      "file_type": "rationale"
+    },
+    {
+      "id": "API_PLACES_DETAILS",
+      "label": "GET /api/places/details",
+      "file_type": "rationale"
+    },
+    {
+      "id": "MAPVIEW",
+      "label": "MapView.jsx Component",
+      "file_type": "rationale"
+    },
+    {
+      "id": "LIVECHAT",
+      "label": "LiveChat.jsx Component",
+      "file_type": "rationale"
+    },
+    {
+      "id": "SOS_OVERLAY",
+      "label": "SOSOverlay.jsx Component",
+      "file_type": "rationale"
+    },
+    {
+      "id": "SMART_MEETING",
+      "label": "SmartMeetingPoint.jsx Component",
+      "file_type": "rationale"
+    },
+    {
+      "id": "HOMEPAGE",
+      "label": "HomePage.jsx Page",
+      "file_type": "rationale"
+    },
+    {
+      "id": "HOST_ROOM_PAGE",
+      "label": "HostRoomPage.jsx Page",
+      "file_type": "rationale"
+    },
+    {
+      "id": "MEMBER_ROOM_PAGE",
+      "label": "MemberRoomPage.jsx Page",
+      "file_type": "rationale"
+    },
+    {
+      "id": "JOIN_ROOM_PAGE",
+      "label": "JoinRoomPage.jsx Page",
+      "file_type": "rationale"
+    },
+    {
+      "id": "MAP_CONTEXT",
+      "label": "MapContext.jsx Context",
+      "file_type": "rationale"
+    },
+    {
+      "id": "LOCATION_SMOOTHER",
+      "label": "locationSmoother.js Utility",
+      "file_type": "rationale"
+    },
+    {
+      "id": "PLACES_SERVICE",
+      "label": "placesService.js Utility",
+      "file_type": "rationale"
+    },
+    {
+      "id": "SERVER_JS",
+      "label": "server.js Backend Entry",
+      "file_type": "rationale"
+    },
+    {
+      "id": "DB_JS",
+      "label": "db.js MongoDB Operations",
+      "file_type": "rationale"
+    },
+    {
+      "id": "GROUP_ROUTES",
+      "label": "group.js Routes",
+      "file_type": "rationale"
+    },
+    {
+      "id": "PLACES_ROUTES",
+      "label": "places.js Routes",
+      "file_type": "rationale"
+    },
+    {
+      "id": "MAIN_BRANCH",
+      "label": "main Branch",
+      "file_type": "rationale"
+    },
+    {
+      "id": "PRODUCTION_BRANCH",
+      "label": "production Branch",
+      "file_type": "rationale"
+    },
+    {
+      "id": "DEVELOP_BRANCH",
+      "label": "develop Branch",
+      "file_type": "rationale"
+    }
+  ],
+  "edges": [
+    {
+      "source": "README",
+      "target": "MERN_STACK",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "SOCKET_IO",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "REACT_19",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "VITE",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "TAILWIND_CSS",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "REACT_LEAFLET",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "REACT_ROUTER",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "NODE_JS",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "EXPRESS",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "MONGODB",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "GOOGLE_PLACES_API",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "QRCODE",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "KALMAN_FILTER",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "API_CREATE_ROOM",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "API_JOIN_ROOM",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "API_GET_ROOM",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "API_LEAVE_ROOM",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "API_PLACES_NEARBY",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "API_PLACES_SEARCH",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "API_PLACES_DIRECTIONS",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "API_PLACES_DETAILS",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "MAPVIEW",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "LIVECHAT",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "SOS_OVERLAY",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "SMART_MEETING",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "HOMEPAGE",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "HOST_ROOM_PAGE",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "MEMBER_ROOM_PAGE",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "JOIN_ROOM_PAGE",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "MAP_CONTEXT",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "LOCATION_SMOOTHER",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "PLACES_SERVICE",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "SERVER_JS",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "DB_JS",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "GROUP_ROUTES",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "PLACES_ROUTES",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "VERCEL",
+      "relation": "deploys_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "README",
+      "target": "RENDER",
+      "relation": "deploys_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "DEPLOYMENT_CHECKLIST",
+      "target": "RENDER",
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "DEPLOYMENT_CHECKLIST",
+      "target": "VERCEL",
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "DEPLOYMENT_CHECKLIST",
+      "target": "MONGODB",
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "DEPLOYMENT_CHECKLIST",
+      "target": "API_CREATE_ROOM",
+      "relation": "tests",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "DEPLOY_QUICK",
+      "target": "VERCEL",
+      "relation": "deploys_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "DEPLOY_QUICK",
+      "target": "RENDER",
+      "relation": "deploys_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "DEPLOY_QUICK",
+      "target": "GITHUB_ACTIONS",
+      "relation": "mentions",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "DEPLOY_FRONTEND_YML",
+      "target": "VERCEL",
+      "relation": "deploys_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "DEPLOY_FRONTEND_YML",
+      "target": "GITHUB_ACTIONS",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "DEPLOY_FRONTEND_YML",
+      "target": "PRODUCTION_BRANCH",
+      "relation": "triggers_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "RENDER_YAML",
+      "target": "RENDER",
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "RENDER_YAML",
+      "target": "NODE_JS",
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "RENDER_YAML",
+      "target": "SERVER_JS",
+      "relation": "starts",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "RENDER_FIX",
+      "target": "RENDER",
+      "relation": "fixes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "RENDER_FIX",
+      "target": "MONGODB",
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "RENDER_FIX",
+      "target": "VERCEL",
+      "relation": "configures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "GIT_WORKFLOW_GUIDE",
+      "target": "MAIN_BRANCH",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "GIT_WORKFLOW_GUIDE",
+      "target": "PRODUCTION_BRANCH",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "GIT_WORKFLOW_GUIDE",
+      "target": "DEVELOP_BRANCH",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "QUICK_GIT_GUIDE",
+      "target": "MAIN_BRANCH",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "QUICK_GIT_GUIDE",
+      "target": "PRODUCTION_BRANCH",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "QUICK_GIT_GUIDE",
+      "target": "DEVELOP_BRANCH",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "INDEX_HTML",
+      "target": "REACT_19",
+      "relation": "loads",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "INDEX_HTML",
+      "target": "VITE",
+      "relation": "configured_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "INDEX_HTML",
+      "target": "VITE_SVG",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "MERN_STACK",
+      "target": "MONGODB",
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "MERN_STACK",
+      "target": "EXPRESS",
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "MERN_STACK",
+      "target": "REACT_19",
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "MERN_STACK",
+      "target": "NODE_JS",
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "source": "SOCKET_IO",
+      "target": "RENDER",
+      "relation": "runs_on",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8
+    },
+    {
+      "source": "SOCKET_IO",
+      "target": "VERCEL",
+      "relation": "connects_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8
+    },
+    {
+      "source": "REACT_LEAFLET",
+      "target": "WORLDMAP_JPG",
+      "relation": "may_use",
+      "confidence": "INFERRED",
+      "confidence_score": 0.6
+    }
+  ],
+  "hyperedges": [
+    {
+      "nodes": [
+        "DEPLOYMENT_CHECKLIST",
+        "DEPLOY_QUICK",
+        "RENDER_FIX",
+        "RENDER_YAML"
+      ],
+      "relation": "deployment_config_group",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "nodes": [
+        "GIT_WORKFLOW_GUIDE",
+        "QUICK_GIT_GUIDE"
+      ],
+      "relation": "git_docs_group",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "nodes": [
+        "API_CREATE_ROOM",
+        "API_JOIN_ROOM",
+        "API_GET_ROOM",
+        "API_LEAVE_ROOM"
+      ],
+      "relation": "room_api_endpoints",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "nodes": [
+        "API_PLACES_NEARBY",
+        "API_PLACES_SEARCH",
+        "API_PLACES_DIRECTIONS",
+        "API_PLACES_DETAILS"
+      ],
+      "relation": "places_api_endpoints",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "nodes": [
+        "MAPVIEW",
+        "LIVECHAT",
+        "SOS_OVERLAY",
+        "SMART_MEETING"
+      ],
+      "relation": "frontend_components",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "nodes": [
+        "HOMEPAGE",
+        "HOST_ROOM_PAGE",
+        "MEMBER_ROOM_PAGE",
+        "JOIN_ROOM_PAGE"
+      ],
+      "relation": "frontend_pages",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    },
+    {
+      "nodes": [
+        "MAIN_BRANCH",
+        "PRODUCTION_BRANCH",
+        "DEVELOP_BRANCH"
+      ],
+      "relation": "git_branches",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

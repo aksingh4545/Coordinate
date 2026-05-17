@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMap } from "../context/MapContext";
+import { getAuthHeaders } from "../utils/authStorage";
 import AuthMenu from "../components/AuthMenu";
 
 export default function JoinRoomPage() {
@@ -37,7 +38,9 @@ export default function JoinRoomPage() {
     const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
     const fetchRoomInfo = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/rooms/${normalizedRoomId}`);
+        const response = await fetch(`${API_URL}/api/rooms/${normalizedRoomId}`, {
+          headers: { ...getAuthHeaders() },
+        });
         const data = await response.json();
         if (data.success) {
           setRoomInfo(data.room);

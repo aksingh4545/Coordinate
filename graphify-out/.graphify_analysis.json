@@ -1,0 +1,435 @@
+{
+  "communities": {
+    "0": [
+      "backend_db_closedb",
+      "backend_db_connectdb",
+      "backend_db_getdb",
+      "backend_db_getroomscollection",
+      "backend_db_gettripscollection",
+      "backend_db_getuserscollection",
+      "backend_db_isdbconnected",
+      "backend_db_js",
+      "backend_server_allowedkeys",
+      "backend_server_app",
+      "backend_server_calculatedistance",
+      "backend_server_doc",
+      "backend_server_getdefaultroomsettings",
+      "backend_server_getroomfromcacheordb",
+      "backend_server_googleclient",
+      "backend_server_hasinvalid",
+      "backend_server_incomingkeys",
+      "backend_server_io",
+      "backend_server_js",
+      "backend_server_locations",
+      "backend_server_member",
+      "backend_server_memberindex",
+      "backend_server_memberswithlocation",
+      "backend_server_nextsettings",
+      "backend_server_normalizedroomid",
+      "backend_server_room",
+      "backend_server_roomid",
+      "backend_server_rooms",
+      "backend_server_roomscollection",
+      "backend_server_safemongooperation",
+      "backend_server_server",
+      "backend_server_startserver",
+      "backend_server_targetsocketid",
+      "backend_server_tripscollection",
+      "backend_server_userdoc",
+      "backend_server_userrooms",
+      "backend_server_userscollection",
+      "backend_server_usersockets",
+      "backend_server_verifygoogletoken"
+    ],
+    "1": [
+      "assets_coordinatorlogo_coordinatorlogo",
+      "components_authmenu_authmenu",
+      "components_authmenu_decodejwt",
+      "components_callmodal_callmodal",
+      "components_livechat_livechat",
+      "components_sosoverlay_sosoverlay",
+      "context_mapcontext_mapcontext",
+      "context_mapcontext_mapprovider",
+      "context_mapcontext_usemap",
+      "frontend_src_app_jsx",
+      "frontend_src_assets_coordinatorlogo_jsx",
+      "frontend_src_components_authmenu_jsx",
+      "frontend_src_components_callmodal_jsx",
+      "frontend_src_components_livechat_jsx",
+      "frontend_src_components_sosoverlay_jsx",
+      "frontend_src_context_mapcontext_jsx",
+      "frontend_src_main_jsx",
+      "frontend_src_pages_homepage_jsx",
+      "frontend_src_pages_hostroompage_jsx",
+      "frontend_src_pages_joinroompage_jsx",
+      "frontend_src_pages_memberroompage_jsx",
+      "frontend_src_pages_watchroompage_jsx",
+      "frontend_src_utils_authstorage_js",
+      "frontend_src_utils_locationsmoother_js",
+      "frontend_src_utils_placesservice_js",
+      "pages_homepage_homepage",
+      "pages_hostroompage_hostroompage",
+      "pages_joinroompage_joinroompage",
+      "pages_memberroompage_memberroompage",
+      "pages_watchroompage_watchroompage",
+      "src_app_app",
+      "utils_authstorage_clearauthuser",
+      "utils_authstorage_getauthuser",
+      "utils_authstorage_setauthuser",
+      "utils_locationsmoother_calculateaccuracy",
+      "utils_placesservice_calculatehaversinedistance",
+      "utils_placesservice_calculatemeetingpoint",
+      "utils_placesservice_placesservice"
+    ],
+    "2": [
+      "API_GET_ROOM",
+      "API_JOIN_ROOM",
+      "API_LEAVE_ROOM",
+      "API_PLACES_DETAILS",
+      "API_PLACES_DIRECTIONS",
+      "API_PLACES_NEARBY",
+      "API_PLACES_SEARCH",
+      "DB_JS",
+      "GOOGLE_PLACES_API",
+      "GROUP_ROUTES",
+      "HOMEPAGE",
+      "HOST_ROOM_PAGE",
+      "INDEX_HTML",
+      "JOIN_ROOM_PAGE",
+      "KALMAN_FILTER",
+      "LIVECHAT",
+      "LOCATION_SMOOTHER",
+      "MAPVIEW",
+      "MAP_CONTEXT",
+      "MEMBER_ROOM_PAGE",
+      "MERN_STACK",
+      "NODE_JS",
+      "PLACES_ROUTES",
+      "PLACES_SERVICE",
+      "REACT_19",
+      "REACT_ROUTER",
+      "README",
+      "RENDER_YAML",
+      "SERVER_JS",
+      "SMART_MEETING",
+      "SOS_OVERLAY",
+      "TAILWIND_CSS",
+      "VITE",
+      "VITE_SVG",
+      "frontend_package_devdependencies_vite",
+      "frontend_vite_config_js"
+    ],
+    "3": [
+      "API_CREATE_ROOM",
+      "DEPLOYMENT_CHECKLIST",
+      "DEPLOY_FRONTEND_YML",
+      "DEPLOY_QUICK",
+      "DEVELOP_BRANCH",
+      "GITHUB_ACTIONS",
+      "GIT_WORKFLOW_GUIDE",
+      "MAIN_BRANCH",
+      "MONGODB",
+      "PRODUCTION_BRANCH",
+      "QUICK_GIT_GUIDE",
+      "RENDER",
+      "RENDER_FIX",
+      "SOCKET_IO",
+      "VERCEL",
+      "backend_mongodb_test_client",
+      "backend_mongodb_test_js",
+      "backend_mongodb_test_test",
+      "backend_package_dependencies",
+      "backend_package_dependencies_cors",
+      "backend_package_dependencies_dotenv",
+      "backend_package_dependencies_google_auth_library",
+      "backend_package_dependencies_mongodb",
+      "backend_package_dependencies_socket_io",
+      "backend_render_js",
+      "backend_render_testconnection"
+    ],
+    "4": [
+      "frontend_package_devdependencies",
+      "frontend_package_devdependencies_eslint",
+      "frontend_package_devdependencies_eslint_js",
+      "frontend_package_devdependencies_eslint_plugin_react_hooks",
+      "frontend_package_devdependencies_eslint_plugin_react_refresh",
+      "frontend_package_devdependencies_globals",
+      "frontend_package_devdependencies_types_react",
+      "frontend_package_devdependencies_types_react_dom",
+      "frontend_package_devdependencies_vitejs_plugin_react",
+      "frontend_package_json",
+      "frontend_package_name",
+      "frontend_package_private",
+      "frontend_package_scripts",
+      "frontend_package_scripts_build",
+      "frontend_package_scripts_dev",
+      "frontend_package_scripts_lint",
+      "frontend_package_scripts_preview",
+      "frontend_package_type",
+      "frontend_package_version"
+    ],
+    "5": [
+      "REACT_LEAFLET",
+      "WORLDMAP_JPG",
+      "frontend_package_dependencies",
+      "frontend_package_dependencies_axios",
+      "frontend_package_dependencies_leaflet",
+      "frontend_package_dependencies_lucide_react",
+      "frontend_package_dependencies_react",
+      "frontend_package_dependencies_react_dom",
+      "frontend_package_dependencies_react_leaflet",
+      "frontend_package_dependencies_react_router_dom",
+      "frontend_package_dependencies_socket_io_client",
+      "frontend_package_dependencies_tailwindcss",
+      "frontend_package_dependencies_tailwindcss_vite",
+      "frontend_package_dependencies_uuid"
+    ],
+    "6": [
+      "backend_package_author",
+      "backend_package_description",
+      "backend_package_json",
+      "backend_package_keywords",
+      "backend_package_license",
+      "backend_package_main",
+      "backend_package_name",
+      "backend_package_scripts",
+      "backend_package_scripts_dev",
+      "backend_package_scripts_start",
+      "backend_package_scripts_test",
+      "backend_package_type",
+      "backend_package_version"
+    ],
+    "7": [
+      "EXPRESS",
+      "QRCODE",
+      "backend_package_dependencies_express",
+      "backend_package_dependencies_qrcode",
+      "backend_routes_group_js",
+      "backend_routes_places_js",
+      "frontend_package_dependencies_qrcode",
+      "routes_group_group",
+      "routes_group_router",
+      "routes_places_contenttype",
+      "routes_places_results",
+      "routes_places_router",
+      "routes_places_searchparams"
+    ],
+    "8": [
+      "components_mapview_createmarkericon",
+      "components_mapview_createtargeticon",
+      "components_mapview_decodepolyline",
+      "components_mapview_mapclickhandler",
+      "components_mapview_mapinteractiontracker",
+      "components_mapview_mapupdater",
+      "components_mapview_mapview",
+      "components_mapview_routeupdaterwithstate",
+      "components_mapview_zoomhandler",
+      "frontend_src_components_mapview_jsx"
+    ],
+    "9": [
+      "utils_locationsmoother_gpsaccuracymanager",
+      "utils_locationsmoother_gpsaccuracymanager_addreading",
+      "utils_locationsmoother_gpsaccuracymanager_constructor",
+      "utils_locationsmoother_gpsaccuracymanager_getaverageaccuracy",
+      "utils_locationsmoother_gpsaccuracymanager_getbestaccuracy",
+      "utils_locationsmoother_gpsaccuracymanager_isreliable"
+    ],
+    "10": [
+      "utils_locationsmoother_locationsmoother",
+      "utils_locationsmoother_locationsmoother_calculatemeasurementnoise",
+      "utils_locationsmoother_locationsmoother_constructor",
+      "utils_locationsmoother_locationsmoother_filter",
+      "utils_locationsmoother_locationsmoother_getweightedaverage",
+      "utils_locationsmoother_locationsmoother_reset"
+    ],
+    "11": [
+      "utils_locationsmoother_simplekalmanfilter",
+      "utils_locationsmoother_simplekalmanfilter_constructor",
+      "utils_locationsmoother_simplekalmanfilter_filter",
+      "utils_locationsmoother_simplekalmanfilter_reset"
+    ],
+    "12": [
+      "backend_vercel_builds",
+      "backend_vercel_json",
+      "backend_vercel_version"
+    ],
+    "13": [
+      "frontend_vercel_json",
+      "frontend_vercel_rewrites"
+    ],
+    "14": [
+      "frontend_eslint_config_js"
+    ],
+    "15": [
+      "FRONTEND_README"
+    ],
+    "16": [
+      "REACT_SVG"
+    ]
+  },
+  "cohesion": {
+    "0": 0.06,
+    "1": 0.11,
+    "2": 0.06,
+    "3": 0.1,
+    "4": 0.11,
+    "5": 0.14,
+    "6": 0.15,
+    "7": 0.15,
+    "8": 0.2,
+    "9": 0.4,
+    "10": 0.47,
+    "11": 0.5,
+    "12": 0.67,
+    "13": 1.0,
+    "14": 1.0,
+    "15": 1.0,
+    "16": 1.0
+  },
+  "gods": [
+    {
+      "id": "context_mapcontext_usemap",
+      "label": "useMap()",
+      "degree": 19
+    },
+    {
+      "id": "utils_locationsmoother_locationsmoother",
+      "label": "LocationSmoother",
+      "degree": 8
+    },
+    {
+      "id": "utils_locationsmoother_gpsaccuracymanager",
+      "label": "GpsAccuracyManager",
+      "degree": 7
+    },
+    {
+      "id": "frontend_package_scripts",
+      "label": "scripts",
+      "degree": 5
+    },
+    {
+      "id": "utils_authstorage_getauthuser",
+      "label": "getAuthUser()",
+      "degree": 5
+    },
+    {
+      "id": "backend_package_scripts",
+      "label": "scripts",
+      "degree": 4
+    },
+    {
+      "id": "utils_locationsmoother_simplekalmanfilter",
+      "label": "SimpleKalmanFilter",
+      "degree": 4
+    },
+    {
+      "id": "backend_db_connectdb",
+      "label": "connectDB()",
+      "degree": 3
+    },
+    {
+      "id": "backend_db_isdbconnected",
+      "label": "isDBConnected()",
+      "degree": 3
+    },
+    {
+      "id": "backend_server_safemongooperation",
+      "label": "safeMongoOperation()",
+      "degree": 3
+    }
+  ],
+  "surprises": [
+    {
+      "source": "RouteUpdaterWithState()",
+      "target": "useMap()",
+      "source_files": [
+        "Frontend/src/components/MapView.jsx",
+        "Frontend/src/context/MapContext.jsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities; peripheral node `RouteUpdaterWithState()` unexpectedly reaches hub `useMap()`"
+    },
+    {
+      "source": "CallModal()",
+      "target": "useMap()",
+      "source_files": [
+        "Frontend/src/components/CallModal.jsx",
+        "Frontend/src/context/MapContext.jsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `CallModal()` unexpectedly reaches hub `useMap()`"
+    },
+    {
+      "source": "LiveChat()",
+      "target": "useMap()",
+      "source_files": [
+        "Frontend/src/components/LiveChat.jsx",
+        "Frontend/src/context/MapContext.jsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `LiveChat()` unexpectedly reaches hub `useMap()`"
+    },
+    {
+      "source": "SOSOverlay()",
+      "target": "useMap()",
+      "source_files": [
+        "Frontend/src/components/SOSOverlay.jsx",
+        "Frontend/src/context/MapContext.jsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `SOSOverlay()` unexpectedly reaches hub `useMap()`"
+    },
+    {
+      "source": "HomePage()",
+      "target": "useMap()",
+      "source_files": [
+        "Frontend/src/pages/HomePage.jsx",
+        "Frontend/src/context/MapContext.jsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `HomePage()` unexpectedly reaches hub `useMap()`"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `dependencies` connect `Community 5` to `Community 4`, `Community 7`?",
+      "why": "High betweenness centrality (0.164) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `dependencies` connect `Community 3` to `Community 6`, `Community 7`?",
+      "why": "High betweenness centrality (0.130) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `qrcode` connect `Community 7` to `Community 5`?",
+      "why": "High betweenness centrality (0.124) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `client`, `name`, `version` to the rest of the system?",
+      "why": "76 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 0` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.06 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 1` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.11 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 2` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.06 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

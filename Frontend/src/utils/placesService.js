@@ -1,3 +1,5 @@
+import { getAuthHeaders } from "./authStorage";
+
 const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
@@ -9,7 +11,10 @@ export const placesService = {
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/places/nearby?lat=${location.lat}&lng=${location.lng}&radius=${radius}&type=point_of_interest`);
+      const response = await fetch(
+        `${API_URL}/api/places/nearby?lat=${location.lat}&lng=${location.lng}&radius=${radius}&type=point_of_interest`,
+        { headers: { ...getAuthHeaders() } }
+      );
       const data = await response.json();
       
       if (data.status === 'OK' && data.results) {
@@ -33,10 +38,11 @@ export const placesService = {
     if (!origin || !destination) return { currentPlaces: [], targetPlaces: [], routeData: null };
 
     try {
+      const headers = { ...getAuthHeaders() };
       const [routeResponse, currentResponse, targetResponse] = await Promise.all([
-        fetch(`${API_URL}/api/places/directions?originLat=${origin.lat}&originLng=${origin.lng}&destLat=${destination.lat}&destLng=${destination.lng}`),
-        fetch(`${API_URL}/api/places/nearby?lat=${origin.lat}&lng=${origin.lng}&radius=${radius}&type=point_of_interest`),
-        fetch(`${API_URL}/api/places/nearby?lat=${destination.lat}&lng=${destination.lng}&radius=${radius}&type=point_of_interest`),
+        fetch(`${API_URL}/api/places/directions?originLat=${origin.lat}&originLng=${origin.lng}&destLat=${destination.lat}&destLng=${destination.lng}`, { headers }),
+        fetch(`${API_URL}/api/places/nearby?lat=${origin.lat}&lng=${origin.lng}&radius=${radius}&type=point_of_interest`, { headers }),
+        fetch(`${API_URL}/api/places/nearby?lat=${destination.lat}&lng=${destination.lng}&radius=${radius}&type=point_of_interest`, { headers }),
       ]);
 
       const routeData = routeResponse.ok ? await routeResponse.json() : null;
@@ -80,8 +86,10 @@ export const placesService = {
 
     try {
       const responses = await Promise.all(
-        types.map(type => 
-          fetch(`${API_URL}/api/places/nearby?lat=${location.lat}&lng=${location.lng}&radius=${radius}&type=${type}`)
+        types.map(type =>
+          fetch(`${API_URL}/api/places/nearby?lat=${location.lat}&lng=${location.lng}&radius=${radius}&type=${type}`, {
+            headers: { ...getAuthHeaders() },
+          })
             .then(res => res.ok ? res.json() : { results: [] })
             .catch(() => ({ results: [] }))
         )
@@ -117,7 +125,8 @@ export const placesService = {
 
     try {
       const response = await fetch(
-        `${API_URL}/api/places/directions?originLat=${origin.lat}&originLng=${origin.lng}&destLat=${destination.lat}&destLng=${destination.lng}`
+        `${API_URL}/api/places/directions?originLat=${origin.lat}&originLng=${origin.lng}&destLat=${destination.lat}&destLng=${destination.lng}`,
+        { headers: { ...getAuthHeaders() } }
       );
       const data = await response.json();
       
@@ -150,7 +159,7 @@ export const placesService = {
         url += `&lat=${location.lat}&lng=${location.lng}&radius=${radius}`;
       }
 
-      const response = await fetch(url);
+      const response = await fetch(url, { headers: { ...getAuthHeaders() } });
       const data = await response.json();
       
       if (data.status === 'OK' && data.results) {
@@ -175,7 +184,9 @@ export const placesService = {
     if (!placeId) return null;
 
     try {
-      const response = await fetch(`${API_URL}/api/places/details?placeId=${placeId}`);
+      const response = await fetch(`${API_URL}/api/places/details?placeId=${placeId}`, {
+        headers: { ...getAuthHeaders() },
+      });
       const data = await response.json();
       
       if (data.status === 'OK' && data.result) {

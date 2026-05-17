@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMap } from "../context/MapContext";
 import MapView from "../components/MapView";
-import { getAuthUser } from "../utils/authStorage";
+import { getAuthHeaders } from "../utils/authStorage";
 import QRCode from "qrcode";
 import "./MemberRoomPage.css";
 
@@ -39,7 +39,9 @@ export default function WatchRoomPage() {
     const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
     const fetchRoomInfo = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/rooms/${roomId.toUpperCase()}`);
+        const response = await fetch(`${API_URL}/api/rooms/${roomId.toUpperCase()}`, {
+          headers: { ...getAuthHeaders() },
+        });
         const data = await response.json();
         if (data.success) {
           setRoomInfo(data.room);
