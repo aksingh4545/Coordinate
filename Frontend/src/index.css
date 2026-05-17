@@ -472,6 +472,42 @@ body {
   background: rgba(239, 68, 68, 0.35);
 }
 
+@media (max-width: 640px) {
+  .menu-dropdown {
+    width: 220px;
+    padding: 12px;
+    right: -10px;
+  }
+
+  .menu-title {
+    font-size: 0.75rem;
+    margin-bottom: 8px;
+  }
+
+  .menu-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .menu-user {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .menu-user-name {
+    font-size: 0.85rem;
+  }
+
+  .menu-user-email {
+    font-size: 0.65rem;
+  }
+
+  .menu-btn {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+}
+
 .menu-muted {
   font-size: 0.78rem;
   color: rgba(255, 255, 255, 0.55);
