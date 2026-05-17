@@ -53,9 +53,6 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Google Places API routes
-app.use('/api/places', placesRoutes);
-
 // Google Auth - verify ID token and upsert user
 app.post('/api/auth/google', async (req, res) => {
   try {
@@ -102,15 +99,9 @@ app.post('/api/auth/google', async (req, res) => {
 });
 
 // Save trip route (requires Google ID token)
-app.post('/api/trips', async (req, res) => {
+app.post('/api/trips', requireAuth, async (req, res) => {
   try {
-    const authHeader = req.headers.authorization || '';
-    const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-    const payload = await verifyGoogleToken(idToken);
-
-    if (!payload) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+    const payload = req.user;
 
     if (!isDBConnected()) {
       return res.status(503).json({ error: 'Database unavailable' });
@@ -173,6 +164,24 @@ function getDefaultRoomSettings(mode = "crowd") {
   };
 }
 
+async function requireAuth(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const payload = await verifyGoogleToken(idToken);
+
+    if (!payload) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    req.user = payload;
+    return next();
+  } catch (err) {
+    console.error('Auth middleware error:', err);
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+}
+
 async function verifyGoogleToken(idToken) {
   if (!idToken || !process.env.GOOGLE_CLIENT_ID) {
     return null;
@@ -189,6 +198,9 @@ async function verifyGoogleToken(idToken) {
     return null;
   }
 }
+
+// Google Places API routes (protected)
+app.use('/api/places', requireAuth, placesRoutes);
 
 // Helper: Calculate distance between two coordinates (Haversine formula)
 function calculateDistance(lat1, lng1, lat2, lng2) {
@@ -240,6 +252,9 @@ async function getRoomFromCacheOrDb(roomId) {
 }
 
 // API Routes
+
+// Protect all room APIs
+app.use('/api/rooms', requireAuth);
 
 // Create a new room (Host)
 app.post('/api/rooms/create', async (req, res) => {

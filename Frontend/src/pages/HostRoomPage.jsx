@@ -6,7 +6,7 @@ import LiveChat from "../components/LiveChat";
 import SOSOverlay from "../components/SOSOverlay";
 import { LocationSmoother, GpsAccuracyManager } from "../utils/locationSmoother";
 import { placesService } from "../utils/placesService";
-import { getAuthUser } from "../utils/authStorage";
+import { getAuthHeaders, getAuthUser } from "../utils/authStorage";
 import QRCode from "qrcode";
 import "./MemberRoomPage.css";
 
@@ -107,7 +107,9 @@ export default function HostRoomPage() {
 
     const restoreRoom = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/rooms/${roomId.toUpperCase()}`);
+        const response = await fetch(`${API_URL}/api/rooms/${roomId.toUpperCase()}`, {
+          headers: { ...getAuthHeaders() },
+        });
         const data = await response.json();
         if (!data.success) return;
 
@@ -150,7 +152,9 @@ export default function HostRoomPage() {
     const fetchWatchers = async () => {
       try {
         const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
-        const response = await fetch(`${API_URL}/api/rooms/${roomId.toUpperCase()}`);
+        const response = await fetch(`${API_URL}/api/rooms/${roomId.toUpperCase()}`, {
+          headers: { ...getAuthHeaders() },
+        });
         const data = await response.json();
         if (data.success && data.room.members) {
           const watchersList = data.room.members.filter(m => m.role === "watcher");

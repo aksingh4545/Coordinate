@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 import io from "socket.io-client";
+import { getAuthHeaders, getAuthUser } from "../utils/authStorage";
 
 const MapContext = createContext(null);
 
@@ -8,6 +9,15 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
 export function MapProvider({ children }) {
   const [socket, setSocket] = useState(null);
   const [user, setUser] = useState(() => {
+    const authUser = getAuthUser();
+    if (authUser?.id) {
+      return {
+        userId: authUser.id,
+        name: authUser.name || "User",
+        picture: authUser.picture || null,
+        email: authUser.email || null,
+      };
+    }
     const saved = localStorage.getItem("coordinator_user");
     return saved ? JSON.parse(saved) : null;
   });
@@ -143,6 +153,23 @@ export function MapProvider({ children }) {
   const getOrCreateUser = useCallback(() => {
     if (user) return user;
 
+    const authUser = getAuthUser();
+    if (authUser?.id) {
+      const authedUser = {
+        userId: authUser.id,
+        name: authUser.name || "User",
+        picture: authUser.picture || null,
+        email: authUser.email || null,
+      };
+      try {
+        localStorage.setItem("coordinator_user", JSON.stringify(authedUser));
+      } catch (err) {
+        console.error("LocalStorage error:", err);
+      }
+      setUser(authedUser);
+      return authedUser;
+    }
+
     const newUser = {
       userId: "user_" + Math.random().toString(36).substring(2, 10),
       name: "User",
@@ -164,6 +191,10 @@ export function MapProvider({ children }) {
     setError(null);
 
     try {
+      const authUser = getAuthUser();
+      if (!authUser?.idToken) {
+        throw new Error("Login required to create a room");
+      }
       const currentUser = getOrCreateUser();
       const updatedUser = { ...currentUser, name: hostName };
       setUser(updatedUser);
@@ -171,7 +202,7 @@ export function MapProvider({ children }) {
 
       const response = await fetch(`${SOCKET_URL}/api/rooms/create`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({
           hostId: currentUser.userId,
           hostName,
@@ -220,6 +251,10 @@ export function MapProvider({ children }) {
     setError(null);
 
     try {
+      const authUser = getAuthUser();
+      if (!authUser?.idToken) {
+        throw new Error("Login required to join a room");
+      }
       const currentUser = getOrCreateUser();
       const updatedUser = { ...currentUser, name: userName };
       setUser(updatedUser);
@@ -227,7 +262,7 @@ export function MapProvider({ children }) {
 
       const response = await fetch(`${SOCKET_URL}/api/rooms/join`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({
           roomId,
           userId: currentUser.userId,
@@ -316,9 +351,13 @@ export function MapProvider({ children }) {
     if (!currentRoom || !user) return;
 
     try {
+      const authUser = getAuthUser();
+      if (!authUser?.idToken) {
+        throw new Error("Login required to leave a room");
+      }
       await fetch(`${SOCKET_URL}/api/rooms/${currentRoom.roomId}/leave`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ userId: user.userId }),
       });
     } catch (err) {

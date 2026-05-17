@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker, Circle,
 import { DivIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useMap } from "../context/MapContext";
+import { getAuthHeaders } from "../utils/authStorage";
 
 // Component to update map view when locations change
 function MapUpdater({ locations, centerOnUsers, allowAutoFollow }) {
@@ -120,7 +121,7 @@ function RouteUpdaterWithState({ currentUserId, targetLocation, onRouteUpdate })
         const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
         const url = `${API_URL}/api/places/directions?originLat=${currentLoc.lat}&originLng=${currentLoc.lng}&destLat=${targetLocation.lat}&destLng=${targetLocation.lng}`;
         console.log('🛣️ Fetching route from:', url);
-        const response = await fetch(url);
+        const response = await fetch(url, { headers: { ...getAuthHeaders() } });
         const data = await response.json();
         console.log('🛣️ Route API response:', data);
         if (data.routes?.[0]?.overview_polyline?.points) {
