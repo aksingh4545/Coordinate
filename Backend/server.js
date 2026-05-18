@@ -7,6 +7,7 @@ import QRCode from 'qrcode';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 import { OAuth2Client } from 'google-auth-library';
+import twilio from 'twilio';
 import { connectDB, getRoomsCollection, getTripsCollection, getUsersCollection, isDBConnected } from './db.js';
 import placesRoutes from './Routes/places.js';
 
@@ -52,6 +53,12 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+
+const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
+const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioClient = (twilioAccountSid && twilioAuthToken)
+  ? twilio(twilioAccountSid, twilioAuthToken)
+  : null;
 
 // Google Auth - verify ID token and upsert user
 app.post('/api/auth/google', async (req, res) => {
@@ -211,6 +218,21 @@ app.get('/api/trips', requireAuth, async (req, res) => {
       .filter(t => t.userId === req.user.sub)
       .map(t => ({ ...t, _id: undefined }));
     res.json({ success: true, trips: memoryTrips });
+  }
+});
+
+// Get TURN credentials for WebRTC (requires auth)
+app.get('/api/turn', requireAuth, async (req, res) => {
+  try {
+    if (!twilioClient) {
+      return res.status(503).json({ error: 'TURN not configured' });
+    }
+
+    const token = await twilioClient.tokens.create({ ttl: 3600 });
+    res.json({ iceServers: token.iceServers || [] });
+  } catch (err) {
+    console.error('TURN token error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch TURN credentials' });
   }
 });
 

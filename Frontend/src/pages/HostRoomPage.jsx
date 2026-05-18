@@ -1297,11 +1297,17 @@ export default function HostRoomPage() {
 
         {/* Watch Panel - Trip Mode Only */}
         {showWatchPanel && (
-          <div className="watcher-list-panel">
-            <div className="watcher-list-header">
-              <span className="watcher-list-title">Watching Your Trip</span>
-              <button className="watcher-list-close" onClick={() => setShowWatchPanel(false)}>×</button>
-            </div>
+          <div className="watcher-panel-backdrop" onClick={() => setShowWatchPanel(false)}>
+            <div className="watcher-list-panel" onClick={(event) => event.stopPropagation()}>
+              <div className="watcher-list-header">
+                <span className="watcher-list-title">Watching Your Trip</span>
+                <button
+                  className="watcher-list-close"
+                  onClick={() => setShowWatchPanel(false)}
+                >
+                  ×
+                </button>
+              </div>
             
             {watchers.length > 0 ? (
               <div className="watcher-list">
@@ -1320,17 +1326,21 @@ export default function HostRoomPage() {
               </div>
             )}
 
-            <div className="watch-qr-section">
-              <span className="watch-qr-label">Share Watch Link</span>
-              {watchQrCode && (
-                <img src={watchQrCode} alt="Watch QR Code" className="watch-qr-code" />
-              )}
-              <button className="watch-link-btn" onClick={() => {
-                navigator.clipboard.writeText(watchUrl);
-                alert("Watch link copied!");
-              }}>
-                📋 Copy Watch Link
-              </button>
+              <div className="watch-qr-section">
+                <span className="watch-qr-label">Share Watch Link</span>
+                {watchQrCode && (
+                  <img src={watchQrCode} alt="Watch QR Code" className="watch-qr-code" />
+                )}
+                <button
+                  className="watch-link-btn"
+                  onClick={() => {
+                    navigator.clipboard.writeText(watchUrl);
+                    alert("Watch link copied!");
+                  }}
+                >
+                  📋 Copy Watch Link
+                </button>
+              </div>
             </div>
           </div>
         )}

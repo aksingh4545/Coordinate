@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useMap } from "../context/MapContext";
 import "./LiveChat.css";
+import { getAuthHeaders } from "../utils/authStorage";
 
 export default function LiveChat({ roomId, members, currentUserId, onClose }) {
   const { socket, currentRoom } = useMap();
@@ -12,12 +13,39 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
   const peerConnectionsRef = useRef(new Map());
   const remoteAudioRef = useRef(new Map());
   const touchStartYRef = useRef(null);
+  const audioUnlockedRef = useRef(false);
+  const audioContextRef = useRef(null);
+  const iceServersRef = useRef([
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+  ]);
 
   const currentUserName = members.find(m => m.userId === currentUserId)?.name || "You";
 
+  const ensureAudioUnlocked = () => {
+    if (audioUnlockedRef.current) return;
+
+    try {
+      audioContextRef.current = audioContextRef.current || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioContextRef.current.state === "suspended") {
+        audioContextRef.current.resume().catch(() => {});
+      }
+
+      remoteAudioRef.current.forEach((audioEl) => {
+        audioEl.muted = false;
+        audioEl.volume = 1;
+        audioEl.play().catch(() => {});
+      });
+
+      audioUnlockedRef.current = true;
+    } catch {
+      // Ignore audio unlock errors
+    }
+  };
+
   const createPeerConnection = (remoteUserId, isSender) => {
     const pc = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      iceServers: iceServersRef.current,
     });
 
     pc.onicecandidate = (event) => {
@@ -36,12 +64,13 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
         audioEl = new Audio();
         audioEl.autoplay = true;
         audioEl.playsInline = true;
+        audioEl.muted = false;
+        audioEl.volume = 1;
         remoteAudioRef.current.set(remoteUserId, audioEl);
       }
-      if (event.streams && event.streams[0]) {
-        audioEl.srcObject = event.streams[0];
-        audioEl.play().catch(() => {});
-      }
+      const stream = event.streams?.[0] || new MediaStream([event.track]);
+      audioEl.srcObject = stream;
+      audioEl.play().catch(() => {});
     };
 
     pc.onconnectionstatechange = () => {
@@ -135,8 +164,39 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
     };
   }, [socket, normalizedRoomId, currentUserId]);
 
+  useEffect(() => {
+    const fetchTurnServers = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+        const response = await fetch(`${API_URL}/api/turn`, {
+          headers: { ...getAuthHeaders() },
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (Array.isArray(data.iceServers) && data.iceServers.length > 0) {
+          iceServersRef.current = data.iceServers;
+        }
+      } catch {
+        // Keep default STUN if TURN fetch fails
+      }
+    };
+
+    fetchTurnServers();
+  }, []);
+
+  useEffect(() => {
+    const handleUnlock = () => ensureAudioUnlocked();
+    window.addEventListener("pointerdown", handleUnlock);
+    window.addEventListener("keydown", handleUnlock);
+    return () => {
+      window.removeEventListener("pointerdown", handleUnlock);
+      window.removeEventListener("keydown", handleUnlock);
+    };
+  }, []);
+
   const startTalking = async () => {
     try {
+      ensureAudioUnlocked();
       if (!socket || !normalizedRoomId) {
         console.warn("Walkie talkie unavailable: socket or room missing");
         return;
