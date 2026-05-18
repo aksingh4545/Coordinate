@@ -4,6 +4,7 @@ import { useMap } from "../context/MapContext";
 import MapView from "../components/MapView";
 import LiveChat from "../components/LiveChat";
 import SOSOverlay from "../components/SOSOverlay";
+import AuthMenu from "../components/AuthMenu";
 import { LocationSmoother, GpsAccuracyManager } from "../utils/locationSmoother";
 import { placesService } from "../utils/placesService";
 import { getAuthHeaders, getAuthUser } from "../utils/authStorage";
@@ -50,12 +51,15 @@ export default function HostRoomPage() {
   const [tripPath, setTripPath] = useState([]);
   const [controlsPanelOpen, setControlsPanelOpen] = useState(true);
   const [targetNavPanelOpen, setTargetNavPanelOpen] = useState(true);
+  const [savedTripPath, setSavedTripPath] = useState(null);
+  const [showMenu, setShowMenu] = useState(false);
   const [showTripModal, setShowTripModal] = useState(false);
   const [tripName, setTripName] = useState("");
   const [pendingTrip, setPendingTrip] = useState(null);
   const [waitingForLogin, setWaitingForLogin] = useState(false);
   const [locationStatus, setLocationStatus] = useState("idle");
   const [locationError, setLocationError] = useState("");
+  const [debugMode, setDebugMode] = useState(false);
   const mapRef = useRef(null);
   const watchIdRef = useRef(null);
   const warningRef = useRef({ signature: null, sentAt: 0 });
@@ -68,8 +72,31 @@ export default function HostRoomPage() {
     lastPoint: null,
     completed: false,
   });
+  const tripPathRef = useRef([]);
   const arrivalThresholdMeters = 50;
   const minTripPointDistance = 8;
+
+  const normalizeTripPath = (path) => {
+    if (!Array.isArray(path)) return null;
+    const normalized = path
+      .map((point) => {
+        if (!point) return null;
+        if (Array.isArray(point) && point.length >= 2) {
+          return { lat: Number(point[0]), lng: Number(point[1]) };
+        }
+        if (typeof point === "object") {
+          const lat = Number(point.lat ?? point.latitude);
+          const lng = Number(point.lng ?? point.longitude);
+          if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+            return { lat, lng };
+          }
+        }
+        return null;
+      })
+      .filter((point) => point && Number.isFinite(point.lat) && Number.isFinite(point.lng));
+
+    return normalized.length > 1 ? normalized : null;
+  };
 
   const targetInfo = (() => {
     if (!roomSettings?.targetLocation) return null;
@@ -298,6 +325,7 @@ export default function HostRoomPage() {
       completed: false,
     };
     setTripPath([]);
+    tripPathRef.current = [];
     setPendingTrip(null);
     setWaitingForLogin(false);
     setTripName("");
@@ -326,6 +354,7 @@ export default function HostRoomPage() {
       };
       tripStateRef.current.lastPoint = firstPoint;
       setTripPath([firstPoint]);
+      tripPathRef.current = [firstPoint];
     }
   }, [roomSettings?.mode, roomSettings?.targetLocation, currentUserLocation]);
 
@@ -352,7 +381,11 @@ export default function HostRoomPage() {
         timestamp: Date.now(),
       };
       tripStateRef.current.lastPoint = nextPoint;
-      setTripPath((prev) => [...prev, nextPoint]);
+      setTripPath((prev) => {
+        const updated = [...prev, nextPoint];
+        tripPathRef.current = updated;
+        return updated;
+      });
     }
 
     const distanceToTarget = calculateDistance(
@@ -366,6 +399,21 @@ export default function HostRoomPage() {
       tripStateRef.current.completed = true;
       tripStateRef.current.active = false;
 
+      const endPoint = {
+        lat: currentUserLocation.lat,
+        lng: currentUserLocation.lng,
+        timestamp: Date.now(),
+      };
+
+      let finalPath = tripPathRef.current.length
+        ? [...tripPathRef.current]
+        : [tripStateRef.current.startLocation].filter(Boolean);
+
+      const lastSaved = finalPath[finalPath.length - 1];
+      if (!lastSaved || calculateDistance(lastSaved.lat, lastSaved.lng, endPoint.lat, endPoint.lng) >= 1) {
+        finalPath = [...finalPath, endPoint];
+      }
+
       setPendingTrip({
         roomId: currentRoom?.roomId,
         startLocation: tripStateRef.current.startLocation,
@@ -376,7 +424,7 @@ export default function HostRoomPage() {
         targetLocation: roomSettings.targetLocation,
         startedAt: tripStateRef.current.startedAt,
         endedAt: Date.now(),
-        path: tripPath.length ? tripPath : [tripStateRef.current.startLocation],
+        path: finalPath,
       });
       setShowTripModal(true);
     }
@@ -523,6 +571,65 @@ export default function HostRoomPage() {
     }
   }, [locations, user, calculateDistance, formatDistance, roomSettings]);
 
+  // Listen for saved trip click to display on map
+  useEffect(() => {
+    console.log("HostRoomPage - useEffect mounted, checking state...");
+    
+    // Check for window.currentSavedTrip first (direct method)
+    if (window.currentSavedTrip && window.currentSavedTrip.path) {
+      console.log("HostRoomPage - Found currentSavedTrip on mount:", window.currentSavedTrip);
+      setSavedTripPath(normalizeTripPath(window.currentSavedTrip.path));
+      window.currentSavedTrip = null;
+    }
+    
+    const handleShowSavedTrip = (event) => {
+      console.log("HostRoomPage - EVENT RECEIVED!");
+      const trip = event.detail;
+      console.log("HostRoomPage - Received showSavedTrip event:", trip);
+      console.log("HostRoomPage - Path data:", trip?.path);
+      const nextPath = normalizeTripPath(trip?.path);
+      if (nextPath) {
+        setSavedTripPath(nextPath);
+        console.log("HostRoomPage - savedTripPath set to:", nextPath);
+        // Fit map to show the entire path
+        if (mapRef.current && mapRef.current.getMap) {
+          setTimeout(() => {
+            try {
+              const bounds = nextPath.map(p => [p.lat, p.lng]);
+              mapRef.current.getMap().fitBounds(bounds, { padding: [50, 50] });
+            } catch(e) {
+              console.log("HostRoomPage - fitBounds error:", e);
+            }
+          }, 500);
+        }
+      }
+    };
+
+    window.addEventListener('showSavedTrip', handleShowSavedTrip);
+    console.log("HostRoomPage - Event listener added");
+    return () => {
+      console.log("HostRoomPage - Event listener removed");
+      window.removeEventListener('showSavedTrip', handleShowSavedTrip);
+    };
+  }, []);
+
+  // Clear saved trip path when mode changes away from trip
+  useEffect(() => {
+    if (roomSettings?.mode !== "trip") {
+      setSavedTripPath(null);
+    }
+  }, [roomSettings?.mode]);
+
+  // Listen for close menu event
+  useEffect(() => {
+    const handleCloseMenu = () => {
+      console.log("HostRoomPage - Closing menu");
+      setShowMenu(false);
+    };
+    window.addEventListener('closeMenu', handleCloseMenu);
+    return () => window.removeEventListener('closeMenu', handleCloseMenu);
+  }, []);
+
   useEffect(() => {
     if (!socket || !currentRoom || !user) return;
     if (!roomSettings || roomSettings.mode !== "tracking") return;
@@ -666,17 +773,25 @@ export default function HostRoomPage() {
               <div className="room-topbar-right">
                 {console.log("Mode:", roomSettings?.mode) || null}
                 {roomSettings?.mode === "trip" ? (
-                  <button className="soft-pill-btn watch" onClick={() => setShowWatchPanel(true)}>
-                    Watch {watchers.length > 0 ? `(${watchers.length})` : ''}
-                  </button>
+                  <>
+                    <button className="soft-pill-btn watch" onClick={() => setShowWatchPanel(true)}>
+                      Watch {watchers.length > 0 ? `(${watchers.length})` : ''}
+                    </button>
+                  </>
                 ) : (
                   <button className="soft-pill-btn qr" onClick={() => setShowQR(true)}>Show QR</button>
                 )}
                 <button className="soft-pill-btn leave" onClick={handleLeaveRoom}>LEAVE</button>
+                <button className="soft-pill-btn account" onClick={() => { console.log("Account button clicked, showMenu:", !showMenu); setShowMenu(!showMenu); }}>
+                  {user?.picture ? <img src={user.picture} alt="" className="account-avatar" /> : "👤"}
+                </button>
               </div>
             </>
           )}
         </div>
+
+        {/* Account Menu */}
+        {showMenu && <AuthMenu />}
 
         {isMobile && roomSettings?.mode === "trip" && (
           <div className="trip-header-overlay">
@@ -1074,6 +1189,7 @@ export default function HostRoomPage() {
             isTargeting={isTargeting}
             roomSettings={roomSettings}
             tripPath={roomSettings?.mode === "trip" ? tripPath : null}
+            savedTripPath={savedTripPath}
           />
         </div>
 

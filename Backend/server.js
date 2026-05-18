@@ -98,6 +98,9 @@ app.post('/api/auth/google', async (req, res) => {
   }
 });
 
+// In-memory fallback for trips
+const tripsMemory = [];
+
 // Save trip route (requires Google ID token)
 app.post('/api/trips', requireAuth, async (req, res) => {
   try {
@@ -119,11 +122,11 @@ app.post('/api/trips', requireAuth, async (req, res) => {
       durationMs,
     } = req.body || {};
 
-    if (!tripName || !startLocation || !endLocation || !Array.isArray(path) || path.length < 2) {
-      return res.status(400).json({ error: 'Invalid trip data' });
-    }
+    console.log('Saving trip:', { tripName, startLocation, endLocation, path: path?.length });
 
-    const tripsCollection = getTripsCollection();
+    if (!tripName || !startLocation || !endLocation || !Array.isArray(path) || path.length < 2) {
+      return res.status(400).json({ error: 'Invalid trip data - need tripName, startLocation, endLocation, and path with 2+ points' });
+    }
 
     const doc = {
       userId: payload.sub,
@@ -140,11 +143,74 @@ app.post('/api/trips', requireAuth, async (req, res) => {
       createdAt: new Date(),
     };
 
-    const result = await tripsCollection.insertOne(doc);
-    res.json({ success: true, tripId: result.insertedId });
+    // Try MongoDB first, fallback to in-memory
+    if (isDBConnected()) {
+      try {
+        const tripsCollection = getTripsCollection();
+        if (tripsCollection) {
+          const result = await tripsCollection.insertOne(doc);
+          console.log('Trip saved to MongoDB:', result.insertedId);
+          return res.json({ success: true, tripId: result.insertedId });
+        }
+      } catch (mongoErr) {
+        console.warn('MongoDB write failed, using in-memory fallback:', mongoErr.message);
+      }
+    }
+
+    // Fallback to in-memory storage
+    const tripId = 'mem_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    doc._id = tripId;
+    tripsMemory.push(doc);
+    console.log('Trip saved to in-memory storage:', tripId);
+    res.json({ success: true, tripId: tripId, isMemory: true });
   } catch (err) {
-    console.error('Trip save error:', err);
-    res.status(500).json({ error: 'Failed to save trip' });
+    console.error('Trip save error:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to save trip: ' + err.message });
+  }
+});
+
+// Get user's saved trips
+app.get('/api/trips', requireAuth, async (req, res) => {
+  try {
+    console.log('GET /api/trips - user:', req.user?.sub);
+    
+    // Always check memory fallback
+    const memoryTrips = tripsMemory
+      .filter(t => t.userId === req.user.sub)
+      .map(t => ({ ...t, _id: undefined }));
+    console.log('GET /api/trips - memory trips count:', memoryTrips.length);
+    
+    if (!isDBConnected()) {
+      return res.json({ success: true, trips: memoryTrips });
+    }
+    
+    const tripsCollection = getTripsCollection();
+    let trips = [];
+
+    try {
+      trips = await tripsCollection
+        .find({ userId: req.user.sub })
+        .sort({ createdAt: -1 })
+        .toArray();
+    } catch (err) {
+      console.warn('GET /api/trips - sorted query failed, retrying without sort:', err.message);
+      trips = await tripsCollection
+        .find({ userId: req.user.sub })
+        .toArray();
+    }
+
+    console.log('GET /api/trips - db trips count:', trips.length, 'path:', trips[0]?.path?.length);
+    
+    // If no trips in DB, also return memory trips
+    const allTrips = trips.length > 0 ? trips : memoryTrips;
+    res.json({ success: true, trips: allTrips });
+  } catch (err) {
+    console.error('GET /api/trips error:', err);
+    // Fallback to memory on error
+    const memoryTrips = tripsMemory
+      .filter(t => t.userId === req.user.sub)
+      .map(t => ({ ...t, _id: undefined }));
+    res.json({ success: true, trips: memoryTrips });
   }
 });
 
