@@ -789,7 +789,7 @@ export default function MemberRoomPage() {
         </div>
 
         {/* Walkie Talkie */}
-        {currentRoom && user && (
+        {currentRoom && user && roomSettings?.mode !== "trip" && (
           <LiveChat
             roomId={roomId}
             members={memberList}
@@ -844,7 +844,9 @@ export default function MemberRoomPage() {
         )}
 
         {/* Emergency SOS Overlay */}
-        <SOSOverlay currentLocation={locations.find(loc => loc.userId === user?.userId)} />
+        {roomSettings?.mode !== "trip" && (
+          <SOSOverlay currentLocation={locations.find(loc => loc.userId === user?.userId)} />
+        )}
       </div>
     </div>
   );
