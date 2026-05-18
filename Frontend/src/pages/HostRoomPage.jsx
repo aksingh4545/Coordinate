@@ -724,26 +724,6 @@ export default function HostRoomPage() {
     }
   };
 
-  const handleSimulateTripComplete = () => {
-    if (!currentUserLocation || !roomSettings?.targetLocation) {
-      alert("Set a trip destination first!");
-      return;
-    }
-    const startLoc = tripStateRef.current.startLocation || { lat: currentUserLocation.lat - 0.01, lng: currentUserLocation.lng - 0.01 };
-    tripStateRef.current.completed = true;
-    tripStateRef.current.active = false;
-    setPendingTrip({
-      roomId: currentRoom?.roomId,
-      startLocation: startLoc,
-      endLocation: currentUserLocation,
-      targetLocation: roomSettings.targetLocation,
-      startedAt: Date.now() - 600000,
-      endedAt: Date.now(),
-      path: tripPath.length >= 2 ? tripPath : [startLoc, currentUserLocation],
-    });
-    setShowTripModal(true);
-  };
-
   const copyToClipboard = () => {
     navigator.clipboard.writeText(joinUrl);
     alert("Join link copied to clipboard!");
@@ -796,13 +776,6 @@ export default function HostRoomPage() {
                   <>
                     <button className="soft-pill-btn watch" onClick={() => setShowWatchPanel(true)}>
                       Watch {watchers.length > 0 ? `(${watchers.length})` : ''}
-                    </button>
-                    <button 
-                      className="soft-pill-btn save-trip" 
-                      onClick={handleSimulateTripComplete}
-                      title="Save Trip"
-                    >
-                      💾 Save
                     </button>
                   </>
                 ) : (
