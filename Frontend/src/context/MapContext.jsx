@@ -366,6 +366,7 @@ export function MapProvider({ children }) {
       userName: user.name,
       roomId: currentRoom.roomId,
       location: location,
+      isLocal: true,
       activatedAt: Date.now()
     });
 

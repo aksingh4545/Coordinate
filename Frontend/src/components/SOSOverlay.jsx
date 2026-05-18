@@ -1,8 +1,63 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, MapPin } from "lucide-react";
 import { useMap } from "../context/useMap";
+import placesService from "../utils/placesService";
 
 const SOS_COUNTDOWN_SECONDS = 5;
+const locationLabelCache = new Map();
+
+function getLocationKey(location) {
+  const lat = Number(location?.lat);
+  const lng = Number(location?.lng);
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return "";
+  }
+
+  return `${lat.toFixed(5)},${lng.toFixed(5)}`;
+}
+
+function useLocationLabel(location) {
+  const key = getLocationKey(location);
+  const lat = Number(location?.lat);
+  const lng = Number(location?.lng);
+  const [label, setLabel] = useState("");
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    if (!key) {
+      setLabel("");
+      return () => {
+        isCurrent = false;
+      };
+    }
+
+    const cachedLabel = locationLabelCache.get(key);
+    if (cachedLabel) {
+      setLabel(cachedLabel);
+      return () => {
+        isCurrent = false;
+      };
+    }
+
+    setLabel("Finding location...");
+
+    placesService.reverseGeocode({ lat, lng }).then((resolvedLabel) => {
+      if (!isCurrent) return;
+
+      const nextLabel = resolvedLabel || "Location shared on map";
+      locationLabelCache.set(key, nextLabel);
+      setLabel(nextLabel);
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [key, lat, lng]);
+
+  return label || "Location shared on map";
+}
 
 export default function SOSOverlay({ currentLocation }) {
   const {
@@ -15,6 +70,8 @@ export default function SOSOverlay({ currentLocation }) {
     cancelSOS,
     dismissIncomingSOS,
   } = useMap();
+  const emergencyLocationLabel = useLocationLabel(emergencySOS?.location);
+  const incomingLocationLabel = useLocationLabel(incomingSOS?.location);
 
   const handleSOSClick = useCallback(() => {
     if (currentLocation && currentLocation.lat && currentLocation.lng) {
@@ -74,8 +131,7 @@ export default function SOSOverlay({ currentLocation }) {
           <p>Your SOS has been sent to the room.</p>
           <p className="sos-location">
             <MapPin size={14} strokeWidth={2.4} />
-            {emergencySOS.location?.lat?.toFixed(4)},{" "}
-            {emergencySOS.location?.lng?.toFixed(4)}
+            <span>{emergencyLocationLabel}</span>
           </p>
           <button
             className="sos-cancel-btn"
@@ -103,8 +159,7 @@ export default function SOSOverlay({ currentLocation }) {
           {incomingSOS.location && (
             <p className="sos-location">
               <MapPin size={14} strokeWidth={2.4} />
-              {incomingSOS.location.lat?.toFixed(4)},{" "}
-              {incomingSOS.location.lng?.toFixed(4)}
+              <span>{incomingLocationLabel}</span>
             </p>
           )}
           <button className="sos-dismiss-btn" onClick={dismissIncomingSOS}>
