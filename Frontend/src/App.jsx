@@ -6,6 +6,7 @@ import HostRoomPage from "./pages/HostRoomPage";
 import JoinRoomPage from "./pages/JoinRoomPage";
 import MemberRoomPage from "./pages/MemberRoomPage";
 import WatchRoomPage from "./pages/WatchRoomPage";
+import AdminPage from "./pages/AdminPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -46,6 +47,7 @@ function App() {
               </ProtectedRoute>
             )}
           />
+          <Route path="/admin" element={<AdminPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </MapProvider>

@@ -51,6 +51,8 @@ app.use(cors({
     /https:\/\/.*\.ngrok-free\.dev$/,
   ].filter(Boolean),
   credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-key'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 }));
 app.use(express.json());
 
@@ -855,6 +857,254 @@ io.on('connection', (socket) => {
       }
     }
   });
+});
+
+// ===================== ADMIN API =====================
+
+// Test endpoint - no auth required
+app.get('/api/admin/ping', (req, res) => {
+  res.json({ message: 'Admin API is working' });
+});
+
+// Admin auth middleware (simple key-based)
+const requireAdminAuth = (req, res, next) => {
+  const adminKey = req.headers['x-admin-key'];
+  const validKey = process.env.ADMIN_KEY || 'admin_secret_key_2024';
+  
+  console.log('Admin auth check:', { received: adminKey, expected: validKey });
+  
+  if (adminKey !== validKey) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+};
+
+// Get admin dashboard stats
+app.get('/api/admin/stats', requireAdminAuth, async (req, res) => {
+  try {
+    let roomList = Array.from(rooms.values());
+    
+    // Include DB rooms
+    if (isDBConnected()) {
+      try {
+        const roomsCollection = getRoomsCollection();
+        if (roomsCollection) {
+          const dbRooms = await roomsCollection.find({}).toArray();
+          const existingIds = new Set(roomList.map(r => r.roomId));
+          dbRooms.forEach(r => {
+            if (!existingIds.has(r.roomId)) {
+              roomList.push(r);
+            }
+          });
+        }
+      } catch (e) {}
+    }
+    
+    const activeRooms = roomList.filter(r => r.isActive).length;
+    
+    res.json({
+      success: true,
+      stats: {
+        totalRooms: roomList.length,
+        activeRooms,
+        totalTrips: tripsMemory.length,
+        sosCount: 0,
+        dbConnected: isDBConnected()
+      }
+    });
+  } catch (err) {
+    console.error('Admin stats error:', err);
+    res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
+// Get all rooms for admin
+app.get('/api/admin/rooms', requireAdminAuth, async (req, res) => {
+  try {
+    const { status, mode, limit = 50, offset = 0 } = req.query;
+    
+    let roomList = [];
+    
+    // First try in-memory
+    roomList = Array.from(rooms.values());
+    console.log('In-memory rooms:', roomList.length);
+    
+    // If DB connected, get from database too
+    if (isDBConnected()) {
+      try {
+        const roomsCollection = getRoomsCollection();
+        if (roomsCollection) {
+          const dbRooms = await roomsCollection.find({}).toArray();
+          console.log('DB rooms:', dbRooms.length);
+          // Merge with in-memory (avoid duplicates)
+          const existingIds = new Set(roomList.map(r => r.roomId));
+          dbRooms.forEach(r => {
+            if (!existingIds.has(r.roomId)) {
+              roomList.push(r);
+            }
+          });
+        }
+      } catch (e) {
+        console.log('Error fetching DB rooms:', e.message);
+      }
+    }
+    
+    if (status === 'active') {
+      roomList = roomList.filter(r => r.isActive);
+    } else if (status === 'inactive') {
+      roomList = roomList.filter(r => !r.isActive);
+    }
+    
+    if (mode) {
+      roomList = roomList.filter(r => r.settings?.mode === mode);
+    }
+    
+    const total = roomList.length;
+    roomList = roomList.slice(Number(offset), Number(offset) + Number(limit));
+    
+    res.json({
+      success: true,
+      rooms: roomList,
+      total,
+      limit: Number(limit),
+      offset: Number(offset)
+    });
+  } catch (err) {
+    console.error('Admin rooms error:', err);
+    res.status(500).json({ error: 'Failed to fetch rooms' });
+  }
+});
+
+// Get room details
+app.get('/api/admin/rooms/:roomId', requireAdminAuth, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const room = rooms.get(roomId.toUpperCase());
+    
+    if (!room) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+    
+    res.json({ success: true, room });
+  } catch (err) {
+    console.error('Admin room detail error:', err);
+    res.status(500).json({ error: 'Failed to fetch room' });
+  }
+});
+
+// Delete/close room
+app.delete('/api/admin/rooms/:roomId', requireAdminAuth, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const normalizedRoomId = roomId.toUpperCase();
+    
+    rooms.delete(normalizedRoomId);
+    
+    const roomSocket = io.sockets.adapter.rooms.get(normalizedRoomId);
+    if (roomSocket) {
+      roomSocket.forEach(socketId => {
+        const socket = io.sockets.sockets.get(socketId);
+        if (socket) socket.leave(normalizedRoomId);
+      });
+    }
+    
+    res.json({ success: true, message: 'Room deleted' });
+  } catch (err) {
+    console.error('Admin delete room error:', err);
+    res.status(500).json({ error: 'Failed to delete room' });
+  }
+});
+
+// Get all users
+app.get('/api/admin/users', requireAdminAuth, async (req, res) => {
+  try {
+    const { limit = 50, offset = 0 } = req.query;
+    
+    let userList = [];
+    let total = 0;
+    
+    const dbConnected = isDBConnected();
+    console.log('Fetching users, db connected:', dbConnected);
+    
+    if (!dbConnected) {
+      return res.json({
+        success: true,
+        users: [],
+        total: 0,
+        limit: Number(limit),
+        offset: Number(offset),
+        message: 'Database not connected - showing in-memory only'
+      });
+    }
+    
+    const usersCollection = getUsersCollection();
+    if (usersCollection) {
+      userList = await usersCollection.find({}).toArray();
+      console.log('Found users:', userList.length);
+      total = userList.length;
+      userList = userList.slice(Number(offset), Number(offset) + Number(limit));
+    }
+    
+    res.json({
+      success: true,
+      users: userList,
+      total,
+      limit: Number(limit),
+      offset: Number(offset)
+    });
+  } catch (err) {
+    console.error('Admin users error:', err);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Get all trips
+app.get('/api/admin/trips', requireAdminAuth, async (req, res) => {
+  try {
+    const { limit = 50, offset = 0 } = req.query;
+    
+    const tripList = [...tripsMemory];
+    const total = tripList.length;
+    const sliced = tripList.slice(Number(offset), Number(offset) + Number(limit));
+    
+    res.json({
+      success: true,
+      trips: sliced,
+      total,
+      limit: Number(limit),
+      offset: Number(offset)
+    });
+  } catch (err) {
+    console.error('Admin trips error:', err);
+    res.status(500).json({ error: 'Failed to fetch trips' });
+  }
+});
+
+// Get system info
+app.get('/api/admin/system', requireAdminAuth, async (req, res) => {
+  try {
+    let usersCount = 0;
+    const usersCollection = getUsersCollection();
+    if (usersCollection) {
+      const allUsers = await usersCollection.find({}).toArray();
+      usersCount = allUsers.length;
+    }
+    
+    res.json({
+      success: true,
+      system: {
+        dbConnected: isDBConnected(),
+        nodeVersion: process.version,
+        uptime: process.uptime(),
+        roomsInMemory: rooms.size,
+        usersInDb: usersCount,
+        tripsInMemory: tripsMemory.length
+      }
+    });
+  } catch (err) {
+    console.error('Admin system error:', err);
+    res.status(500).json({ error: 'Failed to fetch system info' });
+  }
 });
 
 const PORT = process.env.PORT || 5000;
