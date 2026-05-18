@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useMap } from "../context/MapContext";
+import { useMap } from "../context/useMap";
 import MapView from "../components/MapView";
 import LiveChat from "../components/LiveChat";
 import SOSOverlay from "../components/SOSOverlay";
@@ -104,7 +104,7 @@ export default function MemberRoomPage() {
   }, [syncRoomLocations]);
 
   // Start location tracking when member enters room
-  const handleLocationUpdate = (latitude, longitude) => {
+  const handleLocationUpdate = useCallback((latitude, longitude) => {
     const { lat, lng } = locationSmootherRef.current.filter(latitude, longitude);
 
     if (socket) {
@@ -130,9 +130,9 @@ export default function MemberRoomPage() {
         },
       ];
     });
-  };
+  }, [currentRoom, setLocations, socket, user]);
 
-  const startLocationTracking = () => {
+  const startLocationTracking = useCallback(() => {
     if (!currentRoom || !user) {
       setError("Room not joined yet");
       return;
@@ -177,7 +177,7 @@ export default function MemberRoomPage() {
       timeout: 15000,
       maximumAge: 0,
     });
-  };
+  }, [currentRoom, handleLocationUpdate, setError, user]);
 
   useEffect(() => {
     if (!currentRoom || !user) return;
@@ -197,7 +197,7 @@ export default function MemberRoomPage() {
         watchIdRef.current = null;
       }
     };
-  }, [currentRoom, user, socket, setError]);
+  }, [currentRoom, user, socket, setError, startLocationTracking]);
 
   const resetTripState = () => {
     tripStateRef.current = {
@@ -361,7 +361,7 @@ export default function MemberRoomPage() {
       if (results.length === 0) {
         setTripSearchError("No results found");
       }
-    } catch (err) {
+    } catch {
       setTripSearchError("Search failed");
     } finally {
       setIsTripSearching(false);

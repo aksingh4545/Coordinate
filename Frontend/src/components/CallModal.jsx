@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { useMap } from "../context/MapContext";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useMap } from "../context/useMap";
 
 export default function CallModal({ isOpen, onClose, members, currentUserId }) {
   const { socket } = useMap();
@@ -16,7 +16,7 @@ export default function CallModal({ isOpen, onClose, members, currentUserId }) {
   const peerConnectionsRef = useRef({});
 
   // Initialize WebRTC
-  const createPeerConnection = (userId) => {
+  const createPeerConnection = useCallback((userId) => {
     const pc = new RTCPeerConnection({
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
@@ -59,7 +59,7 @@ export default function CallModal({ isOpen, onClose, members, currentUserId }) {
     };
 
     return pc;
-  };
+  }, [callType, isMuted, isVideoOff, socket]);
 
   // Start a call
   const startCall = (type = "audio") => {
@@ -96,7 +96,7 @@ export default function CallModal({ isOpen, onClose, members, currentUserId }) {
   };
 
   // End call
-  const endCall = () => {
+  const endCall = useCallback(() => {
     // Close all peer connections
     Object.values(peerConnectionsRef.current).forEach((pc) => {
       pc.close();
@@ -114,7 +114,7 @@ export default function CallModal({ isOpen, onClose, members, currentUserId }) {
     setIsInCall(false);
     setParticipants([]);
     onClose();
-  };
+  }, [onClose, socket]);
 
   // Toggle mute
   const toggleMute = () => {
@@ -213,7 +213,7 @@ export default function CallModal({ isOpen, onClose, members, currentUserId }) {
       socket.off("call:chat-message");
       socket.off("call:ended");
     };
-  }, [socket, isOpen, members, currentUserId]);
+  }, [socket, isOpen, members, currentUserId, createPeerConnection, endCall]);
 
   if (!isOpen) return null;
 

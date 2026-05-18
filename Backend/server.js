@@ -626,6 +626,20 @@ io.on('connection', (socket) => {
     io.to(normalizedRoomId).emit('room:warning', warning);
   });
 
+  socket.on('chat:message', ({ roomId, message }) => {
+    const normalizedRoomId = (roomId || "").toUpperCase();
+    const text = String(message?.text || "").trim().slice(0, 160);
+    if (!normalizedRoomId || !text || !message?.userId) return;
+
+    io.to(normalizedRoomId).emit('chat:message', {
+      ...message,
+      roomId: normalizedRoomId,
+      text,
+      userName: String(message.userName || "User").trim().slice(0, 40) || "User",
+      sentAt: message.sentAt || Date.now(),
+    });
+  });
+
   // ===== WALKIE-TALKIE HANDLERS =====
 
   // User starts talking (push-to-talk)

@@ -1,18 +1,19 @@
-import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useMap } from "../context/MapContext";
+import { useEffect, useRef, useState } from "react";
+import { MapPin, Users } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 import AuthMenu from "../components/AuthMenu";
+import { useMap } from "../context/useMap";
 
 export default function JoinRoomPage() {
   const { roomId } = useParams();
   const navigate = useNavigate();
-  const { joinRoom, currentRoom, isLoading, error } = useMap();
+  const { joinRoom, isLoading, error } = useMap();
   const [memberName, setMemberName] = useState("");
   const [roomInfo, setRoomInfo] = useState(null);
   const [localError, setLocalError] = useState("");
-  const normalizedRoomId = (roomId || "").toUpperCase();
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
+  const normalizedRoomId = (roomId || "").toUpperCase();
 
   useEffect(() => {
     if (!showMenu) return;
@@ -27,7 +28,6 @@ export default function JoinRoomPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showMenu]);
 
-  // Fetch room info on mount
   useEffect(() => {
     if (roomId && roomId !== normalizedRoomId) {
       navigate(`/join/${normalizedRoomId}`, { replace: true });
@@ -44,7 +44,7 @@ export default function JoinRoomPage() {
         } else {
           setLocalError(data.error || "Room not found");
         }
-      } catch (err) {
+      } catch {
         setLocalError("Failed to fetch room information");
       }
     };
@@ -70,7 +70,7 @@ export default function JoinRoomPage() {
   return (
     <div className="home-page">
       <div className="earth-bg"></div>
-      
+
       <header className="top-glass-bar">
         <div className="brand-small">Coordinator</div>
         <div className="tagline-top">Find your group in crowded places</div>
@@ -90,24 +90,32 @@ export default function JoinRoomPage() {
       </header>
 
       <main className="home-content">
-        <div className="custom-modal" style={{ maxWidth: '420px' }}>
+        <div className="custom-modal" style={{ maxWidth: "420px" }}>
           <div className="modal-head">
-            <div className="modal-icon">👥</div>
+            <div className="modal-icon">
+              <Users size={30} strokeWidth={2.4} />
+            </div>
             <h2>Join Group</h2>
             {roomInfo && (
               <p>
-                Host: <span style={{ fontWeight: '600' }}>{roomInfo.hostName}</span>
+                Host: <span style={{ fontWeight: "600" }}>{roomInfo.hostName}</span>
               </p>
             )}
-            <div style={{ 
-              marginTop: '12px', 
-              padding: '8px 16px', 
-              background: 'rgba(139, 92, 246, 0.2)', 
-              borderRadius: '12px',
-              display: 'inline-block'
-            }}>
-              <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '4px' }}>Group Code</p>
-              <p style={{ fontSize: '1.5rem', fontFamily: 'monospace', fontWeight: '700', color: '#8b5cf6' }}>{normalizedRoomId}</p>
+            <div
+              style={{
+                marginTop: "12px",
+                padding: "8px 16px",
+                background: "rgba(139, 92, 246, 0.2)",
+                borderRadius: "12px",
+                display: "inline-block",
+              }}
+            >
+              <p style={{ fontSize: "0.75rem", color: "rgba(255, 255, 255, 0.6)", marginBottom: "4px" }}>
+                Group Code
+              </p>
+              <p style={{ fontSize: "1.5rem", fontFamily: "monospace", fontWeight: "700", color: "#8b5cf6" }}>
+                {normalizedRoomId}
+              </p>
             </div>
           </div>
 
@@ -124,7 +132,7 @@ export default function JoinRoomPage() {
             </div>
 
             {(localError || error) && (
-              <div className="home-error" style={{ marginBottom: '16px' }}>
+              <div className="home-error" style={{ marginBottom: "16px" }}>
                 {localError || error}
               </div>
             )}
@@ -147,8 +155,11 @@ export default function JoinRoomPage() {
             </div>
           </form>
 
-          <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>
-            <p>📍 Your location will be shared with the group</p>
+          <div style={{ marginTop: "20px", textAlign: "center", fontSize: "0.8rem", color: "rgba(255, 255, 255, 0.5)" }}>
+            <p className="inline-icon-note">
+              <MapPin size={15} strokeWidth={2.4} />
+              Your location will be shared with the group
+            </p>
           </div>
         </div>
       </main>

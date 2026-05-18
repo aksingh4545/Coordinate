@@ -1,21 +1,35 @@
-import { useState, useEffect, useRef } from "react";
-import { useMap } from "../context/MapContext";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useMap } from "../context/useMap";
 import "./LiveChat.css";
 
-export default function LiveChat({ roomId, members, currentUserId, onClose }) {
+export default function LiveChat({ roomId, members, currentUserId }) {
   const { socket, currentRoom } = useMap();
   const [isTalking, setIsTalking] = useState(false);
   const [activeSpeaker, setActiveSpeaker] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [messageText, setMessageText] = useState("");
   const normalizedRoomId = (currentRoom?.roomId || roomId || "").toUpperCase();
   const mediaStreamRef = useRef(null);
   const animationFrameRef = useRef(null);
   const peerConnectionsRef = useRef(new Map());
   const remoteAudioRef = useRef(new Map());
-  const touchStartYRef = useRef(null);
 
   const currentUserName = members.find(m => m.userId === currentUserId)?.name || "You";
 
-  const createPeerConnection = (remoteUserId, isSender) => {
+  const cleanupPeer = useCallback((remoteUserId) => {
+    const pc = peerConnectionsRef.current.get(remoteUserId);
+    if (pc) {
+      pc.close();
+      peerConnectionsRef.current.delete(remoteUserId);
+    }
+    const audioEl = remoteAudioRef.current.get(remoteUserId);
+    if (audioEl) {
+      audioEl.srcObject = null;
+      remoteAudioRef.current.delete(remoteUserId);
+    }
+  }, []);
+
+  const createPeerConnection = useCallback((remoteUserId, isSender) => {
     const pc = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
@@ -60,20 +74,7 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
 
     peerConnectionsRef.current.set(remoteUserId, pc);
     return pc;
-  };
-
-  const cleanupPeer = (remoteUserId) => {
-    const pc = peerConnectionsRef.current.get(remoteUserId);
-    if (pc) {
-      pc.close();
-      peerConnectionsRef.current.delete(remoteUserId);
-    }
-    const audioEl = remoteAudioRef.current.get(remoteUserId);
-    if (audioEl) {
-      audioEl.srcObject = null;
-      remoteAudioRef.current.delete(remoteUserId);
-    }
-  };
+  }, [cleanupPeer, currentUserId, socket]);
 
   useEffect(() => {
     if (!socket || !normalizedRoomId) return;
@@ -126,14 +127,41 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
       }
     });
 
+    socket.on("chat:message", (message) => {
+      if (message.roomId && message.roomId !== normalizedRoomId) return;
+      setMessages((prev) => [...prev.slice(-4), message]);
+    });
+
     return () => {
       socket.off("walkie:Speaking");
       socket.off("walkie:Stopped");
       socket.off("walkie:offer");
       socket.off("walkie:answer");
       socket.off("walkie:ice");
+      socket.off("chat:message");
     };
-  }, [socket, normalizedRoomId, currentUserId]);
+  }, [socket, normalizedRoomId, currentUserId, createPeerConnection]);
+
+  const sendMessage = (e) => {
+    e.preventDefault();
+    const text = messageText.trim();
+    if (!text || !socket || !normalizedRoomId || !currentUserId) return;
+
+    const message = {
+      id: `${currentUserId}-${Date.now()}`,
+      roomId: normalizedRoomId,
+      userId: currentUserId,
+      userName: currentUserName,
+      text,
+      sentAt: Date.now(),
+    };
+
+    socket.emit("chat:message", {
+      roomId: normalizedRoomId,
+      message,
+    });
+    setMessageText("");
+  };
 
   const startTalking = async () => {
     try {
@@ -225,7 +253,7 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
     checkAudioLevel();
   };
 
-  const stopTalking = () => {
+  const stopTalking = useCallback(() => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
@@ -251,7 +279,7 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
 
     setIsTalking(false);
     setActiveSpeaker(null);
-  };
+  }, [cleanupPeer, currentUserId, normalizedRoomId, socket]);
 
   useEffect(() => {
     const handleMouseUp = () => {
@@ -259,43 +287,75 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
     };
     window.addEventListener("mouseup", handleMouseUp);
     return () => window.removeEventListener("mouseup", handleMouseUp);
-  }, [isTalking]);
+  }, [isTalking, stopTalking]);
 
   useEffect(() => {
     return () => stopTalking();
-  }, []);
+  }, [stopTalking]);
 
   return (
     <div className="walkie-fab-container">
+      {messages.length > 0 && (
+        <div className="walkie-message-stack">
+          {messages.slice(-4).map((message) => (
+            <div
+              key={message.id}
+              className={`walkie-message ${message.userId === currentUserId ? "own" : ""}`}
+            >
+              <span className="walkie-message-author">
+                {message.userId === currentUserId ? "You" : message.userName}
+              </span>
+              <span className="walkie-message-text">{message.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {activeSpeaker && (
         <div className="walkie-speaking-badge">
           {activeSpeaker === currentUserId ? "You" : members.find(m => m.userId === activeSpeaker)?.name} is talking...
         </div>
       )}
-      
-      <button
-        className={`ptt-button-fab ${isTalking ? "active" : ""}`}
-        onMouseDown={startTalking}
-        onMouseUp={stopTalking}
-        onTouchStart={(e) => { e.preventDefault(); startTalking(); }}
-        onTouchEnd={(e) => { e.preventDefault(); stopTalking(); }}
-      >
-        <div className="ptt-icon-fab">
-          {isTalking ? (
-            <svg viewBox="0 0 24 24" fill="currentColor" className="mic-active-fab">
-              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/>
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1 1.93c-3.94-.49-7-3.85-7-7.93h2c0 3.31 2.69 6 6 6s6-2.69 6-6h2c0 4.08-3.06 7.44-7 7.93V19h4v2H8v-2h4v-3.07z"/>
-            </svg>
-          )}
-        </div>
-        <span className="ptt-label-fab">
-          {isTalking ? "Release" : "Hold to talk"}
-        </span>
-        {isTalking && <div className="ptt-waves-fab"><span></span><span></span><span></span></div>}
-      </button>
+
+      <div className="walkie-control-dock">
+        <form className="walkie-message-form" onSubmit={sendMessage}>
+          <input
+            type="text"
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            placeholder="Message group"
+            maxLength={160}
+          />
+          <button type="submit" disabled={!messageText.trim()}>
+            Send
+          </button>
+        </form>
+
+        <button
+          className={`ptt-button-fab ${isTalking ? "active" : ""}`}
+          onMouseDown={startTalking}
+          onMouseUp={stopTalking}
+          onTouchStart={(e) => { e.preventDefault(); startTalking(); }}
+          onTouchEnd={(e) => { e.preventDefault(); stopTalking(); }}
+          aria-label={isTalking ? "Release to stop talking" : "Hold to talk"}
+        >
+          <div className="ptt-icon-fab">
+            {isTalking ? (
+              <svg viewBox="0 0 24 24" fill="currentColor" className="mic-active-fab">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/>
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1 1.93c-3.94-.49-7-3.85-7-7.93h2c0 3.31 2.69 6 6 6s6-2.69 6-6h2c0 4.08-3.06 7.44-7 7.93V19h4v2H8v-2h4v-3.07z"/>
+              </svg>
+            )}
+          </div>
+          <span className="ptt-label-fab">
+            {isTalking ? "Release" : "Hold"}
+          </span>
+          {isTalking && <div className="ptt-waves-fab"><span></span><span></span><span></span></div>}
+        </button>
+      </div>
     </div>
   );
 }

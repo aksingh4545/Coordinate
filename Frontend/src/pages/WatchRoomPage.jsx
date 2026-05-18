@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useMap } from "../context/MapContext";
+import { useEffect, useState } from "react";
+import { Eye, X } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 import MapView from "../components/MapView";
-import { getAuthUser } from "../utils/authStorage";
-import QRCode from "qrcode";
+import { useMap } from "../context/useMap";
 import "./MemberRoomPage.css";
 
 export default function WatchRoomPage() {
@@ -12,29 +11,15 @@ export default function WatchRoomPage() {
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
   const {
     currentRoom,
-    user,
     locations,
-    setCurrentRoom,
     roomSettings,
-    setError,
     joinRoom,
-    isLoading,
   } = useMap();
-  
-  const [showWatchQR, setShowWatchQR] = useState(false);
-  const [watchQrCode, setWatchQrCode] = useState("");
+
   const [watcherName, setWatcherName] = useState("");
   const [isJoining, setIsJoining] = useState(false);
   const [roomInfo, setRoomInfo] = useState(null);
-  const watchUrl = `${window.location.origin}/watch/${roomId}`;
 
-  useEffect(() => {
-    QRCode.toDataURL(watchUrl, { width: 256, height: 256 })
-      .then(setWatchQrCode)
-      .catch((err) => console.error("QR generation error:", err));
-  }, [roomId]);
-
-  // Fetch room info
   useEffect(() => {
     const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
     const fetchRoomInfo = async () => {
@@ -54,11 +39,10 @@ export default function WatchRoomPage() {
   const handleJoinAsWatcher = async (e) => {
     e.preventDefault();
     if (!watcherName.trim()) return;
-    
+
     setIsJoining(true);
     try {
       await joinRoom(roomId.toUpperCase(), watcherName.trim(), "watcher");
-      // Don't navigate - just stay here and show the map
     } catch (err) {
       alert(err.message || "Failed to join as watcher");
     } finally {
@@ -66,23 +50,17 @@ export default function WatchRoomPage() {
     }
   };
 
-  const handleLeaveRoom = async () => {
+  const handleLeaveRoom = () => {
     if (window.confirm("Are you sure you want to stop watching?")) {
       navigate("/");
     }
   };
 
-  const copyWatchLink = () => {
-    navigator.clipboard.writeText(watchUrl);
-    alert("Watch link copied to clipboard!");
-  };
-
-  // If not joined yet, show join form
   if (!currentRoom) {
     return (
       <div className="home-page">
         <div className="earth-bg"></div>
-        
+
         <header className="top-glass-bar">
           <div className="brand-small">Coordinator</div>
           <div className="tagline-top">Watch a trip in real-time</div>
@@ -90,7 +68,9 @@ export default function WatchRoomPage() {
 
         <div className="watch-join-container">
           <div className="watch-join-card">
-            <div className="watch-join-icon">👁️</div>
+            <div className="watch-join-icon">
+              <Eye size={46} strokeWidth={2.2} />
+            </div>
             <h2 className="watch-join-title">Watch Trip</h2>
             <p className="watch-join-subtitle">
               {roomInfo ? `Watching ${roomInfo.hostName}'s trip` : "Join to watch host's location"}
@@ -107,8 +87,8 @@ export default function WatchRoomPage() {
                   required
                 />
               </div>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="modal-btn primary"
                 disabled={isJoining}
               >
@@ -129,8 +109,7 @@ export default function WatchRoomPage() {
     <div className="room-page">
       <div className="room-earth-bg"></div>
       <div className="room-shell">
-        {/* Top Bar - Watcher View */}
-        <div className={`room-topbar ${isMobile ? 'mobile-compact' : ''}`}>
+        <div className={`room-topbar ${isMobile ? "mobile-compact" : ""}`}>
           {isMobile ? (
             <>
               <div className="mobile-top-left">
@@ -138,8 +117,8 @@ export default function WatchRoomPage() {
                 <span className="member-count">WATCHING</span>
               </div>
               <div className="mobile-top-right">
-                <button className="options-fab" onClick={handleLeaveRoom}>
-                  ✕
+                <button className="options-fab" onClick={handleLeaveRoom} aria-label="Stop watching">
+                  <X size={16} strokeWidth={2.4} />
                 </button>
               </div>
             </>
@@ -147,8 +126,8 @@ export default function WatchRoomPage() {
             <>
               <div className="room-topbar-left">
                 <span>Watching: {currentRoom?.hostName || "Trip"}</span>
-                <span className="room-mode-pill" style={{ background: "rgba(139, 92, 246, 0.15)", color: "#6b21a8" }}>
-                  WATCH MODE
+                <span className="room-mode-pill watch-mode-pill">
+                  Watch Mode
                 </span>
               </div>
 
@@ -161,10 +140,11 @@ export default function WatchRoomPage() {
           )}
         </div>
 
-        {/* Watch Info Banner */}
         {!isMobile && (
           <div className="watch-info-banner">
-            <div className="watch-info-icon">👁️</div>
+            <div className="watch-info-icon">
+              <Eye size={24} strokeWidth={2.3} />
+            </div>
             <div className="watch-info-text">
               <span className="watch-info-title">Watching {currentRoom?.hostName || "Host"}'s Location</span>
               <span className="watch-info-subtitle">You are in watch-only mode. Your location is not shared.</span>
@@ -172,14 +152,12 @@ export default function WatchRoomPage() {
           </div>
         )}
 
-        {/* Mobile Watch Info */}
         {isMobile && (
           <div className="mobile-watch-info">
             <span>Watching {currentRoom?.hostName || "Host"}'s trip</span>
           </div>
         )}
 
-        {/* Map */}
         <div className="room-map-wrap">
           <MapView
             locations={locations}

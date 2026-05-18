@@ -1,7 +1,6 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import io from "socket.io-client";
-
-const MapContext = createContext(null);
+import { MapContext } from "./MapContextCore";
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
 
@@ -357,44 +356,6 @@ export function MapProvider({ children }) {
     setRoomWarning(null);
   }, []);
 
-  // Emergency SOS Functions
-  const startSOSTimer = useCallback((location) => {
-    if (!currentRoom || !user) return;
-    
-    let seconds = 5;
-    setIsPressingSOS(true);
-    setSOSCountdown(seconds);
-
-    sosCountdownRef.current = setInterval(() => {
-      seconds--;
-      setSOSCountdown(seconds);
-      
-      if (socket) {
-        socket.emit("sos:countdown", {
-          roomId: currentRoom.roomId,
-          userId: user.userId,
-          seconds: seconds
-        });
-      }
-
-      if (seconds <= 0) {
-        clearInterval(sosCountdownRef.current);
-        activateSOS(location);
-      }
-    }, 1000);
-
-    sosTimerRef.current = sosCountdownRef.current;
-  }, [currentRoom, user, socket]);
-
-  const cancelSOSTimer = useCallback(() => {
-    if (sosCountdownRef.current) {
-      clearInterval(sosCountdownRef.current);
-      sosCountdownRef.current = null;
-    }
-    setIsPressingSOS(false);
-    setSOSCountdown(0);
-  }, []);
-
   const activateSOS = useCallback((location) => {
     if (!currentRoom || !user || !socket) return;
 
@@ -405,6 +366,7 @@ export function MapProvider({ children }) {
       userName: user.name,
       roomId: currentRoom.roomId,
       location: location,
+      isLocal: true,
       activatedAt: Date.now()
     });
 
@@ -420,6 +382,44 @@ export function MapProvider({ children }) {
       navigator.vibrate([200, 100, 200, 100, 200]);
     }
   }, [currentRoom, user, socket]);
+
+  // Emergency SOS Functions
+  const startSOSTimer = useCallback((location) => {
+    if (!currentRoom || !user) return;
+
+    let seconds = 5;
+    setIsPressingSOS(true);
+    setSOSCountdown(seconds);
+
+    sosCountdownRef.current = setInterval(() => {
+      seconds--;
+      setSOSCountdown(seconds);
+
+      if (socket) {
+        socket.emit("sos:countdown", {
+          roomId: currentRoom.roomId,
+          userId: user.userId,
+          seconds: seconds
+        });
+      }
+
+      if (seconds <= 0) {
+        clearInterval(sosCountdownRef.current);
+        activateSOS(location);
+      }
+    }, 1000);
+
+    sosTimerRef.current = sosCountdownRef.current;
+  }, [activateSOS, currentRoom, user, socket]);
+
+  const cancelSOSTimer = useCallback(() => {
+    if (sosCountdownRef.current) {
+      clearInterval(sosCountdownRef.current);
+      sosCountdownRef.current = null;
+    }
+    setIsPressingSOS(false);
+    setSOSCountdown(0);
+  }, []);
 
   const cancelSOS = useCallback(() => {
     if (!currentRoom || !user || !socket) return;
@@ -523,12 +523,4 @@ export function MapProvider({ children }) {
   };
 
   return <MapContext.Provider value={value}>{children}</MapContext.Provider>;
-}
-
-export function useMap() {
-  const context = useContext(MapContext);
-  if (!context) {
-    throw new Error("useMap must be used within a MapProvider");
-  }
-  return context;
 }

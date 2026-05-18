@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "re
 import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker, Circle, useMap as useLeafletMap, useMapEvents } from "react-leaflet";
 import { DivIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useMap } from "../context/MapContext";
+import { useMap } from "../context/useMap";
 
 // Component to update map view when locations change
 function MapUpdater({ locations, centerOnUsers, allowAutoFollow }) {
@@ -146,7 +146,7 @@ function RouteUpdaterWithState({ currentUserId, targetLocation, onRouteUpdate })
 const createMarkerIcon = (isHost, isCurrentUser, baseSize = 32) => {
   const color = isCurrentUser ? "#10b981" : isHost ? "#8b5cf6" : "#ec4899";
   const halfSize = baseSize / 2;
-  const fontSize = Math.round(baseSize * 0.5);
+  const fontSize = 0;
 
   return new DivIcon({
     html: `
@@ -219,7 +219,6 @@ const MapView = forwardRef(({
   const [allowAutoFollow, setAllowAutoFollow] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(15);
   const [routePath, setRoutePath] = useState(null);
-  const routeFetchedKeyRef = useRef(null);
 
   // Calculate marker size based on zoom level
   // Smaller when zoomed in, larger when zoomed out
@@ -254,14 +253,14 @@ const MapView = forwardRef(({
 
   const polylines = [];
 
-  const getRouteMidpoint = (routePath, activeUserLocation, targetLocation) => {
+  const getRouteMidpoint = (routePath) => {
     if (!routePath) return null;
     try {
       const decoded = decodePolyline(routePath);
       if (!decoded || decoded.length < 2) return null;
       const midIndex = Math.floor(decoded.length / 2);
       return decoded[midIndex];
-    } catch (e) {
+    } catch {
       return null;
     }
   };
@@ -289,7 +288,7 @@ const MapView = forwardRef(({
         />
       );
 
-      const routeMidpoint = getRouteMidpoint(routePath, activeUserLocation, targetLocation);
+      const routeMidpoint = getRouteMidpoint(routePath);
       const midLat = routeMidpoint ? routeMidpoint[0] : (activeUserLocation.lat + targetLocation.lat) / 2;
       const midLng = routeMidpoint ? routeMidpoint[1] : (activeUserLocation.lng + targetLocation.lng) / 2;
 

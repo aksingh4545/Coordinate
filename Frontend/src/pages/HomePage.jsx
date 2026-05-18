@@ -1,8 +1,30 @@
 import { useEffect, useRef, useState } from "react";
+import { MapPinned, Navigation, Plus, Route, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useMap } from "../context/MapContext";
+import { useMap } from "../context/useMap";
 import CoordinatorLogo from "../assets/CoordinatorLogo";
 import AuthMenu from "../components/AuthMenu";
+
+const roomModeOptions = [
+  {
+    value: "crowd",
+    label: "Crowd",
+    description: "Meet in busy places",
+    Icon: Users,
+  },
+  {
+    value: "tracking",
+    label: "Tracking",
+    description: "Follow live movement",
+    Icon: Navigation,
+  },
+  {
+    value: "trip",
+    label: "Trip",
+    description: "Plan a shared route",
+    Icon: Route,
+  },
+];
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -62,10 +84,8 @@ export default function HomePage() {
 
   return (
     <div className="home-page">
-      {/* scrolling world map background */}
       <div className="earth-bg"></div>
 
-      {/* top bar */}
       <header className="top-glass-bar">
         <div className="brand-small">Coordinator</div>
         <div className="tagline-top">Find your group in crowded places</div>
@@ -84,23 +104,22 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* center content */}
       <main className="home-content">
         <div className="hero-logo">
           <CoordinatorLogo />
         </div>
 
         <h1 className="hero-title">Coordinator</h1>
-        <p className="hero-subtitle">
-          Find your group in crowded places
-        </p>
+        <p className="hero-subtitle">Find your group in crowded places</p>
 
         <div className="hero-actions">
           <button
             onClick={() => setShowJoinModal(true)}
             className="action-card join-card"
           >
-            <div className="action-icon">👥</div>
+            <div className="action-icon">
+              <Users size={34} strokeWidth={2.2} />
+            </div>
             <div className="action-label">Join Room</div>
           </button>
 
@@ -108,7 +127,9 @@ export default function HomePage() {
             onClick={() => setShowCreateModal(true)}
             className="action-card create-card"
           >
-            <div className="action-icon">＋</div>
+            <div className="action-icon">
+              <Plus size={36} strokeWidth={2.4} />
+            </div>
             <div className="action-label">Create Room</div>
           </button>
         </div>
@@ -118,18 +139,17 @@ export default function HomePage() {
         </p>
 
         {(error || localError) && (
-          <div className="home-error">
-            {localError || error}
-          </div>
+          <div className="home-error">{localError || error}</div>
         )}
       </main>
 
-      {/* Create Room Modal */}
       {showCreateModal && (
         <div className="modal-backdrop-custom">
           <div className="custom-modal">
             <div className="modal-head">
-              <div className="modal-icon">＋</div>
+              <div className="modal-icon">
+                <Plus size={30} strokeWidth={2.5} />
+              </div>
               <h2>Create Room</h2>
               <p>Start a room and invite your group</p>
             </div>
@@ -148,14 +168,30 @@ export default function HomePage() {
 
               <div className="input-group">
                 <label>Mode</label>
-                <select
-                  value={roomMode}
-                  onChange={(e) => setRoomMode(e.target.value)}
-                >
-                  <option value="crowd">Crowd</option>
-                  <option value="tracking">Tracking</option>
-                  <option value="trip">Trip</option>
-                </select>
+                <div className="room-mode-grid" role="radiogroup" aria-label="Room mode">
+                  {roomModeOptions.map((option) => {
+                    const RoomModeIcon = option.Icon;
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`room-mode-option${roomMode === option.value ? " active" : ""}`}
+                        onClick={() => setRoomMode(option.value)}
+                        role="radio"
+                        aria-checked={roomMode === option.value}
+                      >
+                        <span className="room-mode-icon">
+                          <RoomModeIcon size={18} strokeWidth={2.2} />
+                        </span>
+                        <span className="room-mode-text">
+                          <span>{option.label}</span>
+                          <small>{option.description}</small>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="modal-actions">
@@ -183,12 +219,13 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Join Room Modal */}
       {showJoinModal && (
         <div className="modal-backdrop-custom">
           <div className="custom-modal">
             <div className="modal-head">
-              <div className="modal-icon">👥</div>
+              <div className="modal-icon">
+                <MapPinned size={30} strokeWidth={2.4} />
+              </div>
               <h2>Join Room</h2>
               <p>Enter room details to join your group</p>
             </div>

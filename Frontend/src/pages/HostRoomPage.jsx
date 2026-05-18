@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useMap } from "../context/MapContext";
+import { useMap } from "../context/useMap";
 import MapView from "../components/MapView";
 import LiveChat from "../components/LiveChat";
 import SOSOverlay from "../components/SOSOverlay";
@@ -132,14 +132,14 @@ export default function HostRoomPage() {
     QRCode.toDataURL(joinUrl, { width: 256, height: 256 })
       .then(setQrCode)
       .catch((err) => console.error("QR generation error:", err));
-  }, [roomId]);
+  }, [joinUrl]);
 
   useEffect(() => {
     // Generate watch QR code
     QRCode.toDataURL(watchUrl, { width: 256, height: 256 })
       .then(setWatchQrCode)
       .catch((err) => console.error("Watch QR generation error:", err));
-  }, [roomId]);
+  }, [watchUrl]);
 
   // Fetch watchers periodically
   useEffect(() => {
@@ -174,7 +174,7 @@ export default function HostRoomPage() {
   }, [syncRoomLocations]);
 
   // Start location tracking when host enters room
-  const handleLocationUpdate = (latitude, longitude, accuracy = null, speed = null) => {
+  const handleLocationUpdate = useCallback((latitude, longitude, accuracy = null, speed = null) => {
     accuracyManagerRef.current.addReading(accuracy);
     
     const filtered = locationSmootherRef.current.filter(latitude, longitude, accuracy, speed);
@@ -208,9 +208,9 @@ export default function HostRoomPage() {
         accuracy: accuracy,
       });
     }
-  };
+  }, [currentRoom, setLocations, socket, user]);
 
-  const startLocationTracking = () => {
+  const startLocationTracking = useCallback(() => {
     if (!currentRoom || !user) {
       setError("Room not joined yet");
       return;
@@ -256,7 +256,7 @@ export default function HostRoomPage() {
       timeout: 10000,
       maximumAge: 3000,
     });
-  };
+  }, [currentRoom, handleLocationUpdate, setError, user]);
 
   useEffect(() => {
     if (!currentRoom || !user) {
@@ -281,7 +281,7 @@ export default function HostRoomPage() {
         watchIdRef.current = null;
       }
     };
-  }, [currentRoom, user, socket, setError]);
+  }, [currentRoom, user, socket, setError, startLocationTracking]);
 
   const resetTripState = () => {
     tripStateRef.current = {
@@ -445,7 +445,7 @@ export default function HostRoomPage() {
       if (results.length === 0) {
         setTripSearchError("No results found");
       }
-    } catch (err) {
+    } catch {
       setTripSearchError("Search failed");
     } finally {
       setIsTripSearching(false);

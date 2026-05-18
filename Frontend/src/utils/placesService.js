@@ -171,6 +171,35 @@ export const placesService = {
     }
   },
 
+  async reverseGeocode(location) {
+    if (!location || !location.lat || !location.lng) {
+      return null;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        lat: String(location.lat),
+        lng: String(location.lng),
+      });
+      const response = await fetch(`${API_URL}/api/places/reverse?${params.toString()}`);
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const data = await response.json();
+
+      if (data.status === 'OK' && data.result) {
+        return data.result.shortAddress || data.result.address || data.result.name || null;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error reverse geocoding location:', error);
+      return null;
+    }
+  },
+
   async getPlaceDetails(placeId) {
     if (!placeId) return null;
 
