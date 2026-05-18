@@ -43,6 +43,7 @@ export default function HostRoomPage() {
   const [memberList, setMemberList] = useState([]);
   const [showOptions, setShowOptions] = useState(false);
   const [showTargetNav, setShowTargetNav] = useState(false);
+  const [showTripHeader, setShowTripHeader] = useState(true);
   const [isTargeting, setIsTargeting] = useState(false);
   const [tripQuery, setTripQuery] = useState("");
   const [tripSuggestions, setTripSuggestions] = useState([]);
@@ -834,7 +835,7 @@ export default function HostRoomPage() {
         {/* Account Menu */}
         {showMenu && <AuthMenu />}
 
-        {isMobile && roomSettings?.mode === "trip" && (
+        {isMobile && roomSettings?.mode === "trip" && showTripHeader && (
           <div className="trip-header-overlay">
             <div className="trip-header-row">
               <input
@@ -1001,7 +1002,15 @@ export default function HostRoomPage() {
               </div>
             )}
 
-            <div className="option-item" onClick={() => { setShowTargetNav(!showTargetNav); setShowOptions(false); }}>
+            <div className="option-item" onClick={() => { 
+              if (roomSettings?.mode === "trip") {
+                setTripQuery("");
+                setShowOptions(false);
+                setShowTripHeader(false);
+              }
+              setShowTargetNav(!showTargetNav); 
+              setShowOptions(false);
+            }}>
               <span className="option-label">🧭 Target Nav</span>
               <span className="option-value">{showTargetNav ? "Hide" : "Show"}</span>
             </div>

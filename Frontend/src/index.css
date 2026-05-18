@@ -2040,10 +2040,18 @@ body {
     color: #fbbf24 !important;
   }
 
+  .trip-header-overlay {
+    position: absolute;
+    top: 56px;
+    left: 8px;
+    right: 8px;
+    z-index: 95;
+  }
+
   /* Mobile Target Panel - Single Line */
   .mobile-target-panel {
     position: absolute;
-    top: 56px;
+    top: 110px;
     left: 8px;
     right: 8px;
     background: rgba(20, 20, 45, 0.95);
