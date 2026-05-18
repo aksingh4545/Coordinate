@@ -859,8 +859,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// ===================== ADMIN API =====================
-
+// ===================== ADMIN API ===================
 // Test endpoint - no auth required
 app.get('/api/admin/ping', (req, res) => {
   res.json({ message: 'Admin API is working' });
