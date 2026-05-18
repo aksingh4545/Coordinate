@@ -60,6 +60,8 @@ export default function HostRoomPage() {
   const [locationStatus, setLocationStatus] = useState("idle");
   const [locationError, setLocationError] = useState("");
   const [debugMode, setDebugMode] = useState(false);
+  const suppressTripSearchRef = useRef(false);
+  const lastSelectedTripQueryRef = useRef("");
   const mapRef = useRef(null);
   const watchIdRef = useRef(null);
   const warningRef = useRef({ signature: null, sentAt: 0 });
@@ -522,6 +524,16 @@ export default function HostRoomPage() {
     if (!trimmed) {
       setTripSuggestions([]);
       setTripSearchError("");
+      lastSelectedTripQueryRef.current = "";
+      return;
+    }
+
+    if (suppressTripSearchRef.current) {
+      suppressTripSearchRef.current = false;
+      return;
+    }
+
+    if (lastSelectedTripQueryRef.current && trimmed === lastSelectedTripQueryRef.current) {
       return;
     }
 
@@ -530,14 +542,17 @@ export default function HostRoomPage() {
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [tripQuery, currentUserLocation]);
+  }, [tripQuery]);
 
   const handleSelectTripPlace = (place) => {
+    suppressTripSearchRef.current = true;
+    lastSelectedTripQueryRef.current = place.name;
     updateRoomSettings({
       targetLocation: { lat: place.lat, lng: place.lng },
       targetLabel: place.name,
     });
     setTripSuggestions([]);
+    setTripSearchError("");
     setTripQuery(place.name);
   };
 
