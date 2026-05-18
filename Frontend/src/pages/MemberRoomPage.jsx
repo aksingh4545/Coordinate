@@ -42,6 +42,7 @@ export default function MemberRoomPage() {
   const [isTripSearching, setIsTripSearching] = useState(false);
   const [tripSearchError, setTripSearchError] = useState("");
   const [tripPath, setTripPath] = useState([]);
+  const [savedTripPath, setSavedTripPath] = useState(null);
   const [showTripModal, setShowTripModal] = useState(false);
   const [tripName, setTripName] = useState("");
   const [pendingTrip, setPendingTrip] = useState(null);
@@ -57,8 +58,31 @@ export default function MemberRoomPage() {
     lastPoint: null,
     completed: false,
   });
+  const tripPathRef = useRef([]);
   const arrivalThresholdMeters = 50;
   const minTripPointDistance = 8;
+
+  const normalizeTripPath = (path) => {
+    if (!Array.isArray(path)) return null;
+    const normalized = path
+      .map((point) => {
+        if (!point) return null;
+        if (Array.isArray(point) && point.length >= 2) {
+          return { lat: Number(point[0]), lng: Number(point[1]) };
+        }
+        if (typeof point === "object") {
+          const lat = Number(point.lat ?? point.latitude);
+          const lng = Number(point.lng ?? point.longitude);
+          if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+            return { lat, lng };
+          }
+        }
+        return null;
+      })
+      .filter((point) => point && Number.isFinite(point.lat) && Number.isFinite(point.lng));
+
+    return normalized.length > 1 ? normalized : null;
+  };
 
   useEffect(() => {
     if (!roomId || currentRoom) return;
@@ -102,6 +126,40 @@ export default function MemberRoomPage() {
 
     return () => clearInterval(syncInterval);
   }, [syncRoomLocations]);
+
+  // Listen for saved trip click to display on map
+  useEffect(() => {
+    if (window.currentSavedTrip?.path) {
+      setSavedTripPath(normalizeTripPath(window.currentSavedTrip.path));
+      window.currentSavedTrip = null;
+    }
+
+    const handleShowSavedTrip = (event) => {
+      const nextPath = normalizeTripPath(event?.detail?.path);
+      if (!nextPath) return;
+
+      setSavedTripPath(nextPath);
+      if (mapRef.current && mapRef.current.getMap) {
+        setTimeout(() => {
+          try {
+            const bounds = nextPath.map((p) => [p.lat, p.lng]);
+            mapRef.current.getMap().fitBounds(bounds, { padding: [50, 50] });
+          } catch (err) {
+            console.log("MemberRoomPage - fitBounds error:", err);
+          }
+        }, 500);
+      }
+    };
+
+    window.addEventListener('showSavedTrip', handleShowSavedTrip);
+    return () => window.removeEventListener('showSavedTrip', handleShowSavedTrip);
+  }, []);
+
+  useEffect(() => {
+    if (roomSettings?.mode !== "trip") {
+      setSavedTripPath(null);
+    }
+  }, [roomSettings?.mode]);
 
   // Start location tracking when member enters room
   const handleLocationUpdate = (latitude, longitude) => {
@@ -208,6 +266,7 @@ export default function MemberRoomPage() {
       completed: false,
     };
     setTripPath([]);
+    tripPathRef.current = [];
     setPendingTrip(null);
     setWaitingForLogin(false);
     setTripName("");
@@ -236,6 +295,7 @@ export default function MemberRoomPage() {
       };
       tripStateRef.current.lastPoint = firstPoint;
       setTripPath([firstPoint]);
+      tripPathRef.current = [firstPoint];
     }
   }, [roomSettings?.mode, roomSettings?.targetLocation, currentUserLocation]);
 
@@ -262,7 +322,11 @@ export default function MemberRoomPage() {
         timestamp: Date.now(),
       };
       tripStateRef.current.lastPoint = nextPoint;
-      setTripPath((prev) => [...prev, nextPoint]);
+      setTripPath((prev) => {
+        const updated = [...prev, nextPoint];
+        tripPathRef.current = updated;
+        return updated;
+      });
     }
 
     const distanceToTarget = calculateDistance(
@@ -276,6 +340,21 @@ export default function MemberRoomPage() {
       tripStateRef.current.completed = true;
       tripStateRef.current.active = false;
 
+      const endPoint = {
+        lat: currentUserLocation.lat,
+        lng: currentUserLocation.lng,
+        timestamp: Date.now(),
+      };
+
+      let finalPath = tripPathRef.current.length
+        ? [...tripPathRef.current]
+        : [tripStateRef.current.startLocation].filter(Boolean);
+
+      const lastSaved = finalPath[finalPath.length - 1];
+      if (!lastSaved || calculateDistance(lastSaved.lat, lastSaved.lng, endPoint.lat, endPoint.lng) >= 1) {
+        finalPath = [...finalPath, endPoint];
+      }
+
       setPendingTrip({
         roomId: currentRoom?.roomId,
         startLocation: tripStateRef.current.startLocation,
@@ -286,7 +365,7 @@ export default function MemberRoomPage() {
         targetLocation: roomSettings.targetLocation,
         startedAt: tripStateRef.current.startedAt,
         endedAt: Date.now(),
-        path: tripPath.length ? tripPath : [tripStateRef.current.startLocation],
+        path: finalPath,
       });
       setShowTripModal(true);
     }
@@ -679,6 +758,7 @@ export default function MemberRoomPage() {
             targetLocation={roomSettings?.targetLocation}
             roomSettings={roomSettings}
             tripPath={roomSettings?.mode === "trip" ? tripPath : null}
+            savedTripPath={savedTripPath}
           />
         </div>
 

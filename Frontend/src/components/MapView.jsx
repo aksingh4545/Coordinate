@@ -212,6 +212,7 @@ const MapView = forwardRef(({
   isTargeting = false,
   roomSettings = null,
   tripPath = null,
+  savedTripPath = null,
 }, ref) => {
   const { calculateDistance, formatDistance } = useMap();
   const mapRef = useRef(null);
@@ -565,6 +566,33 @@ const MapView = forwardRef(({
             lineCap="round"
             lineJoin="round"
           />
+        )}
+
+        {/* Saved trip path from profile */}
+        {console.log("MapView - savedTripPath:", savedTripPath) || null}
+        {savedTripPath && savedTripPath.length > 1 && (
+          <>
+            <Polyline
+              positions={savedTripPath.map((point) => [point.lat, point.lng])}
+              color="#8b5cf6"
+              weight={5}
+              opacity={0.9}
+              lineCap="round"
+              lineJoin="round"
+            />
+            {/* Start marker */}
+            <CircleMarker
+              center={[savedTripPath[0].lat, savedTripPath[0].lng]}
+              radius={8}
+              pathOptions={{ color: '#8b5cf6', fillColor: '#8b5cf6', fillOpacity: 1 }}
+            />
+            {/* End marker */}
+            <CircleMarker
+              center={[savedTripPath[savedTripPath.length - 1].lat, savedTripPath[savedTripPath.length - 1].lng]}
+              radius={8}
+              pathOptions={{ color: '#ec4899', fillColor: '#ec4899', fillOpacity: 1 }}
+            />
+          </>
         )}
 
         {/* Connection lines */}

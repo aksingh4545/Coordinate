@@ -169,6 +169,51 @@ app.post('/api/trips', requireAuth, async (req, res) => {
   }
 });
 
+// Get user's saved trips
+app.get('/api/trips', requireAuth, async (req, res) => {
+  try {
+    console.log('GET /api/trips - user:', req.user?.sub);
+    
+    // Always check memory fallback
+    const memoryTrips = tripsMemory
+      .filter(t => t.userId === req.user.sub)
+      .map(t => ({ ...t, _id: undefined }));
+    console.log('GET /api/trips - memory trips count:', memoryTrips.length);
+    
+    if (!isDBConnected()) {
+      return res.json({ success: true, trips: memoryTrips });
+    }
+    
+    const tripsCollection = getTripsCollection();
+    let trips = [];
+
+    try {
+      trips = await tripsCollection
+        .find({ userId: req.user.sub })
+        .sort({ createdAt: -1 })
+        .toArray();
+    } catch (err) {
+      console.warn('GET /api/trips - sorted query failed, retrying without sort:', err.message);
+      trips = await tripsCollection
+        .find({ userId: req.user.sub })
+        .toArray();
+    }
+
+    console.log('GET /api/trips - db trips count:', trips.length, 'path:', trips[0]?.path?.length);
+    
+    // If no trips in DB, also return memory trips
+    const allTrips = trips.length > 0 ? trips : memoryTrips;
+    res.json({ success: true, trips: allTrips });
+  } catch (err) {
+    console.error('GET /api/trips error:', err);
+    // Fallback to memory on error
+    const memoryTrips = tripsMemory
+      .filter(t => t.userId === req.user.sub)
+      .map(t => ({ ...t, _id: undefined }));
+    res.json({ success: true, trips: memoryTrips });
+  }
+});
+
 // Hybrid storage: MongoDB + in-memory cache for real-time Socket.IO operations
 const rooms = new Map(); // roomId -> room data (cache)
 const userSockets = new Map(); // userId -> socketId
