@@ -251,10 +251,6 @@ export function MapProvider({ children }) {
     setError(null);
 
     try {
-      const authUser = getAuthUser();
-      if (!authUser?.idToken) {
-        throw new Error("Login required to join a room");
-      }
       const currentUser = getOrCreateUser();
       const updatedUser = { ...currentUser, name: userName };
       setUser(updatedUser);
@@ -351,10 +347,6 @@ export function MapProvider({ children }) {
     if (!currentRoom || !user) return;
 
     try {
-      const authUser = getAuthUser();
-      if (!authUser?.idToken) {
-        throw new Error("Login required to leave a room");
-      }
       await fetch(`${SOCKET_URL}/api/rooms/${currentRoom.roomId}/leave`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },

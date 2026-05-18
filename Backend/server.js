@@ -341,11 +341,8 @@ async function getRoomFromCacheOrDb(roomId) {
 
 // API Routes
 
-// Protect all room APIs
-app.use('/api/rooms', requireAuth);
-
-// Create a new room (Host)
-app.post('/api/rooms/create', async (req, res) => {
+// Create a new room (Host) - requires auth
+app.post('/api/rooms/create', requireAuth, async (req, res) => {
   try {
     const { hostId, hostName, mode } = req.body;
     if (!hostId || !hostName) {
