@@ -149,11 +149,15 @@ export const placesService = {
     }
   },
 
-  async searchPlaces(query, location = null, radius = 2000) {
+  async searchPlaces(query, location = null, radius = 2000, options = {}) {
     if (!query) return [];
 
     try {
       let url = `${API_URL}/api/places/search?query=${encodeURIComponent(query)}`;
+
+      if (options.cityOnly) {
+        url += `&cityOnly=1`;
+      }
       
       if (location && location.lat && location.lng) {
         url += `&lat=${location.lat}&lng=${location.lng}&radius=${radius}`;

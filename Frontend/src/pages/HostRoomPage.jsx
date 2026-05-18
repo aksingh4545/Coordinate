@@ -485,15 +485,22 @@ export default function HostRoomPage() {
     await saveTripRequest(authUser, pendingTrip, tripName);
   };
 
-  const handleTripSearch = async () => {
-    if (!tripQuery.trim()) return;
+  const runTripSearch = async (query) => {
+    if (!query.trim()) {
+      setTripSuggestions([]);
+      setTripSearchError("");
+      return;
+    }
+
     setIsTripSearching(true);
     setTripSearchError("");
 
     try {
       const results = await placesService.searchPlaces(
-        tripQuery.trim(),
-        currentUserLocation
+        query.trim(),
+        currentUserLocation,
+        2000,
+        { cityOnly: true }
       );
       setTripSuggestions(results);
       if (results.length === 0) {
@@ -505,6 +512,25 @@ export default function HostRoomPage() {
       setIsTripSearching(false);
     }
   };
+
+  const handleTripSearch = async () => {
+    await runTripSearch(tripQuery);
+  };
+
+  useEffect(() => {
+    const trimmed = tripQuery.trim();
+    if (!trimmed) {
+      setTripSuggestions([]);
+      setTripSearchError("");
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      runTripSearch(trimmed);
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [tripQuery, currentUserLocation]);
 
   const handleSelectTripPlace = (place) => {
     updateRoomSettings({

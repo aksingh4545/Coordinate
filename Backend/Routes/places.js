@@ -56,7 +56,7 @@ router.get('/nearby', async (req, res) => {
 });
 
 router.get('/search', async (req, res) => {
-  const { query, lat, lng, radius = 2000 } = req.query;
+  const { query, lat, lng, radius = 2000, cityOnly } = req.query;
 
   if (!query) {
     return res.status(400).json({ error: 'Missing query' });
@@ -67,8 +67,12 @@ router.get('/search', async (req, res) => {
       q: query,
       format: 'json',
       addressdetails: '1',
-      limit: '10',
+      limit: '12',
     });
+
+    if (cityOnly === '1') {
+      searchParams.set('featuretype', 'city');
+    }
 
     if (process.env.NOMINATIM_EMAIL) {
       searchParams.set('email', process.env.NOMINATIM_EMAIL);

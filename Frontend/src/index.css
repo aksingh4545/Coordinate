@@ -2206,6 +2206,7 @@ body {
   justify-content: flex-end;
   padding: 80px 18px 18px;
   background: rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
 }
 
 .watcher-list-panel {
@@ -2359,6 +2360,7 @@ body {
     padding: 60px 8px 8px;
     justify-content: stretch;
     align-items: flex-start;
+    z-index: 3000;
   }
 
   .watcher-list-panel {
