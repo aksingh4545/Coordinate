@@ -52,6 +52,9 @@ export default function MemberRoomPage() {
   const [locationStatus, setLocationStatus] = useState("idle");
   const [locationError, setLocationError] = useState("");
   const watchIdRef = useRef(null);
+  const [batterySaver, setBatterySaver] = useState(false);
+  const pollIntervalRef = useRef(null);
+  const wakeLockRef = useRef(null);
   const suppressTripSearchRef = useRef(false);
   const lastSelectedTripQueryRef = useRef("");
   const locationSmootherRef = useRef(new LocationSmoother());
@@ -130,13 +133,14 @@ export default function MemberRoomPage() {
   const currentUserLocation = locations.find((loc) => loc.userId === user?.userId) || null;
 
   useEffect(() => {
-    // Sync locations periodically
+    // Sync locations periodically - throttled in battery saver mode
+    const interval = batterySaver ? 12000 : 3000;
     const syncInterval = setInterval(() => {
       syncRoomLocations();
-    }, 3000);
+    }, interval);
 
     return () => clearInterval(syncInterval);
-  }, [syncRoomLocations]);
+  }, [syncRoomLocations, batterySaver]);
 
   // Listen for saved trip click to display on map
   useEffect(() => {
@@ -211,7 +215,14 @@ export default function MemberRoomPage() {
       return;
     }
 
-    if (watchIdRef.current !== null) return;
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    if (pollIntervalRef.current !== null) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
 
     if (!navigator.geolocation) {
       setLocationStatus("error");
@@ -230,14 +241,13 @@ export default function MemberRoomPage() {
         return;
       }
       const { latitude, longitude, accuracy, speed } = position.coords;
-      console.log(`📍 GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} | Accuracy: ${accuracy?.toFixed(1)}m | Speed: ${speed?.toFixed(1)}m/s`);
+      console.log(`📍 GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} | Accuracy: ${accuracy?.toFixed(1)}m | Speed: ${speed?.toFixed(1)}m/s | Mode: ${batterySaver ? 'Saver' : 'HighAccuracy'}`);
       handleLocationUpdate(latitude, longitude, accuracy, speed);
       setLocationStatus("active");
       setLocationError("");
     };
 
     const onError = (error) => {
-      watchIdRef.current = null;
       let errorMsg = "Unable to get your location.";
       if (error.code === 1) {
         errorMsg = "Location permission denied. Please enable location access.";
@@ -251,23 +261,41 @@ export default function MemberRoomPage() {
       setError(errorMsg);
     };
 
-    // Get immediate position first (before starting to watch)
-    navigator.geolocation.getCurrentPosition(onSuccess, onError, {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0,
-    });
+    if (batterySaver) {
+      // 🔋 Battery Saver Mode: Polling position every 20 seconds with low accuracy (allows GPS chip to sleep)
+      navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 5000,
+      });
 
-    // Then start continuous watching (strictly fresh, no cached locations allowed)
-    watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 0,
-    });
+      pollIntervalRef.current = setInterval(() => {
+        navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 5000,
+        });
+      }, 20000);
+    } else {
+      // ⚡ High Accuracy Mode: Continuous real-time GPS tracking
+      navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      });
+
+      watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      });
+    }
   };
 
   useEffect(() => {
     if (!currentRoom || !user) return;
+
+    console.log('📍 Starting location tracking for member:', user.userId, 'in room:', currentRoom.roomId, 'BatterySaver:', batterySaver);
 
     if (socket) {
       socket.emit("user:join", {
@@ -283,8 +311,59 @@ export default function MemberRoomPage() {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
+      if (pollIntervalRef.current !== null) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
     };
-  }, [currentRoom, user, socket, setError]);
+  }, [currentRoom, user, socket, setError, batterySaver]);
+
+  const requestWakeLock = async () => {
+    try {
+      if ("wakeLock" in navigator && !wakeLockRef.current) {
+        wakeLockRef.current = await navigator.wakeLock.request("screen");
+        console.log("🔒 Member Screen Wake Lock acquired");
+        
+        wakeLockRef.current.addEventListener("release", () => {
+          console.log("🔒 Member Screen Wake Lock was released");
+          wakeLockRef.current = null;
+        });
+      }
+    } catch (err) {
+      console.warn("⚠️ Failed to acquire member wake lock:", err.message);
+    }
+  };
+
+  const releaseWakeLock = async () => {
+    if (wakeLockRef.current) {
+      try {
+        await wakeLockRef.current.release();
+        wakeLockRef.current = null;
+        console.log("🔒 Member Screen Wake Lock released manually");
+      } catch (err) {
+        console.error("⚠️ Failed to release member wake lock:", err);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!currentRoom) return;
+
+    requestWakeLock();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        requestWakeLock();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      releaseWakeLock();
+    };
+  }, [currentRoom]);
 
   const resetTripState = () => {
     tripStateRef.current = {
@@ -605,6 +684,13 @@ export default function MemberRoomPage() {
                 <span className="member-count">{locations.length}</span>
               </div>
               <div className="mobile-top-right">
+                <button 
+                  className={`mobile-battery-btn ${batterySaver ? 'active' : ''}`}
+                  onClick={() => setBatterySaver(!batterySaver)}
+                  title={batterySaver ? "Disable Battery Saver" : "Enable Battery Saver"}
+                >
+                  {batterySaver ? "🔋" : "🪫"}
+                </button>
                 {roomSettings?.mode && (
                   <span className={`mode-badge ${roomSettings.mode}`}>
                     {roomSettings.mode === "tracking" ? "TRK" : roomSettings.mode === "trip" ? "TRP" : "CRW"}
@@ -628,6 +714,13 @@ export default function MemberRoomPage() {
                 )}
               </div>
               <div className="room-topbar-right">
+                <button 
+                  className={`soft-pill-btn battery ${batterySaver ? 'active' : ''}`}
+                  onClick={() => setBatterySaver(!batterySaver)}
+                  title={batterySaver ? "Disable Battery Saver" : "Enable Battery Saver"}
+                >
+                  {batterySaver ? "🔋 Saver On" : "🪫 Saver Off"}
+                </button>
                 <button className="soft-pill-btn leave" onClick={handleLeaveRoom}>LEAVE</button>
               </div>
             </>

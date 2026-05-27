@@ -2781,3 +2781,65 @@ body {
     box-shadow: none !important;
   }
 }
+
+/* ===== Battery Saver Mode Buttons ===== */
+
+/* Desktop pill button */
+.soft-pill-btn.battery {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  font-size: 13px;
+  letter-spacing: 1px;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.soft-pill-btn.battery:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.35);
+  box-shadow: 0 4px 18px rgba(239, 68, 68, 0.15);
+}
+
+.soft-pill-btn.battery.active {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #10b981;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.12);
+}
+
+.soft-pill-btn.battery.active:hover {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
+}
+
+/* Mobile compact battery button */
+.mobile-battery-btn {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.mobile-battery-btn.active {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+  animation: batterySaverPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes batterySaverPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(16, 185, 129, 0.12); }
+  50%      { box-shadow: 0 0 16px rgba(16, 185, 129, 0.3); }
+}

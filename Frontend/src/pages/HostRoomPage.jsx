@@ -55,6 +55,8 @@ export default function HostRoomPage() {
   const [savedTripPath, setSavedTripPath] = useState(null);
   const [selectedSavedTrip, setSelectedSavedTrip] = useState(null);
   const [qrModalTab, setQrModalTab] = useState("join");
+  const [batterySaver, setBatterySaver] = useState(false);
+  const pollIntervalRef = useRef(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showTripModal, setShowTripModal] = useState(false);
   const [tripName, setTripName] = useState("");
@@ -68,6 +70,7 @@ export default function HostRoomPage() {
   const lastSelectedTripQueryRef = useRef("");
   const mapRef = useRef(null);
   const watchIdRef = useRef(null);
+  const wakeLockRef = useRef(null);
   const warningRef = useRef({ signature: null, sentAt: 0 });
   const locationSmootherRef = useRef(new LocationSmoother({ minAccuracy: 50 }));
   const accuracyManagerRef = useRef(new GpsAccuracyManager());
@@ -298,13 +301,14 @@ export default function HostRoomPage() {
   }, [roomId, roomSettings?.mode]);
 
   useEffect(() => {
-    // Sync locations periodically
+    // Sync locations periodically - throttled in battery saver mode
+    const interval = batterySaver ? 12000 : 3000;
     const syncInterval = setInterval(() => {
       syncRoomLocations();
-    }, 3000);
+    }, interval);
 
     return () => clearInterval(syncInterval);
-  }, [syncRoomLocations]);
+  }, [syncRoomLocations, batterySaver]);
 
   // Start location tracking when host enters room
   const handleLocationUpdate = (latitude, longitude, accuracy = null, speed = null) => {
@@ -349,7 +353,14 @@ export default function HostRoomPage() {
       return;
     }
 
-    if (watchIdRef.current !== null) return;
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    if (pollIntervalRef.current !== null) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
 
     if (!navigator.geolocation) {
       setLocationStatus("error");
@@ -368,14 +379,13 @@ export default function HostRoomPage() {
         return;
       }
       const { latitude, longitude, accuracy, speed } = position.coords;
-      console.log(`📍 GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} | Accuracy: ${accuracy?.toFixed(1)}m | Speed: ${speed?.toFixed(1)}m/s`);
+      console.log(`📍 GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} | Accuracy: ${accuracy?.toFixed(1)}m | Speed: ${speed?.toFixed(1)}m/s | Mode: ${batterySaver ? 'Saver' : 'HighAccuracy'}`);
       handleLocationUpdate(latitude, longitude, accuracy, speed);
       setLocationStatus("active");
       setLocationError("");
     };
 
     const onError = (error) => {
-      watchIdRef.current = null;
       let errorMsg = "Unable to get your location.";
       if (error.code === 1) {
         errorMsg = "Location permission denied. Please enable location access.";
@@ -389,19 +399,35 @@ export default function HostRoomPage() {
       setError(errorMsg);
     };
 
-    // Get immediate position first (before starting to watch)
-    navigator.geolocation.getCurrentPosition(onSuccess, onError, {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0,
-    });
+    if (batterySaver) {
+      // 🔋 Battery Saver Mode: Polling position every 20 seconds with low accuracy (allows GPS chip to sleep)
+      navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 5000,
+      });
 
-    // Then start continuous watching (strictly fresh, no cached locations allowed)
-    watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0,
-    });
+      pollIntervalRef.current = setInterval(() => {
+        navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 5000,
+        });
+      }, 20000);
+    } else {
+      // ⚡ High Accuracy Mode: Continuous real-time GPS tracking
+      navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      });
+
+      watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      });
+    }
   };
 
   useEffect(() => {
@@ -410,7 +436,7 @@ export default function HostRoomPage() {
       return;
     }
 
-    console.log('📍 Starting location tracking for host:', user.userId, 'in room:', currentRoom.roomId);
+    console.log('📍 Starting location tracking for host:', user.userId, 'in room:', currentRoom.roomId, 'BatterySaver:', batterySaver);
 
     if (socket) {
       socket.emit("user:join", {
@@ -426,8 +452,59 @@ export default function HostRoomPage() {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
+      if (pollIntervalRef.current !== null) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
     };
-  }, [currentRoom, user, socket, setError]);
+  }, [currentRoom, user, socket, setError, batterySaver]);
+
+  const requestWakeLock = async () => {
+    try {
+      if ("wakeLock" in navigator && !wakeLockRef.current) {
+        wakeLockRef.current = await navigator.wakeLock.request("screen");
+        console.log("🔒 Host Screen Wake Lock acquired");
+        
+        wakeLockRef.current.addEventListener("release", () => {
+          console.log("🔒 Host Screen Wake Lock was released");
+          wakeLockRef.current = null;
+        });
+      }
+    } catch (err) {
+      console.warn("⚠️ Failed to acquire host wake lock:", err.message);
+    }
+  };
+
+  const releaseWakeLock = async () => {
+    if (wakeLockRef.current) {
+      try {
+        await wakeLockRef.current.release();
+        wakeLockRef.current = null;
+        console.log("🔒 Host Screen Wake Lock released manually");
+      } catch (err) {
+        console.error("⚠️ Failed to release host wake lock:", err);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!currentRoom) return;
+
+    requestWakeLock();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        requestWakeLock();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      releaseWakeLock();
+    };
+  }, [currentRoom]);
 
   const resetTripState = () => {
     tripStateRef.current = {
@@ -907,6 +984,13 @@ export default function HostRoomPage() {
                 <span className="member-count">{locations.length}</span>
               </div>
               <div className="mobile-top-right">
+                <button 
+                  className={`mobile-battery-btn ${batterySaver ? 'active' : ''}`}
+                  onClick={() => setBatterySaver(!batterySaver)}
+                  title={batterySaver ? "Disable Battery Saver" : "Enable Battery Saver"}
+                >
+                  {batterySaver ? "🔋" : "🪫"}
+                </button>
                 {roomSettings?.mode === "trip" && (
                   <button 
                     className="mobile-watch-btn" 
@@ -937,6 +1021,13 @@ export default function HostRoomPage() {
 
               <div className="room-topbar-right">
                 {console.log("Mode:", roomSettings?.mode) || null}
+                <button 
+                  className={`soft-pill-btn battery ${batterySaver ? 'active' : ''}`}
+                  onClick={() => setBatterySaver(!batterySaver)}
+                  title={batterySaver ? "Disable Battery Saver" : "Enable Battery Saver"}
+                >
+                  {batterySaver ? "🔋 Saver On" : "🪫 Saver Off"}
+                </button>
                 {roomSettings?.mode === "trip" && (
                   <button className="soft-pill-btn watch" onClick={() => setShowWatchPanel(true)}>
                     Watchers {watchers.length > 0 ? `(${watchers.length})` : ''}
