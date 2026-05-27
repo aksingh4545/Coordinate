@@ -44,6 +44,7 @@ export default function MemberRoomPage() {
   const [tripSearchError, setTripSearchError] = useState("");
   const [tripPath, setTripPath] = useState([]);
   const [savedTripPath, setSavedTripPath] = useState(null);
+  const [selectedSavedTrip, setSelectedSavedTrip] = useState(null);
   const [showTripModal, setShowTripModal] = useState(false);
   const [tripName, setTripName] = useState("");
   const [pendingTrip, setPendingTrip] = useState(null);
@@ -88,13 +89,20 @@ export default function MemberRoomPage() {
   };
 
   useEffect(() => {
-    if (!roomId || currentRoom) return;
-    if (!user) return;
+    if (!roomId) return;
+    
+    if (!user || !user.name) {
+      console.log("No user session found, redirecting to join page");
+      navigate(`/join/${roomId}`);
+      return;
+    }
 
-    joinRoom(roomId.toUpperCase(), user.name || "User").catch((err) => {
+    // Always rejoin the room on mount to fetch the latest room details and settings (e.g. active trip mode)
+    joinRoom(roomId.toUpperCase(), user.name).catch((err) => {
       console.error("Failed to rejoin room:", err);
+      navigate(`/join/${roomId}`);
     });
-  }, [roomId, currentRoom, user, joinRoom]);
+  }, [roomId, user, joinRoom, navigate]);
 
   const targetInfo = (() => {
     if (!roomSettings?.targetLocation) return null;
@@ -134,14 +142,17 @@ export default function MemberRoomPage() {
   useEffect(() => {
     if (window.currentSavedTrip?.path) {
       setSavedTripPath(normalizeTripPath(window.currentSavedTrip.path));
+      setSelectedSavedTrip(window.currentSavedTrip);
       window.currentSavedTrip = null;
     }
 
     const handleShowSavedTrip = (event) => {
-      const nextPath = normalizeTripPath(event?.detail?.path);
+      const trip = event?.detail;
+      const nextPath = normalizeTripPath(trip?.path);
       if (!nextPath) return;
 
       setSavedTripPath(nextPath);
+      setSelectedSavedTrip(trip);
       if (mapRef.current && mapRef.current.getMap) {
         setTimeout(() => {
           try {
@@ -161,12 +172,13 @@ export default function MemberRoomPage() {
   useEffect(() => {
     if (roomSettings?.mode !== "trip") {
       setSavedTripPath(null);
+      setSelectedSavedTrip(null);
     }
   }, [roomSettings?.mode]);
 
   // Start location tracking when member enters room
-  const handleLocationUpdate = (latitude, longitude) => {
-    const { lat, lng } = locationSmootherRef.current.filter(latitude, longitude);
+  const handleLocationUpdate = (latitude, longitude, accuracy = null, speed = null) => {
+    const { lat, lng } = locationSmootherRef.current.filter(latitude, longitude, accuracy, speed);
 
     if (socket) {
       socket.emit("location:update", {
@@ -212,8 +224,14 @@ export default function MemberRoomPage() {
     setLocationError("");
 
     const onSuccess = (position) => {
-      const { latitude, longitude } = position.coords;
-      handleLocationUpdate(latitude, longitude);
+      // Validate freshness to block mobile browser stale cached readings
+      if (position.timestamp && Date.now() - position.timestamp > 15000) {
+        console.log("⚠️ Stale GPS reading cached by browser, ignoring");
+        return;
+      }
+      const { latitude, longitude, accuracy, speed } = position.coords;
+      console.log(`📍 GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} | Accuracy: ${accuracy?.toFixed(1)}m | Speed: ${speed?.toFixed(1)}m/s`);
+      handleLocationUpdate(latitude, longitude, accuracy, speed);
       setLocationStatus("active");
       setLocationError("");
     };
@@ -233,6 +251,14 @@ export default function MemberRoomPage() {
       setError(errorMsg);
     };
 
+    // Get immediate position first (before starting to watch)
+    navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    });
+
+    // Then start continuous watching (strictly fresh, no cached locations allowed)
     watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
       enableHighAccuracy: true,
       timeout: 15000,
@@ -444,7 +470,7 @@ export default function MemberRoomPage() {
         query.trim(),
         currentUserLocation,
         2000,
-        { cityOnly: true }
+        { cityOnly: false }
       );
       setTripSuggestions(results);
       if (results.length === 0) {
@@ -812,6 +838,36 @@ export default function MemberRoomPage() {
           />
         </div>
 
+        {/* Members Panel */}
+        {!isMobile && memberList.length > 0 && (
+          <div className="room-members-panel">
+            <div className="room-members-title">Group Members ({memberList.length})</div>
+            <div style={{ maxHeight: "320px", overflowY: "auto" }}>
+              {memberList.map((member) => {
+                const isCurrentUser = member.userId === user?.userId;
+                return (
+                  <div key={member.userId + "_" + member.name} className="member-row">
+                    <div className="member-left-side">
+                      <span className="status-dot live"></span>
+                      <div className="member-name-wrap">
+                        <span className="member-name">
+                          {member.name} {isCurrentUser ? " (You)" : ""}
+                        </span>
+                        {member.distance !== null && (
+                          <span className="member-status-text">
+                            {formatDistance(member.distance)} from you
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {member.isHost && <span className="member-role-host">Host</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Walkie Talkie */}
         {currentRoom && user && roomSettings?.mode !== "trip" && (
           <LiveChat
@@ -864,6 +920,26 @@ export default function MemberRoomPage() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Active Saved Trip Floating Badge */}
+        {savedTripPath && (
+          <div className="active-saved-trip-badge">
+            <span className="badge-icon">🧭</span>
+            <div className="badge-text">
+              <span className="badge-label">Viewing Saved Trip</span>
+              <span className="badge-name">{selectedSavedTrip?.tripName || "Unnamed Trip"}</span>
+            </div>
+            <button 
+              className="badge-close-btn" 
+              onClick={() => { 
+                setSavedTripPath(null); 
+                setSelectedSavedTrip(null); 
+              }}
+            >
+              ✕
+            </button>
           </div>
         )}
 

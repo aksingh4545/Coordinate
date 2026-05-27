@@ -304,24 +304,33 @@
 
 .trip-suggestion {
   text-align: left;
-  padding: 10px 12px;
+  padding: 12px 16px;
   border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: #e5e5e5;
-  color: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #ffffff;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.trip-suggestion:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateX(2px);
 }
 
 .trip-suggestion-name {
   display: block;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.85rem;
+  color: #ffffff;
 }
 
 .trip-suggestion-address {
   display: block;
-  font-size: 0.72rem;
-  color: #333333;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 2px;
 }
 
 .option-hint {

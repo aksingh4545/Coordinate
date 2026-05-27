@@ -53,6 +53,8 @@ export default function HostRoomPage() {
   const [controlsPanelOpen, setControlsPanelOpen] = useState(true);
   const [targetNavPanelOpen, setTargetNavPanelOpen] = useState(true);
   const [savedTripPath, setSavedTripPath] = useState(null);
+  const [selectedSavedTrip, setSelectedSavedTrip] = useState(null);
+  const [qrModalTab, setQrModalTab] = useState("join");
   const [showMenu, setShowMenu] = useState(false);
   const [showTripModal, setShowTripModal] = useState(false);
   const [tripName, setTripName] = useState("");
@@ -61,6 +63,7 @@ export default function HostRoomPage() {
   const [locationStatus, setLocationStatus] = useState("idle");
   const [locationError, setLocationError] = useState("");
   const [debugMode, setDebugMode] = useState(false);
+  const [plannedRoutePoints, setPlannedRoutePoints] = useState([]); // Store calculated route path
   const suppressTripSearchRef = useRef(false);
   const lastSelectedTripQueryRef = useRef("");
   const mapRef = useRef(null);
@@ -68,6 +71,100 @@ export default function HostRoomPage() {
   const warningRef = useRef({ signature: null, sentAt: 0 });
   const locationSmootherRef = useRef(new LocationSmoother({ minAccuracy: 50 }));
   const accuracyManagerRef = useRef(new GpsAccuracyManager());
+  
+  const decodePolyline = (encoded) => {
+    if (!encoded) return [];
+    const points = [];
+    let index = 0;
+    let lat = 0;
+    let lng = 0;
+    
+    while (index < encoded.length) {
+      let b;
+      let shift = 0;
+      let result = 0;
+      
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      
+      const dlat = (result & 1) ? ~(result >> 1) : (result >> 1);
+      lat += dlat;
+      
+      shift = 0;
+      result = 0;
+      
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      
+      const dlng = (result & 1) ? ~(result >> 1) : (result >> 1);
+      lng += dlng;
+      
+      points.push({ lat: lat / 1e5, lng: lng / 1e5 });
+    }
+    
+    return points;
+  };
+
+  const handlePlannedRouteUpdate = (encodedPolyline) => {
+    if (!encodedPolyline) {
+      setPlannedRoutePoints([]);
+      return;
+    }
+    try {
+      const decoded = decodePolyline(encodedPolyline);
+      setPlannedRoutePoints(decoded);
+    } catch (e) {
+      console.log("Error decoding polyline:", e);
+    }
+  };
+
+  const handleEndTripManually = () => {
+    if (roomSettings?.mode !== "trip" || !roomSettings?.targetLocation) return;
+    if (!currentUserLocation) return;
+
+    tripStateRef.current.completed = true;
+    tripStateRef.current.active = false;
+
+    // Use planned route path if available, fallback to walked path, fallback to start-end straight line
+    let finalPath = [];
+    if (plannedRoutePoints && plannedRoutePoints.length >= 2) {
+      finalPath = plannedRoutePoints;
+    } else if (tripPathRef.current.length) {
+      finalPath = [...tripPathRef.current];
+    } else {
+      finalPath = [
+        tripStateRef.current.startLocation,
+        {
+          lat: currentUserLocation.lat,
+          lng: currentUserLocation.lng,
+        }
+      ].filter(Boolean);
+    }
+
+    setPendingTrip({
+      roomId: currentRoom?.roomId,
+      startLocation: tripStateRef.current.startLocation || {
+        lat: currentUserLocation.lat,
+        lng: currentUserLocation.lng,
+      },
+      endLocation: {
+        lat: currentUserLocation.lat,
+        lng: currentUserLocation.lng,
+      },
+      targetLocation: roomSettings.targetLocation,
+      startedAt: tripStateRef.current.startedAt || Date.now(),
+      endedAt: Date.now(),
+      path: finalPath,
+    });
+    setShowTripModal(true);
+  };
+
   const tripStateRef = useRef({
     active: false,
     startedAt: null,
@@ -130,7 +227,7 @@ export default function HostRoomPage() {
   const watchUrl = `${window.location.origin}/watch/${roomId}`;
 
   useEffect(() => {
-    if (!roomId || currentRoom) return;
+    if (!roomId) return;
     if (!user) return;
 
     const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
@@ -159,7 +256,7 @@ export default function HostRoomPage() {
     };
 
     restoreRoom();
-  }, [roomId, currentRoom, user, setCurrentRoom, updateRoomSettings]);
+  }, [roomId, user, setCurrentRoom, updateRoomSettings]);
 
   useEffect(() => {
     // Generate QR code
@@ -265,6 +362,11 @@ export default function HostRoomPage() {
     setLocationError("");
 
     const onSuccess = (position) => {
+      // Validate freshness to block mobile browser stale cached readings
+      if (position.timestamp && Date.now() - position.timestamp > 15000) {
+        console.log("⚠️ Stale GPS reading cached by browser, ignoring");
+        return;
+      }
       const { latitude, longitude, accuracy, speed } = position.coords;
       console.log(`📍 GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} | Accuracy: ${accuracy?.toFixed(1)}m | Speed: ${speed?.toFixed(1)}m/s`);
       handleLocationUpdate(latitude, longitude, accuracy, speed);
@@ -287,10 +389,18 @@ export default function HostRoomPage() {
       setError(errorMsg);
     };
 
+    // Get immediate position first (before starting to watch)
+    navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    });
+
+    // Then start continuous watching (strictly fresh, no cached locations allowed)
     watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
       enableHighAccuracy: true,
       timeout: 10000,
-      maximumAge: 3000,
+      maximumAge: 0,
     });
   };
 
@@ -408,30 +518,40 @@ export default function HostRoomPage() {
         timestamp: Date.now(),
       };
 
-      let finalPath = tripPathRef.current.length
-        ? [...tripPathRef.current]
-        : [tripStateRef.current.startLocation].filter(Boolean);
-
-      const lastSaved = finalPath[finalPath.length - 1];
-      if (!lastSaved || calculateDistance(lastSaved.lat, lastSaved.lng, endPoint.lat, endPoint.lng) >= 1) {
-        finalPath = [...finalPath, endPoint];
+      // Use planned route path if available, fallback to walked path, fallback to start-end straight line
+      let finalPath = [];
+      if (plannedRoutePoints && plannedRoutePoints.length >= 2) {
+        finalPath = plannedRoutePoints;
+      } else if (tripPathRef.current.length) {
+        finalPath = [...tripPathRef.current];
+      } else {
+        finalPath = [
+          tripStateRef.current.startLocation || {
+            lat: currentUserLocation.lat,
+            lng: currentUserLocation.lng,
+          },
+          endPoint
+        ].filter(Boolean);
       }
 
       setPendingTrip({
         roomId: currentRoom?.roomId,
-        startLocation: tripStateRef.current.startLocation,
+        startLocation: tripStateRef.current.startLocation || {
+          lat: currentUserLocation.lat,
+          lng: currentUserLocation.lng,
+        },
         endLocation: {
           lat: currentUserLocation.lat,
           lng: currentUserLocation.lng,
         },
         targetLocation: roomSettings.targetLocation,
-        startedAt: tripStateRef.current.startedAt,
+        startedAt: tripStateRef.current.startedAt || Date.now(),
         endedAt: Date.now(),
         path: finalPath,
       });
       setShowTripModal(true);
     }
-  }, [currentUserLocation, roomSettings, calculateDistance, currentRoom, tripPath]);
+  }, [currentUserLocation, roomSettings, calculateDistance, currentRoom, tripPath, plannedRoutePoints]);
 
   useEffect(() => {
     if (!waitingForLogin || !pendingTrip) return;
@@ -503,7 +623,7 @@ export default function HostRoomPage() {
         query.trim(),
         currentUserLocation,
         2000,
-        { cityOnly: true }
+        { cityOnly: false }
       );
       setTripSuggestions(results);
       if (results.length === 0) {
@@ -621,6 +741,7 @@ export default function HostRoomPage() {
     if (window.currentSavedTrip && window.currentSavedTrip.path) {
       console.log("HostRoomPage - Found currentSavedTrip on mount:", window.currentSavedTrip);
       setSavedTripPath(normalizeTripPath(window.currentSavedTrip.path));
+      setSelectedSavedTrip(window.currentSavedTrip);
       window.currentSavedTrip = null;
     }
     
@@ -632,6 +753,7 @@ export default function HostRoomPage() {
       const nextPath = normalizeTripPath(trip?.path);
       if (nextPath) {
         setSavedTripPath(nextPath);
+        setSelectedSavedTrip(trip);
         console.log("HostRoomPage - savedTripPath set to:", nextPath);
         // Fit map to show the entire path
         if (mapRef.current && mapRef.current.getMap) {
@@ -659,6 +781,7 @@ export default function HostRoomPage() {
   useEffect(() => {
     if (roomSettings?.mode !== "trip") {
       setSavedTripPath(null);
+      setSelectedSavedTrip(null);
     }
   }, [roomSettings?.mode]);
 
@@ -814,15 +937,12 @@ export default function HostRoomPage() {
 
               <div className="room-topbar-right">
                 {console.log("Mode:", roomSettings?.mode) || null}
-                {roomSettings?.mode === "trip" ? (
-                  <>
-                    <button className="soft-pill-btn watch" onClick={() => setShowWatchPanel(true)}>
-                      Watch {watchers.length > 0 ? `(${watchers.length})` : ''}
-                    </button>
-                  </>
-                ) : (
-                  <button className="soft-pill-btn qr" onClick={() => setShowQR(true)}>Show QR</button>
+                {roomSettings?.mode === "trip" && (
+                  <button className="soft-pill-btn watch" onClick={() => setShowWatchPanel(true)}>
+                    Watchers {watchers.length > 0 ? `(${watchers.length})` : ''}
+                  </button>
                 )}
+                <button className="soft-pill-btn qr" onClick={() => setShowQR(true)}>Show QR</button>
                 <button className="soft-pill-btn leave" onClick={handleLeaveRoom}>LEAVE</button>
                 <button className="soft-pill-btn account" onClick={() => { console.log("Account button clicked, showMenu:", !showMenu); setShowMenu(!showMenu); }}>
                   {user?.picture ? <img src={user.picture} alt="" className="account-avatar" /> : "👤"}
@@ -901,6 +1021,16 @@ export default function HostRoomPage() {
                 <span>{formatDistance(targetInfo.distance)}</span>
                 <span>{targetInfo.bearingLabel}</span>
                 <span>~{targetInfo.etaMinutes} min</span>
+              </div>
+              <div className="control-row" style={{ marginTop: '12px' }}>
+                <button
+                  type="button"
+                  className="soft-pill-btn target"
+                  style={{ width: '100%', padding: '8px 16px', fontSize: '12px' }}
+                  onClick={handleEndTripManually}
+                >
+                  🏁 End & Save Route
+                </button>
               </div>
               </>
               )}
@@ -1218,6 +1348,18 @@ export default function HostRoomPage() {
                         <span>{targetInfo.bearingLabel}</span>
                         <span>~{targetInfo.etaMinutes} min</span>
                       </div>
+                      {roomSettings?.mode === "trip" && (
+                        <div className="control-row" style={{ marginTop: '12px' }}>
+                          <button
+                            type="button"
+                            className="soft-pill-btn target"
+                            style={{ width: '100%', padding: '8px 16px', fontSize: '12px' }}
+                            onClick={handleEndTripManually}
+                          >
+                            🏁 End & Save Route
+                          </button>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
@@ -1240,8 +1382,39 @@ export default function HostRoomPage() {
             roomSettings={roomSettings}
             tripPath={roomSettings?.mode === "trip" ? tripPath : null}
             savedTripPath={savedTripPath}
+            onRouteUpdate={handlePlannedRouteUpdate}
           />
         </div>
+
+        {/* Members Panel */}
+        {!isMobile && memberList.length > 0 && (
+          <div className="room-members-panel">
+            <div className="room-members-title">Group Members ({memberList.length})</div>
+            <div style={{ maxHeight: "320px", overflowY: "auto" }}>
+              {memberList.map((member) => {
+                const isCurrentUser = member.userId === user?.userId;
+                return (
+                  <div key={member.userId + "_" + member.name} className="member-row">
+                    <div className="member-left-side">
+                      <span className="status-dot live"></span>
+                      <div className="member-name-wrap">
+                        <span className="member-name">
+                          {member.name} {isCurrentUser ? " (You)" : ""}
+                        </span>
+                        {member.distance !== null && (
+                          <span className="member-status-text">
+                            {formatDistance(member.distance)} from you
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {member.isHost && <span className="member-role-host">Host</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Walkie Talkie */}
         {currentRoom && user && roomSettings?.mode !== "trip" && (
@@ -1300,45 +1473,160 @@ export default function HostRoomPage() {
 
         {/* QR Code Modal */}
         {showQR && (
-          <div className="qr-modal-backdrop" onClick={() => setShowQR(false)}>
+          <div className="qr-modal-backdrop" onClick={() => { setShowQR(false); setQrModalTab("join"); }}>
             <div className="qr-modal-content" onClick={(e) => e.stopPropagation()}>
               <button
-                onClick={() => setShowQR(false)}
+                onClick={() => { setShowQR(false); setQrModalTab("join"); }}
                 className="qr-modal-close"
               >
                 ×
               </button>
-              <h2 className="qr-modal-title">Share to Join</h2>
-              <div className="qr-code-wrap">
-                {qrCode ? (
-                  <img src={qrCode} alt="Join QR Code" />
-                ) : (
-                  <div className="qr-loading">Loading QR...</div>
-                )}
-              </div>
-              <div className="qr-room-id">
-                <p className="qr-label">Group Code</p>
-                <p className="qr-code-text">{roomId}</p>
-              </div>
-              <div className="qr-actions">
-                <button
-                  onClick={copyToClipboard}
-                  className="qr-btn-primary"
-                >
-                  📋 Copy Link
-                </button>
-                <button
-                  onClick={() => setShowQR(false)}
-                  className="qr-btn-secondary"
-                >
-                  Close
-                </button>
-              </div>
-              <div className="qr-link-wrap">
-                <p>Or share this link:</p>
-                <p className="qr-link-text">{joinUrl}</p>
-              </div>
+              
+              {roomSettings?.mode === "trip" ? (
+                <>
+                  <div className="qr-modal-tabs">
+                    <button 
+                      type="button" 
+                      className={`qr-modal-tab ${qrModalTab === "join" ? "active" : ""}`}
+                      onClick={() => setQrModalTab("join")}
+                    >
+                      📱 Join Group
+                    </button>
+                    <button 
+                      type="button" 
+                      className={`qr-modal-tab ${qrModalTab === "watch" ? "active" : ""}`}
+                      onClick={() => setQrModalTab("watch")}
+                    >
+                      👁️ Watch Trip
+                    </button>
+                  </div>
+
+                  {qrModalTab === "join" ? (
+                    <>
+                      <h2 className="qr-modal-title" style={{ marginTop: '0px', marginBottom: '16px' }}>Share to Join Group</h2>
+                      <div className="qr-code-wrap">
+                        {qrCode ? (
+                          <img src={qrCode} alt="Join QR Code" />
+                        ) : (
+                          <div className="qr-loading">Loading QR...</div>
+                        )}
+                      </div>
+                      <div className="qr-room-id">
+                        <p className="qr-label">Group Code</p>
+                        <p className="qr-code-text">{roomId}</p>
+                      </div>
+                      <div className="qr-actions">
+                        <button
+                          onClick={copyToClipboard}
+                          className="qr-btn-primary"
+                        >
+                          📋 Copy Join Link
+                        </button>
+                        <button
+                          onClick={() => { setShowQR(false); setQrModalTab("join"); }}
+                          className="qr-btn-secondary"
+                        >
+                          Close
+                        </button>
+                      </div>
+                      <div className="qr-link-wrap">
+                        <p>Or share this link:</p>
+                        <p className="qr-link-text">{joinUrl}</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h2 className="qr-modal-title" style={{ marginTop: '0px', marginBottom: '16px' }}>Share to Watch Trip</h2>
+                      <div className="qr-code-wrap">
+                        {watchQrCode ? (
+                          <img src={watchQrCode} alt="Watch QR Code" />
+                        ) : (
+                          <div className="qr-loading">Loading QR...</div>
+                        )}
+                      </div>
+                      <div className="qr-room-id">
+                        <p className="qr-label">Watch Access</p>
+                        <p className="qr-code-text" style={{ fontSize: '1.25rem', letterSpacing: '0px' }}>Live Watcher Link</p>
+                      </div>
+                      <div className="qr-actions">
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(watchUrl);
+                            alert("Watch link copied!");
+                          }}
+                          className="qr-btn-primary"
+                        >
+                          📋 Copy Watch Link
+                        </button>
+                        <button
+                          onClick={() => { setShowQR(false); setQrModalTab("join"); }}
+                          className="qr-btn-secondary"
+                        >
+                          Close
+                        </button>
+                      </div>
+                      <div className="qr-link-wrap">
+                        <p>Or share this watch link:</p>
+                        <p className="qr-link-text">{watchUrl}</p>
+                      </div>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <h2 className="qr-modal-title">Share to Join</h2>
+                  <div className="qr-code-wrap">
+                    {qrCode ? (
+                      <img src={qrCode} alt="Join QR Code" />
+                    ) : (
+                      <div className="qr-loading">Loading QR...</div>
+                    )}
+                  </div>
+                  <div className="qr-room-id">
+                    <p className="qr-label">Group Code</p>
+                    <p className="qr-code-text">{roomId}</p>
+                  </div>
+                  <div className="qr-actions">
+                    <button
+                      onClick={copyToClipboard}
+                      className="qr-btn-primary"
+                    >
+                      📋 Copy Link
+                    </button>
+                    <button
+                      onClick={() => setShowQR(false)}
+                      className="qr-btn-secondary"
+                    >
+                      Close
+                    </button>
+                  </div>
+                  <div className="qr-link-wrap">
+                    <p>Or share this link:</p>
+                    <p className="qr-link-text">{joinUrl}</p>
+                  </div>
+                </>
+              )}
             </div>
+          </div>
+        )}
+
+        {/* Active Saved Trip Floating Badge */}
+        {savedTripPath && (
+          <div className="active-saved-trip-badge">
+            <span className="badge-icon">🧭</span>
+            <div className="badge-text">
+              <span className="badge-label">Viewing Saved Trip</span>
+              <span className="badge-name">{selectedSavedTrip?.tripName || "Unnamed Trip"}</span>
+            </div>
+            <button 
+              className="badge-close-btn" 
+              onClick={() => { 
+                setSavedTripPath(null); 
+                setSelectedSavedTrip(null); 
+              }}
+            >
+              ✕
+            </button>
           </div>
         )}
 

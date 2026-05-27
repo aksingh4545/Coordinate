@@ -213,6 +213,7 @@ const MapView = forwardRef(({
   roomSettings = null,
   tripPath = null,
   savedTripPath = null,
+  onRouteUpdate = null, // Callback to pass calculated route up to the parent page
 }, ref) => {
   const { calculateDistance, formatDistance } = useMap();
   const mapRef = useRef(null);
@@ -494,7 +495,12 @@ const MapView = forwardRef(({
         <RouteUpdaterWithState 
           currentUserId={currentUserId} 
           targetLocation={targetLocation} 
-          onRouteUpdate={setRoutePath} 
+          onRouteUpdate={(points) => {
+            setRoutePath(points);
+            if (onRouteUpdate) {
+              onRouteUpdate(points);
+            }
+          }} 
         />
 
         <MapClickHandler onMapClick={onMapClick ? (latlng) => {

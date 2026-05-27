@@ -34,17 +34,31 @@ export class LocationSmoother {
     this.enableHighAccuracy = options.enableHighAccuracy !== false;
     this.positionHistory = [];
     this.maxHistorySize = options.maxHistorySize || 10;
-    this.minAccuracy = options.minAccuracy || 50;
+    this.minAccuracy = options.minAccuracy || 120; // Increased default limit to prevent aggressive freezing
     this.lastSmoothed = null;
+    this.rejectedConsecutive = 0; // Track consecutive low-accuracy rejections
     
     this.kalmanLat = new SimpleKalmanFilter(this.processNoise, this.measurementNoise);
     this.kalmanLng = new SimpleKalmanFilter(this.processNoise, this.measurementNoise);
   }
 
   filter(lat, lng, accuracy = null, speed = null) {
+    // If accuracy is extremely poor, handle it
     if (accuracy && accuracy > this.minAccuracy) {
-      console.log(`⚠️ Low accuracy (${accuracy}m), using previous estimate`);
-      return this.lastSmoothed || this.getWeightedAverage() || { lat, lng };
+      this.rejectedConsecutive++;
+      console.log(`⚠️ Extremely low accuracy (${accuracy}m), consecutive rejections: ${this.rejectedConsecutive}`);
+      
+      // If we are locked in a low accuracy environment (e.g. indoors) for 4+ updates,
+      // force-accept the coordinate to prevent freezing the user miles away.
+      if (this.rejectedConsecutive >= 4) {
+        console.log(`🔄 Force-recovering from frozen state. Resetting Kalman filter to new location.`);
+        this.reset();
+        this.rejectedConsecutive = 0;
+      } else {
+        return this.lastSmoothed || this.getWeightedAverage() || { lat, lng };
+      }
+    } else {
+      this.rejectedConsecutive = 0;
     }
 
     if (speed !== null && speed > 50) {
@@ -74,7 +88,8 @@ export class LocationSmoother {
     if (accuracy < 10) return 0.00005;
     if (accuracy < 20) return 0.0001;
     if (accuracy < 50) return 0.0005;
-    return 0.001;
+    if (accuracy < 100) return 0.002;
+    return 0.005; // Smooth heavily for accuracy between 100m and 120m
   }
 
   getWeightedAverage() {
@@ -101,6 +116,8 @@ export class LocationSmoother {
     this.kalmanLat.reset();
     this.kalmanLng.reset();
     this.positionHistory = [];
+    this.lastSmoothed = null;
+    this.rejectedConsecutive = 0;
   }
 }
 

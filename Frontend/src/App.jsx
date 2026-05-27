@@ -25,27 +25,15 @@ function App() {
           />
           <Route
             path="/join/:roomId"
-            element={(
-              <ProtectedRoute>
-                <JoinRoomPage />
-              </ProtectedRoute>
-            )}
+            element={<JoinRoomPage />}
           />
           <Route
             path="/room/:roomId"
-            element={(
-              <ProtectedRoute>
-                <MemberRoomPage />
-              </ProtectedRoute>
-            )}
+            element={<MemberRoomPage />}
           />
           <Route
             path="/watch/:roomId"
-            element={(
-              <ProtectedRoute>
-                <WatchRoomPage />
-              </ProtectedRoute>
-            )}
+            element={<WatchRoomPage />}
           />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
