@@ -223,6 +223,47 @@ app.get('/api/trips', requireAuth, async (req, res) => {
   }
 });
 
+// Get a single trip by ID (public for sharing)
+app.get('/api/trips/:tripId', async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    console.log('GET /api/trips/:tripId - ID:', tripId);
+
+    // Check in-memory trips first
+    const memoryTrip = tripsMemory.find(t => t._id === tripId);
+    if (memoryTrip) {
+      console.log('Found trip in-memory:', memoryTrip.tripName);
+      return res.json({ success: true, trip: memoryTrip });
+    }
+
+    if (isDBConnected()) {
+      const tripsCollection = getTripsCollection();
+      
+      // Try treating tripId as ObjectId if valid, fallback to string matching
+      let query = { _id: tripId };
+      try {
+        const { ObjectId } = await import('mongodb');
+        if (ObjectId.isValid(tripId)) {
+          query = { _id: new ObjectId(tripId) };
+        }
+      } catch (objErr) {
+        console.warn('MongoDB ObjectId import failed, using string match query');
+      }
+
+      const trip = await tripsCollection.findOne(query);
+      if (trip) {
+        console.log('Found trip in MongoDB:', trip.tripName);
+        return res.json({ success: true, trip });
+      }
+    }
+
+    res.status(404).json({ error: 'Trip not found' });
+  } catch (err) {
+    console.error('Fetch single trip error:', err);
+    res.status(500).json({ error: 'Failed to fetch trip details: ' + err.message });
+  }
+});
+
 // Get TURN credentials for WebRTC (requires auth)
 app.get('/api/turn', requireAuth, async (req, res) => {
   try {

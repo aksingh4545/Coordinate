@@ -74,6 +74,40 @@ export default function HomePage() {
     return () => window.removeEventListener('showSavedTrip', handleShowSavedTrip);
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tripId = params.get("tripId");
+    if (!tripId) return;
+
+    const fetchSharedTrip = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+        console.log("Fetching shared trip:", tripId);
+        const response = await fetch(`${API_URL}/api/trips/${tripId}`);
+        const data = await response.json();
+        
+        if (data.success && data.trip) {
+          const trip = data.trip;
+          const normalized = normalizeTripPath(trip.path);
+          if (normalized && normalized.length >= 2) {
+            setSavedTripPath(normalized);
+            setSelectedSavedTrip(trip);
+            setTimeout(() => {
+              if (mapRef.current?.getMap) {
+                const bounds = normalized.map(p => [p.lat, p.lng]);
+                mapRef.current.getMap().fitBounds(bounds, { padding: [50, 50] });
+              }
+            }, 500);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load shared trip:", err);
+      }
+    };
+
+    fetchSharedTrip();
+  }, []);
+
   const handleCreateRoom = async (e) => {
     e.preventDefault();
     if (!hostName.trim()) {
@@ -138,6 +172,17 @@ export default function HomePage() {
             )}
           </div>
           <div className="saved-trip-actions">
+            <button 
+              className="modal-btn primary" 
+              onClick={() => {
+                const tripId = selectedSavedTrip?._id || selectedSavedTrip?.id;
+                const shareUrl = `${window.location.origin}/?tripId=${tripId}`;
+                navigator.clipboard.writeText(shareUrl);
+                alert("Trip share link copied to clipboard!");
+              }}
+            >
+              🔗 Copy Share Link
+            </button>
             <button className="modal-btn secondary" onClick={() => { setSavedTripPath(null); setSelectedSavedTrip(null); }}>Close</button>
           </div>
         </div>
