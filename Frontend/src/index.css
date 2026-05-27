@@ -2727,3 +2727,57 @@ body {
   background: rgba(139, 92, 246, 0.3);
   box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
 }
+
+/* Mobile Responsive Tweaks & Smooth Touch Scroll Optimizations */
+@media (max-width: 640px) {
+  .active-saved-trip-badge {
+    bottom: 16px;
+    padding: 8px 14px;
+    gap: 8px;
+    border-radius: 30px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 12px rgba(139, 92, 246, 0.1);
+  }
+
+  .badge-icon {
+    font-size: 15px;
+  }
+
+  .badge-name {
+    font-size: 11px;
+    max-width: 150px;
+  }
+
+  .badge-close-btn {
+    width: 18px;
+    height: 18px;
+    font-size: 8px;
+  }
+  
+  .qr-modal-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+}
+
+/* Butter-Smooth momentum scrolling physics for touch screens */
+.room-members-panel,
+.watcher-list-panel,
+.watcher-list,
+.mobile-options-panel,
+.saved-trips-list,
+.suggestions-list,
+.custom-modal,
+.mobile-options-panel {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Eliminate sticky tap overlays in mobile browsers */
+@media (hover: none) {
+  .soft-pill-btn:hover,
+  .modal-btn:hover,
+  .qr-modal-tab:hover,
+  .watch-link-btn:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}

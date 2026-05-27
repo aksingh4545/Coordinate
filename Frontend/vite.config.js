@@ -14,5 +14,20 @@ export default defineConfig({
     // Keep the output INSIDE the Frontend folder so Vercel can find it
     outDir: 'dist', 
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('leaflet') || id.includes('react-leaflet')) {
+              return 'leaflet-vendor';
+            }
+            if (id.includes('react')) {
+              return 'react-vendor';
+            }
+            return 'vendor';
+          }
+        }
+      }
+    }
   },
 })
