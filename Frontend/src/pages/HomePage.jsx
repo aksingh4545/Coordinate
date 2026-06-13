@@ -88,6 +88,7 @@ export default function HomePage() {
   const [activeHomePanel, setActiveHomePanel] = useState(null); // 'create', 'join', 'layers', or null
   const [mapStyle, setMapStyle] = useState("osm");
   const [userLocation, setUserLocation] = useState(null);
+  const [hasCenteredMap, setHasCenteredMap] = useState(false);
   const locationSmootherRef = useRef(new LocationSmoother({ minAccuracy: 50 }));
 
   useEffect(() => {
@@ -135,6 +136,13 @@ export default function HomePage() {
       navigator.geolocation.clearWatch(watchId);
     };
   }, []);
+
+  useEffect(() => {
+    if (userLocation && !hasCenteredMap && mapRef.current?.getMap) {
+      mapRef.current.getMap().setView([userLocation.lat, userLocation.lng], 15);
+      setHasCenteredMap(true);
+    }
+  }, [userLocation, hasCenteredMap]);
 
   // Prefill the user's name if logged in
   useEffect(() => {
@@ -282,7 +290,7 @@ export default function HomePage() {
             lng: userLocation.lng,
           }] : []}
           currentUserId={currentUser?.id || 'temp-user'}
-          centerOnUsers={true}
+          centerOnUsers={false}
           roomSettings={{ mapStyle }}
         />
       </div>

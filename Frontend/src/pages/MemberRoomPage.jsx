@@ -72,7 +72,7 @@ export default function MemberRoomPage() {
     completed: false,
   });
   const tripPathRef = useRef([]);
-  const arrivalThresholdMeters = 50;
+  const arrivalThresholdMeters = roomSettings?.trackingRange ?? 50;
   const minTripPointDistance = 8;
 
   const normalizeTripPath = (path) => {
@@ -241,8 +241,9 @@ export default function MemberRoomPage() {
     setLocationError("");
 
     const onSuccess = (position) => {
-      // Validate freshness to block mobile browser stale cached readings
-      if (position.timestamp && Date.now() - position.timestamp > 120000) {
+      // Validate freshness to block mobile browser stale cached readings (allow initial cached reading if we have no location yet)
+      const hasExistingLocation = locations.some((loc) => loc.userId === user?.userId);
+      if (hasExistingLocation && position.timestamp && Date.now() - position.timestamp > 300000) {
         console.log("⚠️ Stale GPS reading cached by browser, ignoring");
         return;
       }
@@ -947,7 +948,7 @@ export default function MemberRoomPage() {
                 <span>Group: {roomId}</span>
                 <span className="muted">{locations.length} member{locations.length !== 1 ? 's' : ''}</span>
                 <span className="room-mode-pill">Mode: {modeLabel}</span>
-                {roomSettings?.mode === "tracking" && (
+                {(roomSettings?.mode === "tracking" || roomSettings?.mode === "trip") && (
                   <span className="room-range-pill">Range: {roomSettings.trackingRange ?? 30}m</span>
                 )}
               </div>

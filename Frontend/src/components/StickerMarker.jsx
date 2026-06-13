@@ -3,11 +3,7 @@ import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 
 const getAvatarModel = (isHost, isCurrentUser, name = "") => {
-  if (isCurrentUser) return "carla";
-  if (isHost) return "eric";
-  
-  const hash = (name || "").split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return hash % 2 === 0 ? "claudia" : "eric";
+  return "me";
 };
 
 const createStickerIcon = (modelName, isWalking, accentColor) => {
@@ -17,11 +13,10 @@ const createStickerIcon = (modelName, isWalking, accentColor) => {
     html: `
       <div class="sticker-marker-wrapper ${animClass}" style="--accent-color: ${accentColor};">
         <img src="/stickers/${modelName}.png" class="sticker-img" alt="${modelName}" />
-        <span class="waving-hand">👋</span>
         <div class="sticker-shadow"></div>
       </div>
     `,
-    className: `custom-sticker-marker-${modelName}`,
+    className: `custom-sticker-marker custom-sticker-marker-${modelName}`,
     iconSize: [40, 40],
     iconAnchor: [20, 38],
     popupAnchor: [0, -38],
@@ -49,6 +44,11 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
 
       {/* Inject custom scoped animations */}
       <style>{`
+        .custom-sticker-marker {
+          background: transparent !important;
+          border: none !important;
+        }
+
         @keyframes sticker-bob-walk {
           0%, 100% {
             transform: translateY(0) rotate(-4deg);
@@ -92,15 +92,6 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
           }
         }
 
-        @keyframes emoji-wave {
-          0%, 100% {
-            transform: rotate(0deg);
-          }
-          50% {
-            transform: rotate(-30deg) scale(1.2);
-          }
-        }
-
         .sticker-marker-wrapper {
           position: relative;
           width: 40px;
@@ -119,21 +110,6 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
           z-index: 2;
           filter: drop-shadow(0 0 4px var(--accent-color)) drop-shadow(0 2px 4px rgba(0,0,0,0.4));
           border-radius: 6px;
-        }
-
-        .waving-hand {
-          position: absolute;
-          top: -2px;
-          right: -4px;
-          font-size: 11px;
-          z-index: 3;
-          transform-origin: bottom left;
-          animation: emoji-wave 1.4s infinite ease-in-out;
-          display: none;
-        }
-
-        .sticker-marker-wrapper.waving .waving-hand {
-          display: block;
         }
 
         .sticker-shadow {

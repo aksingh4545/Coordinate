@@ -182,7 +182,7 @@ export default function HostRoomPage() {
     completed: false,
   });
   const tripPathRef = useRef([]);
-  const arrivalThresholdMeters = 50;
+  const arrivalThresholdMeters = roomSettings?.trackingRange ?? 50;
   const minTripPointDistance = 8;
 
   const normalizeTripPath = (path) => {
@@ -379,8 +379,9 @@ export default function HostRoomPage() {
     setLocationError("");
 
     const onSuccess = (position) => {
-      // Validate freshness to block mobile browser stale cached readings
-      if (position.timestamp && Date.now() - position.timestamp > 120000) {
+      // Validate freshness to block mobile browser stale cached readings (allow initial cached reading if we have no location yet)
+      const hasExistingLocation = locations.some((loc) => loc.userId === user?.userId);
+      if (hasExistingLocation && position.timestamp && Date.now() - position.timestamp > 300000) {
         console.log("⚠️ Stale GPS reading cached by browser, ignoring");
         return;
       }
@@ -1395,7 +1396,7 @@ export default function HostRoomPage() {
                       <span className="control-hint">{modeLabel}</span>
                     </div>
 
-                    {roomSettings?.mode === "tracking" && (
+                    {(roomSettings?.mode === "tracking" || roomSettings?.mode === "trip") && (
                       <div className="control-row">
                         <label className="control-label" htmlFor="trackingRange">Range (m)</label>
                         <input
@@ -1408,7 +1409,7 @@ export default function HostRoomPage() {
                           onChange={handleRangeChange}
                           className="control-input"
                         />
-                        <span className="control-hint">Nearest member rule</span>
+                        <span className="control-hint">{roomSettings?.mode === "trip" ? "Arrival check range" : "Nearest member rule"}</span>
                       </div>
                     )}
 

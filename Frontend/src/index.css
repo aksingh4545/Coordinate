@@ -3996,7 +3996,7 @@ body {
 /* Mobile Walkie Talkie FAB */
 .mob-walkie-fab {
   position: fixed;
-  bottom: 20px;
+  bottom: 80px;
   right: 12px;
   width: 56px;
   height: 56px;
