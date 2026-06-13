@@ -4,6 +4,7 @@ import { DivIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useMap } from "../context/MapContext";
 import { getAuthHeaders } from "../utils/authStorage";
+import StickerMarker from "./StickerMarker";
 
 // Component to update map view when locations change
 function MapUpdater({ locations, centerOnUsers, allowAutoFollow }) {
@@ -99,49 +100,100 @@ function decodePolyline(encoded) {
   return points;
 }
 
-function RouteUpdaterWithState({ currentUserId, targetLocation, onRouteUpdate }) {
-  const { locations } = useMap();
-  const fetchedKeyRef = useRef(null);
+const getAvatarModel = (isHost, isCurrentUser, name = "") => {
+  if (isCurrentUser) return "carla";
+  if (isHost) return "eric";
+  
+  // Distribute other members between claudia and eric based on name hash
+  const hash = (name || "").split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return hash % 2 === 0 ? "claudia" : "eric";
+};
 
-  useEffect(() => {
-    if (!targetLocation || !currentUserId) {
-      onRouteUpdate(null);
-      return;
-    }
+const create3DAvatarIcon = (isHost, isCurrentUser, name = "", movementState = 'waving') => {
+  const model = getAvatarModel(isHost, isCurrentUser, name);
+  const animClass = movementState;
+  const isFemale = model === 'carla' || model === 'claudia';
 
-    const currentLoc = locations?.find((loc) => loc.userId === currentUserId);
-    if (!currentLoc || !currentLoc.lat || !currentLoc.lng) return;
+  return new DivIcon({
+    html: `
+      <div class="avatar-3d-container">
+        <div class="avatar-3d human-3d user-${model} ${animClass}">
+          <!-- Head -->
+          <div class="head-group">
+            <div class="head">
+              <div class="face front face-skin">
+                <div class="hair-fringe"></div>
+                <div class="eyes">
+                  <div class="eye left"></div>
+                  <div class="eye right"></div>
+                </div>
+                <div class="smile"></div>
+              </div>
+              <div class="face back face-hair"></div>
+              <div class="face left face-hair"></div>
+              <div class="face right face-hair"></div>
+              <div class="face top face-hair"></div>
+              <div class="face bottom face-skin"></div>
+              ${isFemale ? '<div class="face hair-back-long"></div>' : ''}
+            </div>
+          </div>
+          <!-- Torso -->
+          <div class="torso-group">
+            <div class="torso">
+              <div class="face front face-clothes"></div>
+              <div class="face back face-clothes"></div>
+              <div class="face left face-clothes"></div>
+              <div class="face right face-clothes"></div>
+              <div class="face top face-clothes"></div>
+              <div class="face bottom face-clothes"></div>
+            </div>
+          </div>
+          <!-- Left Arm -->
+          <div class="limb arm left-arm">
+            <div class="face front face-sleeve"></div>
+            <div class="face back face-sleeve"></div>
+            <div class="face left face-sleeve"></div>
+            <div class="face right face-sleeve"></div>
+            <div class="face top face-sleeve"></div>
+            <div class="face bottom face-skin"></div>
+          </div>
+          <!-- Right Arm -->
+          <div class="limb arm right-arm">
+            <div class="face front face-sleeve"></div>
+            <div class="face back face-sleeve"></div>
+            <div class="face left face-sleeve"></div>
+            <div class="face right face-sleeve"></div>
+            <div class="face top face-sleeve"></div>
+            <div class="face bottom face-skin"></div>
+          </div>
+          <!-- Left Leg -->
+          <div class="limb leg left-leg">
+            <div class="face front face-pants"></div>
+            <div class="face back face-pants"></div>
+            <div class="face left face-pants"></div>
+            <div class="face right face-pants"></div>
+            <div class="face top face-pants"></div>
+            <div class="face bottom face-shoes"></div>
+          </div>
+          <!-- Right Leg -->
+          <div class="limb leg right-leg">
+            <div class="face front face-pants"></div>
+            <div class="face back face-pants"></div>
+            <div class="face left face-pants"></div>
+            <div class="face right face-pants"></div>
+            <div class="face top face-pants"></div>
+            <div class="face bottom face-shoes"></div>
+          </div>
+        </div>
+      </div>
+    `,
+    className: "custom-marker-3d",
+    iconSize: [40, 55],
+    iconAnchor: [20, 48],
+    popupAnchor: [0, -48],
+  });
+};
 
-    const key = `${currentLoc.lat.toFixed(5)}_${currentLoc.lng.toFixed(5)}_${targetLocation.lat.toFixed(5)}_${targetLocation.lng.toFixed(5)}`;
-    if (fetchedKeyRef.current === key) return;
-    fetchedKeyRef.current = key;
-
-    const fetchRoute = async () => {
-      try {
-        const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
-        const url = `${API_URL}/api/places/directions?originLat=${currentLoc.lat}&originLng=${currentLoc.lng}&destLat=${targetLocation.lat}&destLng=${targetLocation.lng}`;
-        console.log('🛣️ Fetching route from:', url);
-        const response = await fetch(url, { headers: { ...getAuthHeaders() } });
-        const data = await response.json();
-        console.log('🛣️ Route API response:', data);
-        if (data.routes?.[0]?.overview_polyline?.points) {
-          console.log('🛣️ Route found, points length:', data.routes[0].overview_polyline.points.length);
-          onRouteUpdate(data.routes[0].overview_polyline.points);
-        } else {
-          console.log('🛣️ No route found, response:', data);
-          onRouteUpdate(null);
-        }
-      } catch (err) {
-        console.error("Route fetch error:", err);
-        onRouteUpdate(null);
-      }
-    };
-
-    fetchRoute();
-  }, [targetLocation, currentUserId, locations, onRouteUpdate]);
-
-  return null;
-}
   
   // Dynamic marker icons based on zoom level
 const createMarkerIcon = (isHost, isCurrentUser, baseSize = 32) => {
@@ -223,6 +275,109 @@ const MapView = forwardRef(({
   const [zoomLevel, setZoomLevel] = useState(15);
   const [routePath, setRoutePath] = useState(null);
   const routeFetchedKeyRef = useRef(null);
+
+  // Safe Route Updater logic to prevent infinite update loops
+  const onRouteUpdateRef = useRef(onRouteUpdate);
+  useEffect(() => {
+    onRouteUpdateRef.current = onRouteUpdate;
+  }, [onRouteUpdate]);
+
+  useEffect(() => {
+    const hasValidTarget = targetLocation && typeof targetLocation.lat === 'number' && typeof targetLocation.lng === 'number';
+    if (!hasValidTarget || !currentUserId) {
+      setRoutePath(null);
+      onRouteUpdateRef.current?.(null);
+      routeFetchedKeyRef.current = null;
+      return;
+    }
+
+    const currentLoc = locations?.find((loc) => loc.userId === currentUserId);
+    if (!currentLoc || !currentLoc.lat || !currentLoc.lng) return;
+
+    const key = `${currentLoc.lat.toFixed(5)}_${currentLoc.lng.toFixed(5)}_${targetLocation.lat.toFixed(5)}_${targetLocation.lng.toFixed(5)}`;
+    if (routeFetchedKeyRef.current === key) return;
+    routeFetchedKeyRef.current = key;
+
+    const fetchRoute = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+        const url = `${API_URL}/api/places/directions?originLat=${currentLoc.lat}&originLng=${currentLoc.lng}&destLat=${targetLocation.lat}&destLng=${targetLocation.lng}`;
+        console.log('🛣️ Fetching route from:', url);
+        const response = await fetch(url, { headers: { ...getAuthHeaders() } });
+        const data = await response.json();
+        console.log('🛣️ Route API response:', data);
+        if (data.routes?.[0]?.overview_polyline?.points) {
+          const points = data.routes[0].overview_polyline.points;
+          console.log('🛣️ Route found, points length:', points.length);
+          setRoutePath(points);
+          onRouteUpdateRef.current?.(points);
+        } else {
+          console.log('🛣️ No route found, response:', data);
+          setRoutePath(null);
+          onRouteUpdateRef.current?.(null);
+        }
+      } catch (err) {
+        console.error("Route fetch error:", err);
+        setRoutePath(null);
+        onRouteUpdateRef.current?.(null);
+      }
+    };
+
+    fetchRoute();
+  }, [targetLocation, currentUserId, locations]);
+
+  // Movement state tracking (walking vs waving)
+  const [walkingUsers, setWalkingUsers] = useState({});
+  const prevLocsRef = useRef({});
+
+  useEffect(() => {
+    const now = Date.now();
+    let updated = false;
+    const newWalking = { ...walkingUsers };
+
+    locations.forEach((loc) => {
+      const prev = prevLocsRef.current[loc.userId];
+      if (prev) {
+        const dLat = loc.lat - prev.lat;
+        const dLng = loc.lng - prev.lng;
+        const distMoved = Math.sqrt(dLat * dLat + dLng * dLng);
+        const hasMoved = distMoved > 0.000015;
+
+        if (hasMoved) {
+          newWalking[loc.userId] = now;
+          prevLocsRef.current[loc.userId] = { lat: loc.lat, lng: loc.lng };
+          updated = true;
+        }
+      } else {
+        prevLocsRef.current[loc.userId] = { lat: loc.lat, lng: loc.lng };
+      }
+    });
+
+    if (updated) {
+      setWalkingUsers(newWalking);
+    }
+  }, [locations, walkingUsers]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      let updated = false;
+      const newWalking = { ...walkingUsers };
+
+      Object.keys(newWalking).forEach((userId) => {
+        if (now - newWalking[userId] > 4000) {
+          delete newWalking[userId];
+          updated = true;
+        }
+      });
+
+      if (updated) {
+        setWalkingUsers(newWalking);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [walkingUsers]);
 
   // Calculate marker size based on zoom level
   // Smaller when zoomed in, larger when zoomed out
@@ -492,16 +647,7 @@ const MapView = forwardRef(({
         <MapInteractionTracker onUserInteracted={() => setAllowAutoFollow(false)} />
         <MapUpdater locations={locations} centerOnUsers={centerOnUsers} allowAutoFollow={allowAutoFollow} />
         <ZoomHandler onZoomChange={setZoomLevel} />
-        <RouteUpdaterWithState 
-          currentUserId={currentUserId} 
-          targetLocation={targetLocation} 
-          onRouteUpdate={(points) => {
-            setRoutePath(points);
-            if (onRouteUpdate) {
-              onRouteUpdate(points);
-            }
-          }} 
-        />
+
 
         <MapClickHandler onMapClick={onMapClick ? (latlng) => {
           if (isTargeting) {
@@ -515,15 +661,14 @@ const MapView = forwardRef(({
           const isCurrentUser = loc.userId === currentUserId;
 
           return (
-            <Marker
+            <StickerMarker
               key={loc.userId}
               position={[loc.lat, loc.lng]}
-              icon={createMarkerIcon(isHost, isCurrentUser, markerSize)}
-            >
-              <Popup>
-                <p><b>{loc.name}</b> {isCurrentUser ? '📍' : ''} {isHost ? '🎯' : ''}</p>
-              </Popup>
-            </Marker>
+              isHost={isHost}
+              isCurrentUser={isCurrentUser}
+              name={loc.name}
+              isWalking={walkingUsers[loc.userId] != null}
+            />
           );
         })}
 

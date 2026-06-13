@@ -321,6 +321,18 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
     return () => window.removeEventListener("mouseup", handleMouseUp);
   }, [isTalking]);
 
+  // Listen for mobile toolbar walkie-talkie events
+  useEffect(() => {
+    const handleMobileStart = () => startTalking();
+    const handleMobileStop = () => stopTalking();
+    window.addEventListener('mobileWalkieStart', handleMobileStart);
+    window.addEventListener('mobileWalkieStop', handleMobileStop);
+    return () => {
+      window.removeEventListener('mobileWalkieStart', handleMobileStart);
+      window.removeEventListener('mobileWalkieStop', handleMobileStop);
+    };
+  }, []);
+
   useEffect(() => {
     return () => stopTalking();
   }, []);
