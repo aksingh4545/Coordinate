@@ -57,7 +57,7 @@ export default function MemberRoomPage() {
   const wakeLockRef = useRef(null);
   const suppressTripSearchRef = useRef(false);
   const lastSelectedTripQueryRef = useRef("");
-  const locationSmootherRef = useRef(new LocationSmoother());
+  const locationSmootherRef = useRef(new LocationSmoother({ minAccuracy: 50 }));
   // New mobile UI state
   const [showMembersPanel, setShowMembersPanel] = useState(false);
   const [showLayersPanel, setShowLayersPanel] = useState(false);

@@ -17,13 +17,14 @@ const createStickerIcon = (modelName, isWalking, accentColor) => {
     html: `
       <div class="sticker-marker-wrapper ${animClass}" style="--accent-color: ${accentColor};">
         <img src="/stickers/${modelName}.png" class="sticker-img" alt="${modelName}" />
+        <span class="waving-hand">👋</span>
         <div class="sticker-shadow"></div>
       </div>
     `,
     className: `custom-sticker-marker-${modelName}`,
-    iconSize: [60, 60],
-    iconAnchor: [30, 50],
-    popupAnchor: [0, -50],
+    iconSize: [40, 40],
+    iconAnchor: [20, 38],
+    popupAnchor: [0, -38],
   });
 };
 
@@ -53,7 +54,7 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
             transform: translateY(0) rotate(-4deg);
           }
           50% {
-            transform: translateY(-10px) rotate(4deg);
+            transform: translateY(-6px) rotate(4deg);
           }
         }
 
@@ -73,10 +74,10 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
             transform: translateY(0) rotate(0deg);
           }
           25% {
-            transform: translateY(-3px) rotate(-1.5deg);
+            transform: translateY(-2px) rotate(-1deg);
           }
           75% {
-            transform: translateY(-3px) rotate(1.5deg);
+            transform: translateY(-2px) rotate(1deg);
           }
         }
 
@@ -91,10 +92,19 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
           }
         }
 
+        @keyframes emoji-wave {
+          0%, 100% {
+            transform: rotate(0deg);
+          }
+          50% {
+            transform: rotate(-30deg) scale(1.2);
+          }
+        }
+
         .sticker-marker-wrapper {
           position: relative;
-          width: 60px;
-          height: 60px;
+          width: 40px;
+          height: 40px;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -103,22 +113,37 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
         }
 
         .sticker-img {
-          width: 50px;
-          height: 50px;
+          width: 32px;
+          height: 32px;
           object-fit: contain;
           z-index: 2;
-          filter: drop-shadow(0 0 6px var(--accent-color)) drop-shadow(0 3px 6px rgba(0,0,0,0.4));
-          border-radius: 8px;
+          filter: drop-shadow(0 0 4px var(--accent-color)) drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+          border-radius: 6px;
+        }
+
+        .waving-hand {
+          position: absolute;
+          top: -2px;
+          right: -4px;
+          font-size: 11px;
+          z-index: 3;
+          transform-origin: bottom left;
+          animation: emoji-wave 1.4s infinite ease-in-out;
+          display: none;
+        }
+
+        .sticker-marker-wrapper.waving .waving-hand {
+          display: block;
         }
 
         .sticker-shadow {
           position: absolute;
-          bottom: 2px;
-          width: 26px;
-          height: 6px;
+          bottom: 0px;
+          width: 18px;
+          height: 4px;
           background: rgba(0,0,0,0.5);
           border-radius: 50%;
-          filter: blur(1.5px);
+          filter: blur(1px);
           z-index: 1;
           transition: all 0.3s ease;
         }
@@ -146,3 +171,4 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
 };
 
 export default StickerMarker;
+
