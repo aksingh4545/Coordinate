@@ -52,6 +52,7 @@ export default function MemberRoomPage() {
   const [locationStatus, setLocationStatus] = useState("idle");
   const [locationError, setLocationError] = useState("");
   const watchIdRef = useRef(null);
+  const retryTimeoutRef = useRef(null);
   const [batterySaver, setBatterySaver] = useState(false);
   const pollIntervalRef = useRef(null);
   const wakeLockRef = useRef(null);
@@ -229,6 +230,10 @@ export default function MemberRoomPage() {
       clearInterval(pollIntervalRef.current);
       pollIntervalRef.current = null;
     }
+    if (retryTimeoutRef.current !== null) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
 
     if (!navigator.geolocation) {
       setLocationStatus("error");
@@ -237,16 +242,19 @@ export default function MemberRoomPage() {
       return;
     }
 
-    setLocationStatus("prompt");
+    // Only set to prompt if we don't have an active tracking session yet
+    if (locationStatus !== "active") {
+      setLocationStatus("prompt");
+    }
     setLocationError("");
 
     const onSuccess = (position) => {
-      // Validate freshness to block mobile browser stale cached readings (allow initial cached reading if we have no location yet)
-      const hasExistingLocation = locations.some((loc) => loc.userId === user?.userId);
-      if (hasExistingLocation && position.timestamp && Date.now() - position.timestamp > 300000) {
-        console.log("⚠️ Stale GPS reading cached by browser, ignoring");
-        return;
+      // Clear any pending retry
+      if (retryTimeoutRef.current !== null) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
       }
+
       const { latitude, longitude, accuracy, speed } = position.coords;
       console.log(`📍 GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} | Accuracy: ${accuracy?.toFixed(1)}m | Speed: ${speed?.toFixed(1)}m/s | Mode: ${batterySaver ? 'Saver' : 'HighAccuracy'}`);
       handleLocationUpdate(latitude, longitude, accuracy, speed);
@@ -255,31 +263,55 @@ export default function MemberRoomPage() {
     };
 
     const onError = (error) => {
+      console.warn(`⚠️ GPS Error (code ${error.code}): ${error.message}`);
       let errorMsg = "Unable to get your location.";
       if (error.code === 1) {
         errorMsg = "Location permission denied. Please enable location access.";
+        setLocationStatus("error");
+        setLocationError(errorMsg);
+        setError(errorMsg);
+        // Clear retry timeout on hard permission denial
+        if (retryTimeoutRef.current !== null) {
+          clearTimeout(retryTimeoutRef.current);
+          retryTimeoutRef.current = null;
+        }
+        return;
       } else if (error.code === 2) {
         errorMsg = "Location unavailable. Please enable GPS.";
       } else if (error.code === 3) {
         errorMsg = "Location request timed out. Try again.";
       }
-      setLocationStatus("error");
-      setLocationError(errorMsg);
-      setError(errorMsg);
+
+      // If we already have an active location session, do not transition to error state on Timeout (code 3).
+      // We only transition to error state for code 2 (unavailable) or if we haven't successfully started yet.
+      if (locationStatus !== "active" || error.code === 2) {
+        setLocationStatus("error");
+        setLocationError(errorMsg);
+        setError(errorMsg);
+      }
+
+      // Schedule auto-retry for recoverable errors (unavailable or timeout)
+      if (retryTimeoutRef.current === null) {
+        retryTimeoutRef.current = setTimeout(() => {
+          retryTimeoutRef.current = null;
+          console.log("🔄 Retrying location tracking after GPS error...");
+          startLocationTracking();
+        }, 5000);
+      }
     };
 
     if (batterySaver) {
       // 🔋 Battery Saver Mode: Polling position every 20 seconds with low accuracy (allows GPS chip to sleep)
       navigator.geolocation.getCurrentPosition(onSuccess, onError, {
         enableHighAccuracy: false,
-        timeout: 10000,
+        timeout: 15000,
         maximumAge: 5000,
       });
 
       pollIntervalRef.current = setInterval(() => {
         navigator.geolocation.getCurrentPosition(onSuccess, onError, {
           enableHighAccuracy: false,
-          timeout: 10000,
+          timeout: 15000,
           maximumAge: 5000,
         });
       }, 20000);
@@ -287,7 +319,7 @@ export default function MemberRoomPage() {
       // ⚡ High Accuracy Mode: Continuous real-time GPS tracking
       navigator.geolocation.getCurrentPosition(onSuccess, onError, {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 15000,
         maximumAge: 0,
       });
 
@@ -321,6 +353,10 @@ export default function MemberRoomPage() {
       if (pollIntervalRef.current !== null) {
         clearInterval(pollIntervalRef.current);
         pollIntervalRef.current = null;
+      }
+      if (retryTimeoutRef.current !== null) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
       }
     };
   }, [currentRoom, user, socket, setError, batterySaver]);
