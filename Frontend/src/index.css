@@ -382,7 +382,7 @@ body {
   border: none;
 }
 
-.menu-icon span {
+.menu-icon .menu-line {
   width: 24px;
   height: 2px;
   background: rgba(255, 255, 255, 0.8);
@@ -390,7 +390,7 @@ body {
   transition: all 0.3s ease;
 }
 
-.menu-icon:hover span {
+.menu-icon:hover .menu-line {
   background: #8b5cf6;
 }
 
@@ -1147,7 +1147,7 @@ body {
     display: none;
   }
 
-  .menu-icon span {
+  .menu-icon .menu-line {
     width: 20px;
   }
 
@@ -4443,4 +4443,61 @@ body {
 
 .mob-layers-panel-dropdown {
   width: 220px !important;
+}
+
+/* User Pill Button (Small & Good Looking Login) */
+.user-pill-btn {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  padding: 6px 12px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto;
+}
+
+.user-pill-btn:hover {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.user-pill-btn:active {
+  transform: translateY(0);
+}
+
+.user-pill-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-pill-avatar-placeholder {
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-pill-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.user-pill-arrow {
+  font-size: 0.5rem;
+  opacity: 0.6;
+  transition: transform 0.2s ease;
 }

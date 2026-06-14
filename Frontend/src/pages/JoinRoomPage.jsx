@@ -84,9 +84,9 @@ export default function JoinRoomPage() {
             onClick={() => setShowMenu((prev) => !prev)}
             aria-label="Open account menu"
           >
-            <span></span>
-            <span></span>
-            <span></span>
+            <span className="menu-line"></span>
+            <span className="menu-line"></span>
+            <span className="menu-line"></span>
           </button>
           {showMenu && <AuthMenu />}
         </div>

@@ -428,13 +428,15 @@ export default function HostRoomPage() {
         setError(errorMsg);
       }
 
-      // Schedule auto-retry for recoverable errors (unavailable or timeout)
-      if (retryTimeoutRef.current === null) {
-        retryTimeoutRef.current = setTimeout(() => {
-          retryTimeoutRef.current = null;
-          console.log("🔄 Retrying location tracking after GPS error...");
-          startLocationTracking();
-        }, 5000);
+      // Schedule auto-retry for recoverable errors (unavailable or timeout) if not in batterySaver mode
+      if (!batterySaver && retryTimeoutRef.current === null) {
+        if (error.code === 2 || locationStatus !== "active") {
+          retryTimeoutRef.current = setTimeout(() => {
+            retryTimeoutRef.current = null;
+            console.log("🔄 Retrying location tracking after GPS error...");
+            startLocationTracking();
+          }, 15000);
+        }
       }
     };
 
@@ -454,16 +456,10 @@ export default function HostRoomPage() {
         });
       }, 20000);
     } else {
-      // ⚡ High Accuracy Mode: Continuous real-time GPS tracking
-      navigator.geolocation.getCurrentPosition(onSuccess, onError, {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
-      });
-
+      // ⚡ High Accuracy Mode: Continuous real-time GPS tracking (omit redundant getCurrentPosition)
       watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
         enableHighAccuracy: true,
-        timeout: 15000,
+        timeout: 30000,
         maximumAge: 0,
       });
     }
