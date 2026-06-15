@@ -101,6 +101,7 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
           align-items: center;
           justify-content: flex-end;
           transform-origin: bottom center;
+          will-change: transform;
         }
 
         .sticker-img {
@@ -108,8 +109,10 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
           height: 32px;
           object-fit: contain;
           z-index: 2;
-          filter: drop-shadow(0 0 4px var(--accent-color)) drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+          border: 2px solid var(--accent-color);
+          box-shadow: 0 2px 4px rgba(0,0,0,0.35);
           border-radius: 6px;
+          will-change: transform;
         }
 
         .sticker-shadow {
@@ -117,11 +120,10 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
           bottom: 0px;
           width: 18px;
           height: 4px;
-          background: rgba(0,0,0,0.5);
+          background: rgba(0,0,0,0.45);
           border-radius: 50%;
-          filter: blur(1px);
           z-index: 1;
-          transition: all 0.3s ease;
+          will-change: transform, scale, opacity;
         }
 
         /* Walking state animations */

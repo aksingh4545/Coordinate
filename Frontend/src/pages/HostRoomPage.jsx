@@ -303,13 +303,13 @@ export default function HostRoomPage() {
     };
 
     fetchWatchers();
-    const interval = setInterval(fetchWatchers, 5000);
+    const interval = setInterval(fetchWatchers, 15000);
     return () => clearInterval(interval);
   }, [roomId, roomSettings?.mode]);
 
   useEffect(() => {
     // Sync locations periodically - throttled in battery saver mode
-    const interval = batterySaver ? 12000 : 3000;
+    const interval = batterySaver ? 15000 : 8000;
     const syncInterval = setInterval(() => {
       syncRoomLocations();
     }, interval);

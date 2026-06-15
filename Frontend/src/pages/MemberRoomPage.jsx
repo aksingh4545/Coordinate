@@ -141,7 +141,7 @@ export default function MemberRoomPage() {
 
   useEffect(() => {
     // Sync locations periodically - throttled in battery saver mode
-    const interval = batterySaver ? 12000 : 3000;
+    const interval = batterySaver ? 15000 : 8000;
     const syncInterval = setInterval(() => {
       syncRoomLocations();
     }, interval);

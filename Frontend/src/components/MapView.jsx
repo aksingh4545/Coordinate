@@ -9,6 +9,7 @@ import StickerMarker from "./StickerMarker";
 // Component to update map view when locations change
 function MapUpdater({ locations, centerOnUsers, allowAutoFollow }) {
   const map = useLeafletMap();
+  const lastCenterRef = useRef(null);
 
   useEffect(() => {
     const validLocations = locations.filter(
@@ -20,10 +21,26 @@ function MapUpdater({ locations, centerOnUsers, allowAutoFollow }) {
       const sumLng = validLocations.reduce((sum, loc) => sum + loc.lng, 0);
       const center = [sumLat / validLocations.length, sumLng / validLocations.length];
       
-      // Fly to the new center smoothly
-      map.flyTo(center, map.getZoom() || 15, {
-        duration: 1.5,
-      });
+      let shouldCenter = false;
+      if (!lastCenterRef.current) {
+        shouldCenter = true;
+      } else {
+        const dLat = center[0] - lastCenterRef.current[0];
+        const dLng = center[1] - lastCenterRef.current[1];
+        const distance = Math.sqrt(dLat * dLat + dLng * dLng);
+        // ~15 meters in degrees is roughly 0.00015
+        if (distance > 0.00015) {
+          shouldCenter = true;
+        }
+      }
+
+      if (shouldCenter) {
+        lastCenterRef.current = center;
+        map.panTo(center, {
+          animate: true,
+          duration: 0.5,
+        });
+      }
     }
   }, [locations, centerOnUsers, allowAutoFollow, map]);
 
