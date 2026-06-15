@@ -1,63 +1,34 @@
 const STORAGE_KEY = "coordinator_auth_user";
 
-const decodeJwtPayload = (token) => {
-  try {
-    const payload = token.split(".")[1];
-    const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
-    return JSON.parse(decoded);
-  } catch {
-    return null;
-  }
-};
-
 export const isAuthTokenExpired = (token, leewaySeconds = 30) => {
-  if (!token) return true;
-  const payload = decodeJwtPayload(token);
-  if (!payload?.exp) return true;
-  const nowSeconds = Math.floor(Date.now() / 1000);
-  return nowSeconds >= payload.exp - leewaySeconds;
+  return true; // Always expired/disabled
 };
 
 export const getAuthUser = () => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const user = raw ? JSON.parse(raw) : null;
-    if (user?.idToken && isAuthTokenExpired(user.idToken)) {
-      localStorage.removeItem(STORAGE_KEY);
-      return null;
-    }
-    return user;
-  } catch {
-    return null;
-  }
+  return null; // No Google authenticated user
 };
 
 export const setAuthUser = (user) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-  } catch {
-    // ignore
-  }
+  // no-op
 };
 
 export const clearAuthUser = () => {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // ignore
-  }
+  // no-op
 };
 
 export const getAuthToken = () => {
-  const user = getAuthUser();
-  return user?.idToken || null;
+  return null;
 };
 
 export const getAuthHeaders = () => {
-  const token = getAuthToken();
-  if (!token || isAuthTokenExpired(token)) {
-    clearAuthUser();
-    return {};
+  try {
+    const raw = localStorage.getItem("coordinator_user");
+    const user = raw ? JSON.parse(raw) : null;
+    if (user?.userId) {
+      return { Authorization: `Bearer ${user.userId}` };
+    }
+  } catch (err) {
+    // ignore
   }
-  return { Authorization: `Bearer ${token}` };
+  return {};
 };

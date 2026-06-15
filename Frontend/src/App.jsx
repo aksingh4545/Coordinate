@@ -7,7 +7,6 @@ import JoinRoomPage from "./pages/JoinRoomPage";
 import MemberRoomPage from "./pages/MemberRoomPage";
 import WatchRoomPage from "./pages/WatchRoomPage";
 import AdminPage from "./pages/AdminPage";
-import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -17,11 +16,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route
             path="/host/:roomId"
-            element={(
-              <ProtectedRoute>
-                <HostRoomPage />
-              </ProtectedRoute>
-            )}
+            element={<HostRoomPage />}
           />
           <Route
             path="/join/:roomId"

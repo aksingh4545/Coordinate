@@ -532,16 +532,14 @@ export default function MemberRoomPage() {
     return () => clearInterval(interval);
   }, [waitingForLogin, pendingTrip, tripName]);
 
-  const saveTripRequest = async (authUser, tripData, name) => {
-    if (!authUser?.idToken) return;
-
+  const saveTripRequest = async (tripData, name) => {
     try {
       const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
       const response = await fetch(`${API_URL}/api/trips`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${authUser.idToken}`,
+          ...getAuthHeaders(),
         },
         body: JSON.stringify({
           ...tripData,
@@ -565,12 +563,7 @@ export default function MemberRoomPage() {
 
   const handleTripSave = async () => {
     if (!pendingTrip) return;
-    const authUser = getAuthUser();
-    if (!authUser?.idToken) {
-      setWaitingForLogin(true);
-      return;
-    }
-    await saveTripRequest(authUser, pendingTrip, tripName);
+    await saveTripRequest(pendingTrip, tripName);
   };
 
   const runTripSearch = async (query) => {

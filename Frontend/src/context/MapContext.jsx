@@ -191,10 +191,6 @@ export function MapProvider({ children }) {
     setError(null);
 
     try {
-      const authUser = getAuthUser();
-      if (!authUser?.idToken) {
-        throw new Error("Login required to create a room");
-      }
       const currentUser = getOrCreateUser();
       const updatedUser = { ...currentUser, name: hostName };
       setUser(updatedUser);
