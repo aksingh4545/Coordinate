@@ -249,12 +249,6 @@ export default function MemberRoomPage() {
     setLocationError("");
 
     const onSuccess = (position) => {
-      // Clear any pending retry
-      if (retryTimeoutRef.current !== null) {
-        clearTimeout(retryTimeoutRef.current);
-        retryTimeoutRef.current = null;
-      }
-
       const { latitude, longitude, accuracy, speed } = position.coords;
       console.log(`📍 GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} | Accuracy: ${accuracy?.toFixed(1)}m | Speed: ${speed?.toFixed(1)}m/s | Mode: ${batterySaver ? 'Saver' : 'HighAccuracy'}`);
       handleLocationUpdate(latitude, longitude, accuracy, speed);
@@ -270,34 +264,23 @@ export default function MemberRoomPage() {
         setLocationStatus("error");
         setLocationError(errorMsg);
         setError(errorMsg);
-        // Clear retry timeout on hard permission denial
-        if (retryTimeoutRef.current !== null) {
-          clearTimeout(retryTimeoutRef.current);
-          retryTimeoutRef.current = null;
-        }
         return;
       } else if (error.code === 2) {
         errorMsg = "Location unavailable. Please enable GPS.";
       } else if (error.code === 3) {
-        errorMsg = "Location request timed out. Try again.";
+        errorMsg = "Location request timed out. Retrying...";
       }
 
-      // If we already have an active location session, do not transition to error state on Timeout (code 3).
-      // We only transition to error state for code 2 (unavailable) or if we haven't successfully started yet.
-      if (locationStatus !== "active" || error.code === 2) {
-        setLocationStatus("error");
-        setLocationError(errorMsg);
-        setError(errorMsg);
-      }
-
-      // Schedule auto-retry for recoverable errors (unavailable or timeout) if not in batterySaver mode
-      if (!batterySaver && retryTimeoutRef.current === null) {
-        if (error.code === 2 || locationStatus !== "active") {
-          retryTimeoutRef.current = setTimeout(() => {
-            retryTimeoutRef.current = null;
-            console.log("🔄 Retrying location tracking after GPS error...");
-            startLocationTracking();
-          }, 15000);
+      // If we don't have an active session yet, update the status to show warning/prompt
+      if (locationStatus !== "active") {
+        if (error.code === 2) {
+          setLocationStatus("error");
+          setLocationError(errorMsg);
+          setError(errorMsg);
+        } else {
+          // Keep the status as prompt ("Waiting for GPS...") during timeouts so the GPS keeps trying natively
+          setLocationStatus("prompt");
+          setLocationError(errorMsg);
         }
       }
     };
@@ -322,7 +305,7 @@ export default function MemberRoomPage() {
       watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
         enableHighAccuracy: true,
         timeout: 30000,
-        maximumAge: 0,
+        maximumAge: 5000,
       });
     }
   };
