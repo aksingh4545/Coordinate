@@ -49,6 +49,7 @@ export default function HostRoomPage() {
   const [tripSuggestions, setTripSuggestions] = useState([]);
   const [isTripSearching, setIsTripSearching] = useState(false);
   const [tripSearchError, setTripSearchError] = useState("");
+  const [showTripSearch, setShowTripSearch] = useState(true);
   const [tripPath, setTripPath] = useState([]);
   const [controlsPanelOpen, setControlsPanelOpen] = useState(true);
   const [targetNavPanelOpen, setTargetNavPanelOpen] = useState(true);
@@ -737,6 +738,30 @@ export default function HostRoomPage() {
     await runTripSearch(tripQuery);
   };
 
+  const handleMobileTripSearch = async () => {
+    if (!tripQuery.trim()) return;
+    setIsTripSearching(true);
+    setTripSearchError("");
+    try {
+      const results = await placesService.searchPlaces(
+        tripQuery.trim(),
+        currentUserLocation,
+        2000,
+        { cityOnly: false }
+      );
+      if (results.length > 0) {
+        handleSelectTripPlace(results[0]);
+        setShowTripSearch(false);
+      } else {
+        setTripSearchError("No results found");
+      }
+    } catch (err) {
+      setTripSearchError("Search failed");
+    } finally {
+      setIsTripSearching(false);
+    }
+  };
+
   useEffect(() => {
     const trimmed = tripQuery.trim();
     if (!trimmed) {
@@ -1091,41 +1116,93 @@ export default function HostRoomPage() {
 
             {/* Trip Mode - destination search bar */}
             {roomSettings?.mode === "trip" && (
-              <div className="mob-trip-bar">
-                <div className="mob-trip-bar-row">
-                  <input
-                    type="text"
-                    value={tripQuery}
-                    onChange={(e) => setTripQuery(e.target.value)}
-                    placeholder="🗺️ Search destination..."
-                    className="mob-trip-input"
-                  />
-                  <button
-                    type="button"
-                    className="mob-trip-go-btn"
-                    onClick={handleTripSearch}
-                    disabled={isTripSearching}
-                  >
-                    {isTripSearching ? "..." : "Go"}
-                  </button>
-                </div>
-                {tripSearchError && <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.65rem', marginTop: 4 }}>{tripSearchError}</div>}
-                {tripSuggestions.length > 0 && (
-                  <div className="trip-suggestions" style={{ marginTop: 6 }}>
-                    {tripSuggestions.map((place) => (
-                      <button
-                        key={place.placeId}
-                        type="button"
-                        className="trip-suggestion"
-                        onClick={() => { handleSelectTripPlace(place); }}
-                      >
-                        <span className="trip-suggestion-name">{place.name}</span>
-                        <span className="trip-suggestion-address">{place.address}</span>
-                      </button>
-                    ))}
+              showTripSearch ? (
+                <div className="mob-trip-bar">
+                  <div className="mob-trip-bar-row">
+                    <input
+                      type="text"
+                      value={tripQuery}
+                      onChange={(e) => setTripQuery(e.target.value)}
+                      placeholder="🗺️ Search destination..."
+                      className="mob-trip-input"
+                    />
+                    <button
+                      type="button"
+                      className="mob-trip-go-btn"
+                      onClick={handleMobileTripSearch}
+                      disabled={isTripSearching}
+                    >
+                      {isTripSearching ? "..." : "Go"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowTripSearch(false)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'rgba(255,255,255,0.6)',
+                        fontSize: '1rem',
+                        cursor: 'pointer',
+                        padding: '0 4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      title="Collapse"
+                    >
+                      ✕
+                    </button>
                   </div>
-                )}
-              </div>
+                  {tripSearchError && <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.65rem', marginTop: 4 }}>{tripSearchError}</div>}
+                  {tripSuggestions.length > 0 && (
+                    <div className="trip-suggestions" style={{ marginTop: 6 }}>
+                      {tripSuggestions.map((place) => (
+                        <button
+                          key={place.placeId}
+                          type="button"
+                          className="trip-suggestion"
+                          onClick={() => {
+                            handleSelectTripPlace(place);
+                            setShowTripSearch(false);
+                          }}
+                        >
+                          <span className="trip-suggestion-name">{place.name}</span>
+                          <span className="trip-suggestion-address">{place.address}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  className="mob-trip-search-toggle-btn"
+                  onClick={() => setShowTripSearch(true)}
+                  style={{
+                    position: 'absolute',
+                    top: '60px',
+                    left: '10px',
+                    zIndex: 150,
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '50%',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    background: 'rgba(13, 17, 35, 0.85)',
+                    backdropFilter: 'blur(10px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#ffffff',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+                    cursor: 'pointer',
+                    animation: 'panelSlideDown 0.2s ease-out'
+                  }}
+                  title="Search Destination"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: '20px', height: '20px' }}>
+                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                  </svg>
+                </button>
+              )
             )}
 
             {/* Left Vertical Icon Toolbar */}
