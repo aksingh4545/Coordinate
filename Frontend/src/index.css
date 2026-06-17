@@ -3246,6 +3246,7 @@ body {
 .mob-room-dropdown-wrap {
   position: relative;
   pointer-events: auto;
+  width: fit-content;
 }
 
 /* When panel is inside the wrapper, reset absolute positioning to inherit wrapper width */

@@ -49,21 +49,20 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
   const markerRef = useRef(null);
   const icon = createCleanMarkerIcon(isHost, isCurrentUser, name, isWalking);
 
-  const roleLabel = isHost && isCurrentUser
-    ? "You · Host"
+  const roleSuffix = isHost && isCurrentUser
+    ? " (You, Host)"
     : isHost
-    ? "Host"
+    ? " (Host)"
     : isCurrentUser
-    ? "You"
-    : null;
+    ? " (You)"
+    : "";
 
   return (
     <>
       <Marker ref={markerRef} position={position} icon={icon}>
         <Popup>
           <div className="cmk-popup">
-            <span className="cmk-popup-name">{name}</span>
-            {roleLabel && <span className="cmk-popup-role">{roleLabel}</span>}
+            <span className="cmk-popup-name">{name}{roleSuffix}</span>
           </div>
         </Popup>
       </Marker>

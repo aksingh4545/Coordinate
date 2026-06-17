@@ -74,6 +74,23 @@ router.get('/search', async (req, res) => {
       searchParams.set('featuretype', 'city');
     }
 
+    if (lat && lng) {
+      const latitude = Number(lat);
+      const longitude = Number(lng);
+      const rad = Number(radius);
+
+      const latOffset = rad / 111000;
+      const lngOffset = rad / (111000 * Math.cos(latitude * Math.PI / 180));
+
+      const lon1 = longitude - lngOffset;
+      const lat1 = latitude + latOffset;
+      const lon2 = longitude + lngOffset;
+      const lat2 = latitude - latOffset;
+
+      searchParams.set('viewbox', `${lon1},${lat1},${lon2},${lat2}`);
+      searchParams.set('bounded', '0');
+    }
+
     if (process.env.NOMINATIM_EMAIL) {
       searchParams.set('email', process.env.NOMINATIM_EMAIL);
     }

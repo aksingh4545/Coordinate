@@ -769,8 +769,15 @@ export default function MemberRoomPage() {
                         </div>
                         <div className="mob-member-info">
                           <div className="mob-member-name">{member.name}{isCurrentUser ? ' (You)' : ''}</div>
-                          {member.distance != null && (
-                            <div className="mob-member-sub">{formatDistance(member.distance)} from host</div>
+                          {isCurrentUser ? (
+                            <div className="mob-member-sub" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span className={`mob-live-dot ${locationStatus === 'active' ? '' : 'inactive'}`} style={{ width: 6, height: 6, margin: 0, boxShadow: locationStatus === 'active' ? '0 0 4px rgba(34,197,94,0.8)' : 'none', animation: locationStatus === 'active' ? 'livePulse 2s ease-in-out infinite' : 'none' }} />
+                              <span>{locationStatus === 'active' ? 'Live' : locationStatus === 'prompt' ? 'GPS…' : 'Off'}</span>
+                            </div>
+                          ) : (
+                            member.distance != null && (
+                              <div className="mob-member-sub">{formatDistance(member.distance)} from host</div>
+                            )
                           )}
                         </div>
                         {member.isHost && <span className="mob-member-role host">HOST</span>}
@@ -779,20 +786,10 @@ export default function MemberRoomPage() {
                     );
                   })}
                 </div>
-                <div className="mob-members-footer">
-                  <div className="mob-profile-avatar-placeholder">
-                    {(user?.name || 'G').charAt(0).toUpperCase()}
                   </div>
-                  <div className="mob-profile-info">
-                    <div className="mob-profile-name">{user?.name || 'Guest'}</div>
-                    <div className="mob-profile-role-text">Member · {locationStatus === 'active' ? '📍 Live' : locationStatus === 'prompt' ? '⏳ GPS…' : '📵 Off'}</div>
-                  </div>
-                  <div className={`mob-live-dot ${locationStatus === 'active' ? '' : 'inactive'}`} title={locationStatus === 'active' ? 'Live' : 'GPS Inactive'} />
-                </div>{/* end mob-members-footer */}
-                  </div>{/* end mob-members-panel */}
               )}
-              </div>{/* end mob-room-dropdown-wrap */}
-            </div>{/* end mob-topbar */}
+              </div>
+            </div>
 
             {/* Trip Mode - destination search bar */}
             {roomSettings?.mode === "trip" && (
