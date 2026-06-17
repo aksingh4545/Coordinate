@@ -272,6 +272,17 @@ export default function MemberRoomPage() {
         errorMsg = "Location unavailable. Please enable GPS.";
       } else if (error.code === 3) {
         errorMsg = "Location request timed out. Retrying...";
+        // Clear stuck watch session and schedule a retry
+        if (watchIdRef.current !== null) {
+          navigator.geolocation.clearWatch(watchIdRef.current);
+          watchIdRef.current = null;
+        }
+        if (retryTimeoutRef.current === null) {
+          retryTimeoutRef.current = setTimeout(() => {
+            retryTimeoutRef.current = null;
+            startLocationTracking();
+          }, 5000);
+        }
       }
 
       // If we don't have an active session yet, update the status to show warning/prompt

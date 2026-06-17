@@ -408,6 +408,17 @@ export default function HostRoomPage() {
         errorMsg = "Location unavailable. Please enable GPS.";
       } else if (error.code === 3) {
         errorMsg = "Location request timed out. Retrying...";
+        // Clear stuck watch session and schedule a retry
+        if (watchIdRef.current !== null) {
+          navigator.geolocation.clearWatch(watchIdRef.current);
+          watchIdRef.current = null;
+        }
+        if (retryTimeoutRef.current === null) {
+          retryTimeoutRef.current = setTimeout(() => {
+            retryTimeoutRef.current = null;
+            startLocationTracking();
+          }, 5000);
+        }
       }
 
       // If we don't have an active session yet, update the status to show warning/prompt
@@ -1384,15 +1395,17 @@ export default function HostRoomPage() {
               </div>
             )}
 
-            {/* Location error banner (mobile) */}
-            {locationStatus !== "active" && locationStatus !== "idle" && (
-              <div style={{ position: 'absolute', top: 60, left: 10, right: 10, zIndex: 160, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 12, padding: '8px 12px', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: '0.7rem', color: '#fca5a5', flex: 1 }}>
-                  {locationStatus === "prompt" ? "Waiting for GPS..." : locationError || "Location unavailable"}
-                </span>
-                <button onClick={startLocationTracking} style={{ background: '#ef4444', border: 'none', borderRadius: 8, color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '4px 10px', cursor: 'pointer' }}>
-                  Enable
-                </button>
+            {/* GPS Status Banners (Mobile) */}
+            {locationStatus === 'prompt' && (
+              <div className="mob-gps-acquiring">
+                <span className="mob-gps-spin">⏳</span>
+                <span>Acquiring GPS signal…</span>
+              </div>
+            )}
+            {locationStatus === 'error' && (
+              <div className="mob-gps-error-bar">
+                <span>⚠️ {locationError || 'GPS unavailable'}</span>
+                <button onClick={startLocationTracking}>Retry</button>
               </div>
             )}
 
