@@ -1,147 +1,224 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 
-const getAvatarModel = (isHost, isCurrentUser, name = "") => {
-  return "me";
-};
+const createCleanMarkerIcon = (isHost, isCurrentUser, name = "", isWalking = false) => {
+  const initial = (name || "?").charAt(0).toUpperCase();
+  const accentColor = isCurrentUser ? "#10b981" : isHost ? "#8b5cf6" : "#ec4899";
+  const bgGradient = isCurrentUser
+    ? "linear-gradient(135deg, #059669, #10b981)"
+    : isHost
+    ? "linear-gradient(135deg, #6d28d9, #8b5cf6)"
+    : "linear-gradient(135deg, #be185d, #ec4899)";
 
-const createStickerIcon = (modelName, isWalking, accentColor) => {
-  const animClass = isWalking ? "walking" : "waving";
-  
+  const glowColor = isCurrentUser
+    ? "rgba(16,185,129,0.55)"
+    : isHost
+    ? "rgba(139,92,246,0.55)"
+    : "rgba(236,72,153,0.45)";
+
+  const ringColor = isCurrentUser ? "#10b981" : isHost ? "#8b5cf6" : "#ec4899";
+  const animClass = isWalking ? "cmk-walking" : "cmk-idle";
+
+  // Crown svg for host, dot for current user
+  const badge = isHost
+    ? `<div class="cmk-crown">👑</div>`
+    : isCurrentUser
+    ? `<div class="cmk-you-dot"></div>`
+    : "";
+
   return new L.DivIcon({
     html: `
-      <div class="sticker-marker-wrapper ${animClass}" style="--accent-color: ${accentColor};">
-        <img src="/stickers/${modelName}.png" class="sticker-img" alt="${modelName}" />
-        <div class="sticker-shadow"></div>
+      <div class="cmk-root ${animClass}">
+        ${badge}
+        <div class="cmk-avatar" style="background:${bgGradient}; box-shadow: 0 0 0 2.5px ${ringColor}, 0 4px 14px ${glowColor};">
+          <span class="cmk-initial">${initial}</span>
+        </div>
+        <div class="cmk-tail" style="border-top-color: ${ringColor};"></div>
+        <div class="cmk-shadow"></div>
       </div>
     `,
-    className: `custom-sticker-marker custom-sticker-marker-${modelName}`,
-    iconSize: [40, 40],
-    iconAnchor: [20, 38],
-    popupAnchor: [0, -38],
+    className: "custom-sticker-marker",
+    iconSize: [44, 58],
+    iconAnchor: [22, 54],
+    popupAnchor: [0, -56],
   });
 };
 
 const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => {
   const markerRef = useRef(null);
-  const modelName = getAvatarModel(isHost, isCurrentUser, name);
-  
-  // Decide accent color for the sticker outline glow
-  const accentColor = isCurrentUser ? "#10b981" : isHost ? "#8b5cf6" : "#ec4899";
+  const icon = createCleanMarkerIcon(isHost, isCurrentUser, name, isWalking);
 
-  const customIcon = createStickerIcon(modelName, isWalking, accentColor);
+  const roleLabel = isHost && isCurrentUser
+    ? "You · Host"
+    : isHost
+    ? "Host"
+    : isCurrentUser
+    ? "You"
+    : null;
 
   return (
     <>
-      <Marker ref={markerRef} position={position} icon={customIcon}>
+      <Marker ref={markerRef} position={position} icon={icon}>
         <Popup>
-          <p style={{ margin: 0, fontSize: "11px", fontWeight: "bold" }}>
-            {name} {isCurrentUser ? "📍" : ""} {isHost ? "🎯" : ""}
-          </p>
+          <div className="cmk-popup">
+            <span className="cmk-popup-name">{name}</span>
+            {roleLabel && <span className="cmk-popup-role">{roleLabel}</span>}
+          </div>
         </Popup>
       </Marker>
 
-      {/* Inject custom scoped animations */}
       <style>{`
         .custom-sticker-marker {
           background: transparent !important;
           border: none !important;
+          overflow: visible !important;
         }
 
-        @keyframes sticker-bob-walk {
-          0%, 100% {
-            transform: translateY(0) rotate(-4deg);
-          }
-          50% {
-            transform: translateY(-6px) rotate(4deg);
-          }
-        }
-
-        @keyframes sticker-shadow-walk {
-          0%, 100% {
-            transform: scale(1);
-            opacity: 0.45;
-          }
-          50% {
-            transform: scale(0.75);
-            opacity: 0.15;
-          }
-        }
-
-        @keyframes sticker-wave-idle {
-          0%, 100% {
-            transform: translateY(0) rotate(0deg);
-          }
-          25% {
-            transform: translateY(-2px) rotate(-1deg);
-          }
-          75% {
-            transform: translateY(-2px) rotate(1deg);
-          }
-        }
-
-        @keyframes sticker-shadow-idle {
-          0%, 100% {
-            transform: scale(1);
-            opacity: 0.45;
-          }
-          50% {
-            transform: scale(0.9);
-            opacity: 0.3;
-          }
-        }
-
-        .sticker-marker-wrapper {
+        /* ===== Root wrapper ===== */
+        .cmk-root {
           position: relative;
-          width: 40px;
-          height: 40px;
+          width: 44px;
+          height: 58px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: flex-end;
           transform-origin: bottom center;
           will-change: transform;
         }
 
-        .sticker-img {
-          width: 32px;
-          height: 32px;
-          object-fit: contain;
-          z-index: 2;
-          border: 2px solid var(--accent-color);
-          box-shadow: 0 2px 4px rgba(0,0,0,0.35);
-          border-radius: 6px;
-          will-change: transform;
-        }
-
-        .sticker-shadow {
-          position: absolute;
-          bottom: 0px;
-          width: 18px;
-          height: 4px;
-          background: rgba(0,0,0,0.45);
+        /* ===== Avatar circle ===== */
+        .cmk-avatar {
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          z-index: 2;
+          border: 2.5px solid rgba(255,255,255,0.9);
+        }
+
+        .cmk-initial {
+          font-family: 'Inter', sans-serif;
+          font-size: 14px;
+          font-weight: 800;
+          color: #ffffff;
+          line-height: 1;
+          letter-spacing: -0.5px;
+          user-select: none;
+        }
+
+        /* ===== Tail pointer ===== */
+        .cmk-tail {
+          width: 0;
+          height: 0;
+          border-left: 6px solid transparent;
+          border-right: 6px solid transparent;
+          border-top-width: 9px;
+          border-top-style: solid;
+          margin-top: -2px;
+          z-index: 2;
+          position: relative;
+        }
+
+        /* ===== Drop shadow ellipse ===== */
+        .cmk-shadow {
+          width: 20px;
+          height: 5px;
+          background: rgba(0,0,0,0.3);
+          border-radius: 50%;
+          margin-top: 2px;
           z-index: 1;
-          will-change: transform, scale, opacity;
         }
 
-        /* Walking state animations */
-        .sticker-marker-wrapper.walking .sticker-img {
-          animation: sticker-bob-walk 0.55s infinite ease-in-out;
+        /* ===== Crown badge (host) ===== */
+        .cmk-crown {
+          position: absolute;
+          top: -10px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 13px;
+          line-height: 1;
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+          z-index: 3;
+          pointer-events: none;
         }
 
-        .sticker-marker-wrapper.walking .sticker-shadow {
-          animation: sticker-shadow-walk 0.55s infinite ease-in-out;
+        /* ===== You dot (current user) ===== */
+        .cmk-you-dot {
+          position: absolute;
+          top: -6px;
+          right: 4px;
+          width: 9px;
+          height: 9px;
+          background: #10b981;
+          border: 2px solid #fff;
+          border-radius: 50%;
+          box-shadow: 0 0 6px rgba(16,185,129,0.7);
+          z-index: 3;
+          animation: youDotPulse 2s ease-in-out infinite;
         }
 
-        /* Waving/Idle state animations */
-        .sticker-marker-wrapper.waving .sticker-img {
-          animation: sticker-wave-idle 2.4s infinite ease-in-out;
+        @keyframes youDotPulse {
+          0%, 100% { box-shadow: 0 0 4px rgba(16,185,129,0.5); }
+          50%       { box-shadow: 0 0 10px rgba(16,185,129,0.9); }
         }
 
-        .sticker-marker-wrapper.waving .sticker-shadow {
-          animation: sticker-shadow-idle 2.4s infinite ease-in-out;
+        /* ===== Walking animation ===== */
+        .cmk-root.cmk-walking .cmk-avatar {
+          animation: cmkBobWalk 0.5s ease-in-out infinite alternate;
+        }
+        .cmk-root.cmk-walking .cmk-shadow {
+          animation: cmkShadowWalk 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes cmkBobWalk {
+          from { transform: translateY(0) rotate(-3deg); }
+          to   { transform: translateY(-5px) rotate(3deg); }
+        }
+        @keyframes cmkShadowWalk {
+          from { transform: scaleX(1); opacity: 0.35; }
+          to   { transform: scaleX(0.7); opacity: 0.12; }
+        }
+
+        /* ===== Idle float animation ===== */
+        .cmk-root.cmk-idle .cmk-avatar {
+          animation: cmkFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes cmkFloat {
+          0%, 100% { transform: translateY(0); }
+          50%       { transform: translateY(-4px); }
+        }
+
+        /* ===== Popup ===== */
+        .cmk-popup {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          white-space: nowrap;
+          padding: 1px 2px;
+        }
+
+        .cmk-popup-name {
+          font-size: 11px;
+          font-weight: 700;
+          color: #ffffff;
+          font-family: 'Inter', sans-serif;
+        }
+
+        .cmk-popup-role {
+          font-size: 9px;
+          font-weight: 700;
+          background: rgba(139,92,246,0.3);
+          color: #c4b5fd;
+          border: 1px solid rgba(139,92,246,0.4);
+          border-radius: 4px;
+          padding: 1px 5px;
+          text-transform: uppercase;
+          letter-spacing: 0.4px;
         }
       `}</style>
     </>
@@ -149,4 +226,3 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
 };
 
 export default StickerMarker;
-

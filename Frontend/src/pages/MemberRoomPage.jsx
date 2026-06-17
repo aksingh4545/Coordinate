@@ -724,36 +724,36 @@ export default function MemberRoomPage() {
             {/* Mobile Topbar */}
             <div className="mob-topbar">
               <span className="mob-topbar-logo">Coordinator</span>
-              <div
-                className="mob-topbar-room"
-                onClick={() => {
-                  setShowMembersPanel(v => !v);
-                  setShowLayersPanel(false);
-                  setShowSharePanel(false);
-                }}
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <span className="mob-room-label">Room ID</span>
-                  <span className="mob-room-id">{roomId}</span>
+              <div className="mob-room-dropdown-wrap">
+                <div
+                  className="mob-topbar-room"
+                  onClick={() => {
+                    setShowMembersPanel(v => !v);
+                    setShowLayersPanel(false);
+                    setShowSharePanel(false);
+                  }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <span className="mob-room-label">Room ID</span>
+                    <span className="mob-room-id">{roomId}</span>
+                  </div>
+                  {roomSettings?.mode && (
+                    <span className={`mob-mode-chip ${roomSettings.mode}`}>
+                      {roomSettings.mode === "tracking" ? "TRK" : roomSettings.mode === "trip" ? "TRP" : "CRW"}
+                    </span>
+                  )}
+                  <span className="mob-room-badge">{locations.length}</span>
+                  <div className={`mob-room-arrow ${showMembersPanel ? 'open' : ''}`}>▼</div>
                 </div>
-                {roomSettings?.mode && (
-                  <span className={`mob-mode-chip ${roomSettings.mode}`}>
-                    {roomSettings.mode === "tracking" ? "TRK" : roomSettings.mode === "trip" ? "TRP" : "CRW"}
-                  </span>
-                )}
-                <span className="mob-room-badge">{locations.length}</span>
-                <div className={`mob-room-arrow ${showMembersPanel ? 'open' : ''}`}>▼</div>
-              </div>
-            </div>
 
-            {/* Members Dropdown Panel */}
-            {showMembersPanel && (
-              <div className="mob-members-panel">
-                <div className="mob-members-header">
-                  <span className="mob-members-header-icon">👥</span>
-                  <span className="mob-members-header-title">Members</span>
-                  <span className="mob-members-header-count">{memberList.length}</span>
-                </div>
+                {/* Members Dropdown Panel — same width as chip */}
+                {showMembersPanel && (
+                  <div className="mob-members-panel mob-members-panel--docked">
+                    <div className="mob-members-header">
+                      <span className="mob-members-header-icon">👥</span>
+                      <span className="mob-members-header-title">Members</span>
+                      <span className="mob-members-header-count">{memberList.length}</span>
+                    </div>
                 <div className="mob-members-list">
                   {memberList.length === 0 ? (
                     <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: '0.72rem', padding: '12px 0' }}>
@@ -788,9 +788,11 @@ export default function MemberRoomPage() {
                     <div className="mob-profile-role-text">Member · {locationStatus === 'active' ? '📍 Live' : locationStatus === 'prompt' ? '⏳ GPS…' : '📵 Off'}</div>
                   </div>
                   <div className={`mob-live-dot ${locationStatus === 'active' ? '' : 'inactive'}`} title={locationStatus === 'active' ? 'Live' : 'GPS Inactive'} />
-                </div>
-              </div>
-            )}
+                </div>{/* end mob-members-footer */}
+                  </div>{/* end mob-members-panel */}
+              )}
+              </div>{/* end mob-room-dropdown-wrap */}
+            </div>{/* end mob-topbar */}
 
             {/* Trip Mode - destination search bar */}
             {roomSettings?.mode === "trip" && (

@@ -3242,6 +3242,22 @@ body {
   pointer-events: none;
 }
 
+/* Wrapper so dropdown panel inherits chip width */
+.mob-room-dropdown-wrap {
+  position: relative;
+  pointer-events: auto;
+}
+
+/* When panel is inside the wrapper, reset absolute positioning to inherit wrapper width */
+.mob-members-panel--docked {
+  position: absolute !important;
+  top: calc(100% + 6px) !important;
+  right: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  min-width: unset !important;
+}
+
 .mob-topbar-logo {
   font-family: 'Pacifico', cursive;
   font-size: 1.25rem;
@@ -3266,6 +3282,7 @@ body {
   cursor: pointer;
   transition: background 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  min-width: 172px;  /* ensures consistent width for panel alignment */
 }
 
 .mob-topbar-room:hover,
@@ -3327,7 +3344,9 @@ body {
   position: absolute;
   top: 60px;
   right: 10px;
-  width: 240px;
+  /* Width matches the room-id chip above it (also right:10px, min-width:172px) */
+  width: 200px;
+  min-width: 172px;
   background: rgba(13, 17, 35, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);

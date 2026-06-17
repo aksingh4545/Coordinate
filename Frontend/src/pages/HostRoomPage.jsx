@@ -1014,53 +1014,65 @@ export default function HostRoomPage() {
             {/* Mobile Topbar */}
             <div className="mob-topbar">
               <span className="mob-topbar-logo">Coordinator</span>
-              <div
-                className="mob-topbar-room"
-                onClick={() => {
-                  setShowMembersPanel(v => !v);
-                  setShowLayersPanel(false);
-                  setShowSharePanel(false);
-                }}
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <span className="mob-room-label">Room ID</span>
-                  <span className="mob-room-id">{roomId}</span>
+              {/* Room chip + dropdown wrapper — keeps panel same width as chip */}
+              <div className="mob-room-dropdown-wrap">
+                <div
+                  className="mob-topbar-room"
+                  onClick={() => {
+                    setShowMembersPanel(v => !v);
+                    setShowLayersPanel(false);
+                    setShowSharePanel(false);
+                  }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <span className="mob-room-label">Room ID</span>
+                    <span className="mob-room-id">{roomId}</span>
+                  </div>
+                  {roomSettings?.mode && (
+                    <span className={`mob-mode-chip ${roomSettings.mode}`}>
+                      {roomSettings.mode === "tracking" ? "TRK" : roomSettings.mode === "trip" ? "TRP" : "CRW"}
+                    </span>
+                  )}
+                  <span className="mob-room-badge">{locations.length}</span>
+                  <div className={`mob-room-arrow ${showMembersPanel ? 'open' : ''}`}>▼</div>
                 </div>
-                {roomSettings?.mode && (
-                  <span className={`mob-mode-chip ${roomSettings.mode}`}>
-                    {roomSettings.mode === "tracking" ? "TRK" : roomSettings.mode === "trip" ? "TRP" : "CRW"}
-                  </span>
-                )}
-                <span className="mob-room-badge">{locations.length}</span>
-                <div className={`mob-room-arrow ${showMembersPanel ? 'open' : ''}`}>▼</div>
-              </div>
-            </div>
 
-            {/* Members Dropdown Panel */}
-            {showMembersPanel && (
-              <div className="mob-members-panel">
-                <div className="mob-members-header">
-                  <span className="mob-members-header-icon">👥</span>
-                  <span className="mob-members-header-title">Members</span>
-                  <span className="mob-members-header-count">{memberList.length}</span>
-                </div>
+                {/* Members Dropdown Panel — inside wrapper = same width */}
+                {showMembersPanel && (
+                  <div className="mob-members-panel mob-members-panel--docked">
+                    <div className="mob-members-header">
+                      <span className="mob-members-header-icon">👥</span>
+                      <span className="mob-members-header-title">Members</span>
+                      <span className="mob-members-header-count">{memberList.length}</span>
+                    </div>
                 <div className="mob-members-list">
-                  {memberList.map((member) => {
+                  {memberList.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: '0.72rem', padding: '12px 0' }}>
+                      No members yet…
+                    </div>
+                  ) : memberList.map((member) => {
                     const isCurrentUser = member.userId === user?.userId;
                     const avatarClass = member.isHost ? 'host' : isCurrentUser ? 'self' : 'member';
+                    // Determine single role badge to avoid duplication
+                    const roleBadge = member.isHost && isCurrentUser
+                      ? <span className="mob-member-role host">HOST · YOU</span>
+                      : member.isHost
+                      ? <span className="mob-member-role host">HOST</span>
+                      : isCurrentUser
+                      ? <span className="mob-member-role you">YOU</span>
+                      : null;
                     return (
                       <div key={member.userId} className="mob-member-item">
                         <div className={`mob-member-avatar ${avatarClass}`}>
                           {(member.name || '?').charAt(0).toUpperCase()}
                         </div>
                         <div className="mob-member-info">
-                          <div className="mob-member-name">{member.name}{isCurrentUser ? ' (You)' : ''}</div>
+                          <div className="mob-member-name">{member.name}</div>
                           {member.distance != null && (
                             <div className="mob-member-sub">{formatDistance(member.distance)} away</div>
                           )}
                         </div>
-                        {member.isHost && <span className="mob-member-role host">HOST</span>}
-                        {isCurrentUser && !member.isHost && <span className="mob-member-role you">YOU</span>}
+                        {roleBadge}
                       </div>
                     );
                   })}
@@ -1068,16 +1080,18 @@ export default function HostRoomPage() {
                 <div className="mob-members-footer">
                   {user?.picture
                     ? <img src={user.picture} alt="" className="mob-profile-avatar" />
-                    : <div className="mob-profile-avatar-placeholder">👤</div>
+                    : <div className="mob-profile-avatar-placeholder">{(user?.name || 'H').charAt(0).toUpperCase()}</div>
                   }
                   <div className="mob-profile-info">
-                    <div className="mob-profile-name">{user?.name || 'Guest'}</div>
-                    <div className="mob-profile-role-text">Host</div>
+                    <div className="mob-profile-name">{user?.name || 'Host'}</div>
+                    <div className="mob-profile-role-text">Host · {locationStatus === 'active' ? '📍 Live' : locationStatus === 'prompt' ? '⏳ GPS…' : '📵 Off'}</div>
                   </div>
-                  <div className="mob-live-dot" title="Live" />
-                </div>
-              </div>
-            )}
+                  <div className={`mob-live-dot ${locationStatus === 'active' ? '' : 'inactive'}`} title={locationStatus === 'active' ? 'Live' : 'GPS Inactive'} />
+                </div>{/* end mob-members-footer */}
+                  </div>{/* end mob-members-panel */}
+              )}
+              </div>{/* end mob-room-dropdown-wrap */}
+            </div>{/* end mob-topbar */}
 
             {/* Trip Mode - destination search bar */}
             {roomSettings?.mode === "trip" && (
