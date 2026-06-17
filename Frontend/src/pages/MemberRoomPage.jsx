@@ -189,22 +189,14 @@ export default function MemberRoomPage() {
 
   // Start location tracking when member enters room
   const handleLocationUpdate = (latitude, longitude, accuracy = null, speed = null) => {
-    const { lat, lng } = locationSmootherRef.current.filter(latitude, longitude, accuracy, speed);
-
-    if (socket) {
-      socket.emit("location:update", {
-        userId: user.userId,
-        roomId: currentRoom.roomId,
-        lat: lat,
-        lng: lng,
-        name: user.name,
-      });
-    }
+    const filtered = locationSmootherRef.current.filter(latitude, longitude, accuracy, speed);
+    if (!filtered) return;
+    const { lat, lng } = filtered;
 
     setLocations((prev) => {
-      const filtered = prev.filter((loc) => loc.userId !== user.userId);
+      const filtered2 = prev.filter((loc) => loc.userId !== user.userId);
       return [
-        ...filtered,
+        ...filtered2,
         {
           userId: user.userId,
           name: user.name,
@@ -214,6 +206,16 @@ export default function MemberRoomPage() {
         },
       ];
     });
+
+    if (socket && currentRoom) {
+      socket.emit("location:update", {
+        userId: user.userId,
+        roomId: currentRoom.roomId,
+        lat: lat,
+        lng: lng,
+        name: user.name,
+      });
+    }
   };
 
   const startLocationTracking = () => {
@@ -290,22 +292,31 @@ export default function MemberRoomPage() {
       navigator.geolocation.getCurrentPosition(onSuccess, onError, {
         enableHighAccuracy: false,
         timeout: 15000,
-        maximumAge: 5000,
+        maximumAge: 30000,
       });
 
       pollIntervalRef.current = setInterval(() => {
         navigator.geolocation.getCurrentPosition(onSuccess, onError, {
           enableHighAccuracy: false,
           timeout: 15000,
-          maximumAge: 5000,
+          maximumAge: 30000,
         });
       }, 20000);
     } else {
-      // ⚡ High Accuracy Mode: Continuous real-time GPS tracking (omit redundant getCurrentPosition)
+      // ⚡ High Accuracy Mode: Get a quick first fix with cached position, then start watchPosition
+      // First: try to get a quick cached fix so the status transitions to "active" immediately
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          onSuccess(pos);
+        },
+        () => { /* ignore quick-fix errors, watchPosition will handle */ },
+        { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
+      );
+      // Then: continuous high-accuracy tracking
       watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
         enableHighAccuracy: true,
-        timeout: 30000,
-        maximumAge: 5000,
+        timeout: 60000,
+        maximumAge: 3000,
       });
     }
   };
@@ -707,7 +718,7 @@ export default function MemberRoomPage() {
       <div className="room-earth-bg"></div>
       <div className="room-shell">
 
-        {/* ======= NEW MOBILE UI ======= */}
+        {/* ======= PREMIUM MOBILE UI ======= */}
         {isMobile ? (
           <>
             {/* Mobile Topbar */}
@@ -744,7 +755,11 @@ export default function MemberRoomPage() {
                   <span className="mob-members-header-count">{memberList.length}</span>
                 </div>
                 <div className="mob-members-list">
-                  {memberList.map((member) => {
+                  {memberList.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: '0.72rem', padding: '12px 0' }}>
+                      Waiting for members…
+                    </div>
+                  ) : memberList.map((member) => {
                     const isCurrentUser = member.userId === user?.userId;
                     const avatarClass = member.isHost ? 'host' : isCurrentUser ? 'self' : 'member';
                     return (
@@ -765,12 +780,14 @@ export default function MemberRoomPage() {
                   })}
                 </div>
                 <div className="mob-members-footer">
-                  <div className="mob-profile-avatar-placeholder">👤</div>
+                  <div className="mob-profile-avatar-placeholder">
+                    {(user?.name || 'G').charAt(0).toUpperCase()}
+                  </div>
                   <div className="mob-profile-info">
                     <div className="mob-profile-name">{user?.name || 'Guest'}</div>
-                    <div className="mob-profile-role-text">Member</div>
+                    <div className="mob-profile-role-text">Member · {locationStatus === 'active' ? '📍 Live' : locationStatus === 'prompt' ? '⏳ GPS…' : '📵 Off'}</div>
                   </div>
-                  <div className="mob-live-dot" title="Live" />
+                  <div className={`mob-live-dot ${locationStatus === 'active' ? '' : 'inactive'}`} title={locationStatus === 'active' ? 'Live' : 'GPS Inactive'} />
                 </div>
               </div>
             )}
@@ -822,6 +839,17 @@ export default function MemberRoomPage() {
                   <span className="mob-sos-label">SOS</span>
                 </button>
               )}
+
+              {/* GPS Status Button */}
+              <button
+                className={`mob-icon-btn tool mob-gps-btn ${locationStatus}`}
+                data-tooltip={locationStatus === 'active' ? 'GPS Live' : locationStatus === 'prompt' ? 'Acquiring…' : 'Enable GPS'}
+                onClick={locationStatus !== 'active' ? startLocationTracking : undefined}
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+              </button>
 
               {/* Layers */}
               <div style={{ position: 'relative' }}>
@@ -897,6 +925,20 @@ export default function MemberRoomPage() {
               </button>
             </div>
 
+            {/* GPS acquiring banner - compact */}
+            {locationStatus === 'prompt' && (
+              <div className="mob-gps-acquiring">
+                <span className="mob-gps-spin">⏳</span>
+                <span>Acquiring GPS signal…</span>
+              </div>
+            )}
+            {locationStatus === 'error' && (
+              <div className="mob-gps-error-bar">
+                <span>⚠️ {locationError || 'GPS unavailable'}</span>
+                <button onClick={startLocationTracking}>Retry</button>
+              </div>
+            )}
+
             {/* Walkie-talkie active badge */}
             {isTalkingMobile && <div className="mob-walkie-talking">🎙️ Transmitting...</div>}
 
@@ -917,18 +959,6 @@ export default function MemberRoomPage() {
                   <span className="mob-target-chip-label">ETA</span>
                   <span className="mob-target-chip-val">~{targetInfo.etaMinutes}m</span>
                 </div>
-              </div>
-            )}
-
-            {/* Location error banner (mobile) */}
-            {locationStatus !== "active" && locationStatus !== "idle" && (
-              <div style={{ position: 'absolute', top: 60, left: 10, right: 10, zIndex: 160, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: 12, padding: '8px 12px', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: '0.7rem', color: '#fca5a5', flex: 1 }}>
-                  {locationStatus === "prompt" ? "Waiting for GPS..." : locationError || "Location unavailable"}
-                </span>
-                <button onClick={startLocationTracking} style={{ background: '#ef4444', border: 'none', borderRadius: 8, color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '4px 10px', cursor: 'pointer' }}>
-                  Enable
-                </button>
               </div>
             )}
 

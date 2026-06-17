@@ -428,22 +428,27 @@ export default function HostRoomPage() {
       navigator.geolocation.getCurrentPosition(onSuccess, onError, {
         enableHighAccuracy: false,
         timeout: 15000,
-        maximumAge: 5000,
+        maximumAge: 30000,
       });
 
       pollIntervalRef.current = setInterval(() => {
         navigator.geolocation.getCurrentPosition(onSuccess, onError, {
           enableHighAccuracy: false,
           timeout: 15000,
-          maximumAge: 5000,
+          maximumAge: 30000,
         });
       }, 20000);
     } else {
-      // ⚡ High Accuracy Mode: Continuous real-time GPS tracking (omit redundant getCurrentPosition)
+      // ⚡ High Accuracy Mode: Quick first fix then continuous precise tracking
+      navigator.geolocation.getCurrentPosition(
+        (pos) => { onSuccess(pos); },
+        () => { /* ignore, watchPosition will handle */ },
+        { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
+      );
       watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
         enableHighAccuracy: true,
-        timeout: 30000,
-        maximumAge: 5000,
+        timeout: 60000,
+        maximumAge: 3000,
       });
     }
   };

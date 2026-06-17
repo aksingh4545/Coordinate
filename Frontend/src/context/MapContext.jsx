@@ -316,7 +316,7 @@ export function MapProvider({ children }) {
     });
   }, [socket, currentRoom, user]);
 
-  // Sync room locations
+  // Sync room locations - merges server data with local positions
   const syncRoomLocations = useCallback(() => {
     return new Promise((resolve) => {
       if (!socket || !currentRoom) {
@@ -326,7 +326,31 @@ export function MapProvider({ children }) {
 
       socket.emit("room:sync", { roomId: currentRoom.roomId }, (response) => {
         if (response.success) {
-          setLocations(response.locations);
+          // Merge: use server data but keep local positions for users not yet on server
+          setLocations(prev => {
+            const serverMap = new Map(response.locations.map(l => [l.userId, l]));
+            const localMap = new Map(prev.map(l => [l.userId, l]));
+            // Build merged list: server locations take priority, but preserve local positions
+            const merged = [];
+            // Add all server locations, preserving isHost flag from local if available
+            response.locations.forEach(serverLoc => {
+              const local = localMap.get(serverLoc.userId);
+              merged.push({
+                ...serverLoc,
+                // If local has a more recent/accurate position (non-zero), prefer it
+                lat: local && local.lat !== 0 && local.lat != null ? local.lat : serverLoc.lat,
+                lng: local && local.lng !== 0 && local.lng != null ? local.lng : serverLoc.lng,
+                isHost: serverLoc.isHost || (local && local.isHost) || serverLoc.userId === response.hostId,
+              });
+            });
+            // Add local-only locations not yet synced to server
+            prev.forEach(localLoc => {
+              if (!serverMap.has(localLoc.userId) && localLoc.lat !== 0 && localLoc.lat != null) {
+                merged.push(localLoc);
+              }
+            });
+            return merged;
+          });
           if (response.settings) {
             setRoomSettings(response.settings);
           }
