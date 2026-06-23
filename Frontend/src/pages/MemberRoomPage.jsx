@@ -60,6 +60,7 @@ export default function MemberRoomPage() {
   const suppressTripSearchRef = useRef(false);
   const lastSelectedTripQueryRef = useRef("");
   const locationSmootherRef = useRef(new LocationSmoother({ minAccuracy: 50 }));
+  const handleLocationUpdateRef = useRef(null);
   // New mobile UI state
   const [showMembersPanel, setShowMembersPanel] = useState(false);
   const [showLayersPanel, setShowLayersPanel] = useState(false);
@@ -113,7 +114,7 @@ export default function MemberRoomPage() {
       console.error("Failed to rejoin room:", err);
       navigate(`/join/${roomId}`);
     });
-  }, [roomId, user, joinRoom, navigate]);
+  }, [roomId, user?.userId, user?.name, joinRoom, navigate]);
 
   const targetInfo = (() => {
     if (roomSettings?.targetLocation?.lat == null) return null;
@@ -219,6 +220,11 @@ export default function MemberRoomPage() {
     }
   };
 
+  // Keep callback updated to prevent stale closures in watchPosition/getCurrentPosition
+  useEffect(() => {
+    handleLocationUpdateRef.current = handleLocationUpdate;
+  });
+
   const startLocationTracking = () => {
     if (!currentRoom || !user) {
       setError("Room not joined yet");
@@ -254,7 +260,9 @@ export default function MemberRoomPage() {
     const onSuccess = (position) => {
       const { latitude, longitude, accuracy, speed } = position.coords;
       console.log(`📍 GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} | Accuracy: ${accuracy?.toFixed(1)}m | Speed: ${speed?.toFixed(1)}m/s | Mode: ${batterySaver ? 'Saver' : 'HighAccuracy'}`);
-      handleLocationUpdate(latitude, longitude, accuracy, speed);
+      if (handleLocationUpdateRef.current) {
+        handleLocationUpdateRef.current(latitude, longitude, accuracy, speed);
+      }
       setLocationStatus("active");
       setLocationError("");
     };
@@ -361,7 +369,7 @@ export default function MemberRoomPage() {
         retryTimeoutRef.current = null;
       }
     };
-  }, [currentRoom, user, socket, setError, batterySaver]);
+  }, [currentRoom?.roomId, user?.userId, socket, setError, batterySaver]);
 
   const requestWakeLock = async () => {
     try {

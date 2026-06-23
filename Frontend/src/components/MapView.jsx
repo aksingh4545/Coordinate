@@ -292,6 +292,8 @@ const MapView = forwardRef(({
   const [zoomLevel, setZoomLevel] = useState(15);
   const [routePath, setRoutePath] = useState(null);
   const routeFetchedKeyRef = useRef(null);
+  const lastRouteFetchOriginRef = useRef(null);
+  const lastRouteFetchTargetRef = useRef(null);
 
   // Safe Route Updater logic to prevent infinite update loops
   const onRouteUpdateRef = useRef(onRouteUpdate);
@@ -305,15 +307,40 @@ const MapView = forwardRef(({
       setRoutePath(null);
       onRouteUpdateRef.current?.(null);
       routeFetchedKeyRef.current = null;
+      lastRouteFetchOriginRef.current = null;
+      lastRouteFetchTargetRef.current = null;
       return;
     }
 
     const currentLoc = locations?.find((loc) => loc.userId === currentUserId);
     if (!currentLoc || !currentLoc.lat || !currentLoc.lng) return;
 
+    // Only fetch route if the origin or target has moved significantly (approx. 15 meters)
+    let shouldFetch = false;
+    if (!lastRouteFetchOriginRef.current || !lastRouteFetchTargetRef.current) {
+      shouldFetch = true;
+    } else {
+      const dOriginLat = currentLoc.lat - lastRouteFetchOriginRef.current.lat;
+      const dOriginLng = currentLoc.lng - lastRouteFetchOriginRef.current.lng;
+      const distOrigin = Math.sqrt(dOriginLat * dOriginLat + dOriginLng * dOriginLng);
+
+      const dTargetLat = targetLocation.lat - lastRouteFetchTargetRef.current.lat;
+      const dTargetLng = targetLocation.lng - lastRouteFetchTargetRef.current.lng;
+      const distTarget = Math.sqrt(dTargetLat * dTargetLat + dTargetLng * dTargetLng);
+
+      // 0.00015 degrees is roughly 15 meters
+      if (distOrigin > 0.00015 || distTarget > 0.00015) {
+        shouldFetch = true;
+      }
+    }
+
+    if (!shouldFetch) return;
+
     const key = `${currentLoc.lat.toFixed(5)}_${currentLoc.lng.toFixed(5)}_${targetLocation.lat.toFixed(5)}_${targetLocation.lng.toFixed(5)}`;
     if (routeFetchedKeyRef.current === key) return;
     routeFetchedKeyRef.current = key;
+    lastRouteFetchOriginRef.current = { lat: currentLoc.lat, lng: currentLoc.lng };
+    lastRouteFetchTargetRef.current = { lat: targetLocation.lat, lng: targetLocation.lng };
 
     const fetchRoute = async () => {
       try {

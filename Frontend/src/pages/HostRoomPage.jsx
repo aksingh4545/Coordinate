@@ -82,6 +82,9 @@ export default function HostRoomPage() {
   const warningRef = useRef({ signature: null, sentAt: 0 });
   const locationSmootherRef = useRef(new LocationSmoother({ minAccuracy: 50 }));
   const accuracyManagerRef = useRef(new GpsAccuracyManager());
+  const handleLocationUpdateRef = useRef(null);
+  const updateRoomSettingsRef = useRef(null);
+
   
   const decodePolyline = (encoded) => {
     if (!encoded) return [];
@@ -258,8 +261,8 @@ export default function HostRoomPage() {
           isHost: data.room.hostId === user.userId,
         });
 
-        if (data.room.settings) {
-          updateRoomSettings(data.room.settings);
+        if (data.room.settings && updateRoomSettingsRef.current) {
+          updateRoomSettingsRef.current(data.room.settings);
         }
       } catch (err) {
         console.error("Failed to restore room:", err);
@@ -267,7 +270,7 @@ export default function HostRoomPage() {
     };
 
     restoreRoom();
-  }, [roomId, user, setCurrentRoom, updateRoomSettings]);
+  }, [roomId, user?.userId, setCurrentRoom]);
 
   useEffect(() => {
     // Generate QR code
@@ -355,6 +358,12 @@ export default function HostRoomPage() {
     }
   };
 
+  // Keep callbacks updated to prevent stale closures in watchPosition/getCurrentPosition
+  useEffect(() => {
+    handleLocationUpdateRef.current = handleLocationUpdate;
+    updateRoomSettingsRef.current = updateRoomSettings;
+  });
+
   const startLocationTracking = () => {
     if (!currentRoom || !user) {
       setError("Room not joined yet");
@@ -390,7 +399,9 @@ export default function HostRoomPage() {
     const onSuccess = (position) => {
       const { latitude, longitude, accuracy, speed } = position.coords;
       console.log(`📍 GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} | Accuracy: ${accuracy?.toFixed(1)}m | Speed: ${speed?.toFixed(1)}m/s | Mode: ${batterySaver ? 'Saver' : 'HighAccuracy'}`);
-      handleLocationUpdate(latitude, longitude, accuracy, speed);
+      if (handleLocationUpdateRef.current) {
+        handleLocationUpdateRef.current(latitude, longitude, accuracy, speed);
+      }
       setLocationStatus("active");
       setLocationError("");
     };
@@ -496,7 +507,7 @@ export default function HostRoomPage() {
         retryTimeoutRef.current = null;
       }
     };
-  }, [currentRoom, user, socket, setError, batterySaver]);
+  }, [currentRoom?.roomId, user?.userId, socket, setError, batterySaver]);
 
   const requestWakeLock = async () => {
     try {
