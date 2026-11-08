@@ -34,7 +34,7 @@ export class LocationSmoother {
     this.enableHighAccuracy = options.enableHighAccuracy !== false;
     this.positionHistory = [];
     this.maxHistorySize = options.maxHistorySize || 10;
-    this.minAccuracy = options.minAccuracy || 400; // Allow laptop Wi-Fi positioning (typically 100-300m)
+    this.minAccuracy = options.minAccuracy || 2500; // Allow laptop Wi-Fi/IP positioning (typically 100-2000m)
     this.lastSmoothed = null;
     this.lastAccuracy = null;
     this.rejectedConsecutive = 0;

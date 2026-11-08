@@ -701,7 +701,7 @@ const MapView = forwardRef(({
 
         {/* Location markers */}
         {validLocations.map((loc) => {
-          const isHost = locations.find((l) => l.userId === loc.userId)?.isHost || false;
+          const isHost = Boolean(loc.isHost || locations.find((l) => l.userId === loc.userId)?.isHost);
           const isCurrentUser = loc.userId === currentUserId;
 
           return (

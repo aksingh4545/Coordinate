@@ -87,7 +87,7 @@ export default function HomePage() {
   const [mapStyle, setMapStyle] = useState("osm");
   const [userLocation, setUserLocation] = useState(null);
   const [hasCenteredMap, setHasCenteredMap] = useState(false);
-  const locationSmootherRef = useRef(new LocationSmoother({ minAccuracy: 50 }));
+  const locationSmootherRef = useRef(new LocationSmoother({ minAccuracy: 2500 }));
 
   useEffect(() => {
     if (!navigator.geolocation) return;

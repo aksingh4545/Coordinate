@@ -473,15 +473,21 @@ app.post('/api/rooms/join', async (req, res) => {
     const normalizedRole = isTripMode && userId !== room.hostId ? 'watcher' : 'member';
     const requestedRole = role === 'watcher' && isTripMode ? 'watcher' : normalizedRole;
 
+    let effectiveUserId = userId;
+    // Prevent member joining from accidentally colliding with or overwriting the host
+    if (effectiveUserId === room.hostId && role !== 'host') {
+      effectiveUserId = 'user_' + Math.random().toString(36).substring(2, 10);
+    }
+
     // Check if user already in room
-    let memberIndex = room.members.findIndex(m => m.userId === userId);
+    let memberIndex = room.members.findIndex(m => m.userId === effectiveUserId);
     if (memberIndex !== -1) {
       room.members[memberIndex].name = userName;
       room.members[memberIndex].role = room.members[memberIndex].role || requestedRole;
       room.members[memberIndex].lastUpdate = Date.now();
     } else {
       room.members.push({
-        userId,
+        userId: effectiveUserId,
         name: userName,
         role: requestedRole,
         location: { lat: 0, lng: 0 },
@@ -504,13 +510,24 @@ app.post('/api/rooms/join', async (req, res) => {
     // Update cache
     rooms.set(roomId, room);
 
+    // Broadcast member joined to the socket room immediately
+    io.to(roomId).emit('room:member:joined', {
+      userId: effectiveUserId,
+      userName,
+      role: requestedRole,
+      members: room.members,
+      hostId: room.hostId,
+    });
+
     res.json({
       success: true,
       room: {
         roomId: room.roomId,
         hostId: room.hostId,
         hostName: room.hostName,
+        userId: effectiveUserId,
         role: requestedRole,
+        members: room.members,
         settings: room.settings || getDefaultRoomSettings(),
       }
     });
@@ -608,6 +625,8 @@ app.post('/api/rooms/:roomId/leave', async (req, res) => {
       );
       // Update cache
       rooms.set(normalizedRoomId, room);
+      // Notify remaining room members
+      io.to(normalizedRoomId).emit('user:left', { userId, members: room.members });
     }
 
     res.json({ success: true });
@@ -622,13 +641,32 @@ io.on('connection', (socket) => {
   console.log('🔌 User connected:', socket.id);
 
   // User joins with their ID
-  socket.on('user:join', ({ userId, roomId }) => {
+  socket.on('user:join', async ({ userId, roomId }) => {
     const normalizedRoomId = (roomId || "").toUpperCase();
     if (!normalizedRoomId) return;
     userSockets.set(userId, socket.id);
     userRooms.set(userId, normalizedRoomId);
     socket.join(normalizedRoomId);
     console.log(`User ${userId} joined room ${normalizedRoomId}`);
+
+    let room = rooms.get(normalizedRoomId);
+    if (!room) {
+      room = await safeMongoOperation(
+        async () => {
+          const roomsCollection = getRoomsCollection();
+          const found = await roomsCollection.findOne({ roomId: normalizedRoomId });
+          if (found) rooms.set(normalizedRoomId, found);
+          return found;
+        },
+        () => null
+      );
+    }
+    if (room && room.members) {
+      io.to(normalizedRoomId).emit('room:members:update', {
+        members: room.members,
+        hostId: room.hostId,
+      });
+    }
   });
 
   // Update user location
@@ -644,11 +682,11 @@ io.on('connection', (socket) => {
       if (member) {
         member.location = { lat, lng };
         member.lastUpdate = Date.now();
-        member.name = name;
+        if (name) member.name = name;
       } else {
         room.members.push({
           userId,
-          name,
+          name: name || 'User',
           role: userId === room.hostId ? 'host' : 'member',
           location: { lat, lng },
           lastUpdate: Date.now(),
@@ -670,7 +708,7 @@ io.on('connection', (socket) => {
       // Broadcast to all in room
       io.to(normalizedRoomId).emit('location:updated', {
         userId,
-        name,
+        name: member?.name || name,
         lat,
         lng,
         isHost: userId === room.hostId,
@@ -704,6 +742,15 @@ io.on('connection', (socket) => {
       return;
     }
 
+    const allMembers = (room.members || []).map(m => ({
+      userId: m.userId,
+      name: m.name,
+      role: m.role || (m.userId === room.hostId ? 'host' : 'member'),
+      isHost: m.userId === room.hostId,
+      location: m.location || { lat: 0, lng: 0 },
+      lastUpdate: m.lastUpdate,
+    }));
+
     const locations = room.members
       .filter(m => m.location && m.location.lat !== 0 && m.location.lng !== 0)
       .map(m => ({
@@ -717,6 +764,7 @@ io.on('connection', (socket) => {
     callback({
       success: true,
       locations,
+      members: allMembers,
       hostId: room.hostId,
       settings: room.settings || getDefaultRoomSettings(),
     });

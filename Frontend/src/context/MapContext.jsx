@@ -26,6 +26,7 @@ export function MapProvider({ children }) {
     return saved ? JSON.parse(saved) : null;
   });
   const [locations, setLocations] = useState([]);
+  const [members, setMembers] = useState([]);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [roomSettings, setRoomSettings] = useState({
@@ -63,18 +64,54 @@ export function MapProvider({ children }) {
       setError("Failed to connect to server. Retrying...");
     });
 
-    newSocket.on("location:updated", ({ userId, name, lat, lng }) => {
-      console.log('📍 Received location update:', { userId, name, lat, lng });
+    newSocket.on("location:updated", ({ userId, name, lat, lng, isHost }) => {
+      console.log('📍 Received location update:', { userId, name, lat, lng, isHost });
       setLocations((prev) => {
         const filtered = prev.filter((loc) => loc.userId !== userId);
-        const updated = [...filtered, { userId, name, lat, lng }];
+        const updated = [...filtered, { userId, name, lat, lng, isHost: Boolean(isHost) }];
         console.log('📍 Updated locations in context:', updated);
         return updated;
       });
+      setMembers((prev) => {
+        const exists = prev.some((m) => m.userId === userId);
+        if (exists) {
+          return prev.map((m) =>
+            m.userId === userId
+              ? { ...m, name: name || m.name, location: { lat, lng }, isHost: isHost !== undefined ? Boolean(isHost) : m.isHost }
+              : m
+          );
+        }
+        return [...prev, { userId, name: name || "User", location: { lat, lng }, isHost: Boolean(isHost), role: isHost ? 'host' : 'member' }];
+      });
     });
 
-    newSocket.on("user:left", ({ userId }) => {
+    newSocket.on("room:member:joined", (data) => {
+      console.log("👋 Member joined room:", data);
+      if (data.members && Array.isArray(data.members)) {
+        setMembers(data.members.map(m => ({
+          ...m,
+          isHost: m.userId === data.hostId || m.role === 'host',
+        })));
+      }
+    });
+
+    newSocket.on("room:members:update", (data) => {
+      console.log("👥 Room members updated:", data);
+      if (data.members && Array.isArray(data.members)) {
+        setMembers(data.members.map(m => ({
+          ...m,
+          isHost: m.userId === data.hostId || m.role === 'host',
+        })));
+      }
+    });
+
+    newSocket.on("user:left", ({ userId, members: updatedMembers }) => {
       setLocations((prev) => prev.filter((loc) => loc.userId !== userId));
+      if (updatedMembers && Array.isArray(updatedMembers)) {
+        setMembers(updatedMembers);
+      } else {
+        setMembers((prev) => prev.filter((m) => m.userId !== userId));
+      }
     });
 
     newSocket.on("room:settings", (settings) => {
@@ -220,6 +257,15 @@ export function MapProvider({ children }) {
         role: "host",
       });
 
+      setMembers([{
+        userId: currentUser.userId,
+        name: hostName,
+        role: "host",
+        isHost: true,
+        location: { lat: 0, lng: 0 },
+        lastUpdate: Date.now(),
+      }]);
+
       if (data.settings) {
         setRoomSettings(data.settings);
       }
@@ -269,13 +315,27 @@ export function MapProvider({ children }) {
         throw new Error(data.error || "Failed to join room");
       }
 
+      const effectiveUserId = data.room.userId || currentUser.userId;
+      if (effectiveUserId !== currentUser.userId) {
+        const adjustedUser = { ...currentUser, userId: effectiveUserId, name: userName };
+        setUser(adjustedUser);
+        localStorage.setItem("coordinator_user", JSON.stringify(adjustedUser));
+      }
+
       setCurrentRoom({
         roomId,
         hostId: data.room.hostId,
         hostName: data.room.hostName,
-        isHost: false,
+        isHost: effectiveUserId === data.room.hostId,
         role: data.room.role || role || "member",
       });
+
+      if (data.room.members && Array.isArray(data.room.members)) {
+        setMembers(data.room.members.map(m => ({
+          ...m,
+          isHost: m.userId === data.room.hostId || m.role === 'host',
+        })));
+      }
 
       if (data.room.settings) {
         setRoomSettings(data.room.settings);
@@ -284,7 +344,7 @@ export function MapProvider({ children }) {
       // Join socket room
       if (socket) {
         socket.emit("user:join", {
-          userId: currentUser.userId,
+          userId: effectiveUserId,
           roomId,
         });
       }
@@ -326,6 +386,13 @@ export function MapProvider({ children }) {
 
       socket.emit("room:sync", { roomId: currentRoom.roomId }, (response) => {
         if (response.success) {
+          if (response.members && Array.isArray(response.members)) {
+            setMembers(response.members.map(m => ({
+              ...m,
+              isHost: m.userId === response.hostId || m.role === 'host',
+            })));
+          }
+
           // Merge: use server data but keep local positions for users not yet on server
           setLocations(prev => {
             const serverMap = new Map(response.locations.map(l => [l.userId, l]));
@@ -345,8 +412,11 @@ export function MapProvider({ children }) {
             });
             // Add local-only locations not yet synced to server
             prev.forEach(localLoc => {
-              if (!serverMap.has(localLoc.userId) && localLoc.lat !== 0 && localLoc.lat != null) {
-                merged.push(localLoc);
+              if (!serverMap.has(localLoc.userId)) {
+                merged.push({
+                  ...localLoc,
+                  isHost: localLoc.isHost || localLoc.userId === response.hostId,
+                });
               }
             });
             return merged;
@@ -378,6 +448,7 @@ export function MapProvider({ children }) {
 
     setCurrentRoom(null);
     setLocations([]);
+    setMembers([]);
     setRoomSettings({
       mode: "crowd",
       trackingRange: 30,
@@ -543,6 +614,8 @@ export function MapProvider({ children }) {
     setCurrentRoom,
     locations,
     setLocations,
+    members,
+    setMembers,
     error,
     setError,
     isLoading,

@@ -20,6 +20,8 @@ export default function HostRoomPage() {
     user,
     locations,
     setLocations,
+    members,
+    setMembers,
     socket,
     syncRoomLocations,
     leaveRoom,
@@ -41,6 +43,7 @@ export default function HostRoomPage() {
   const [watchQrCode, setWatchQrCode] = useState("");
   const [watchers, setWatchers] = useState([]);
   const [memberList, setMemberList] = useState([]);
+  const [isAdjustingLocation, setIsAdjustingLocation] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showTargetNav, setShowTargetNav] = useState(false);
   const [showTripHeader, setShowTripHeader] = useState(true);
@@ -81,7 +84,7 @@ export default function HostRoomPage() {
   const wakeLockRef = useRef(null);
   const retryTimeoutRef = useRef(null);
   const warningRef = useRef({ signature: null, sentAt: 0 });
-  const locationSmootherRef = useRef(new LocationSmoother({ minAccuracy: 400 }));
+  const locationSmootherRef = useRef(new LocationSmoother({ minAccuracy: 2500 }));
   const accuracyManagerRef = useRef(new GpsAccuracyManager());
   const handleLocationUpdateRef = useRef(null);
   const updateRoomSettingsRef = useRef(null);
@@ -261,6 +264,13 @@ export default function HostRoomPage() {
           hostName: data.room.hostName,
           isHost: data.room.hostId === user.userId,
         });
+
+        if (data.room.members && setMembers) {
+          setMembers(data.room.members.map(m => ({
+            ...m,
+            isHost: m.userId === data.room.hostId || m.role === 'host',
+          })));
+        }
 
         if (data.room.settings && updateRoomSettingsRef.current) {
           updateRoomSettingsRef.current(data.room.settings);
@@ -853,60 +863,109 @@ export default function HostRoomPage() {
   };
 
   useEffect(() => {
-    // Update member list with distances
-    if (locations.length > 0 && user) {
-      const hostLocation = locations.find((loc) => loc.userId === user.userId);
-      const updatedMembers = locations.map((loc) => {
-        let nearestDistance = null;
-        locations.forEach((other) => {
-          if (other.userId === loc.userId) return;
-          if (other.lat === 0 || other.lng === 0 || loc.lat === 0 || loc.lng === 0) return;
-          const distance = calculateDistance(
-            loc.lat,
-            loc.lng,
-            other.lat,
-            other.lng
-          );
-          if (nearestDistance === null || distance < nearestDistance) {
-            nearestDistance = distance;
+    if (!user) return;
+    const allUsersMap = new Map();
+    const hostId = currentRoom?.hostId || user.userId;
+
+    // 1. Host is always first and guaranteed present
+    allUsersMap.set(user.userId, {
+      userId: user.userId,
+      name: user.name || "Host",
+      isHost: true,
+      role: "host",
+      lat: 0,
+      lng: 0,
+    });
+
+    // 2. Add members from room members state
+    if (members && Array.isArray(members)) {
+      members.forEach((m) => {
+        if (!m || !m.userId) return;
+        const isThisHost = m.userId === hostId || m.role === "host" || m.isHost;
+        const existing = allUsersMap.get(m.userId) || {};
+        allUsersMap.set(m.userId, {
+          ...existing,
+          ...m,
+          name: m.name || existing.name || "Member",
+          isHost: isThisHost,
+          role: isThisHost ? "host" : (m.role || "member"),
+          lat: m.location?.lat ?? existing.lat ?? 0,
+          lng: m.location?.lng ?? existing.lng ?? 0,
+        });
+      });
+    }
+
+    // 3. Overlay real-time active locations
+    if (locations && Array.isArray(locations)) {
+      locations.forEach((loc) => {
+        if (!loc || !loc.userId) return;
+        const isThisHost = loc.userId === hostId || loc.isHost || allUsersMap.get(loc.userId)?.isHost;
+        const existing = allUsersMap.get(loc.userId) || {};
+        allUsersMap.set(loc.userId, {
+          ...existing,
+          ...loc,
+          name: loc.name || existing.name || "Member",
+          isHost: isThisHost,
+          lat: loc.lat ?? existing.lat ?? 0,
+          lng: loc.lng ?? existing.lng ?? 0,
+        });
+      });
+    }
+
+    const hostEntry = allUsersMap.get(hostId) || Array.from(allUsersMap.values()).find(u => u.isHost);
+    const hasHostValidLoc = hostEntry && hostEntry.lat !== 0 && hostEntry.lng !== 0;
+
+    const updatedMembers = Array.from(allUsersMap.values()).map((member) => {
+      let nearestDistance = null;
+      const hasValidLoc = member.lat !== 0 && member.lng !== 0 && member.lat != null && member.lng != null;
+
+      if (hasValidLoc) {
+        allUsersMap.forEach((other) => {
+          if (other.userId === member.userId) return;
+          if (!other.lat || !other.lng || other.lat === 0 || other.lng === 0) return;
+          const dist = calculateDistance(member.lat, member.lng, other.lat, other.lng);
+          if (nearestDistance === null || dist < nearestDistance) {
+            nearestDistance = dist;
           }
         });
+      }
 
-        const distanceLabels = [];
-        if (nearestDistance !== null) {
-          distanceLabels.push(`Nearest ${formatDistance(nearestDistance)}`);
-        }
-        if (roomSettings?.targetLocation?.lat != null) {
-          const targetDistance = calculateDistance(
-            loc.lat,
-            loc.lng,
-            roomSettings.targetLocation.lat,
-            roomSettings.targetLocation.lng
-          );
-          distanceLabels.push(`Target ${formatDistance(targetDistance)}`);
-        }
+      const distanceLabels = [];
+      if (nearestDistance !== null) {
+        distanceLabels.push(`Nearest ${formatDistance(nearestDistance)}`);
+      }
+      if (hasValidLoc && roomSettings?.targetLocation?.lat != null) {
+        const targetDist = calculateDistance(
+          member.lat,
+          member.lng,
+          roomSettings.targetLocation.lat,
+          roomSettings.targetLocation.lng
+        );
+        distanceLabels.push(`Target ${formatDistance(targetDist)}`);
+      }
 
-        let distanceToHost = null;
-        if (hostLocation && loc.userId !== user.userId) {
-          distanceToHost = calculateDistance(
-            hostLocation.lat,
-            hostLocation.lng,
-            loc.lat,
-            loc.lng
-          );
-        }
+      let distanceToHost = null;
+      if (hasValidLoc && hasHostValidLoc && member.userId !== hostId) {
+        distanceToHost = calculateDistance(
+          hostEntry.lat,
+          hostEntry.lng,
+          member.lat,
+          member.lng
+        );
+      }
 
-        return {
-          ...loc,
-          distance: distanceToHost,
-          nearestDistance,
-          distanceLabels,
-          isHost: loc.userId === user.userId,
-        };
-      });
-      setMemberList(updatedMembers);
-    }
-  }, [locations, user, calculateDistance, formatDistance, roomSettings]);
+      return {
+        ...member,
+        distance: distanceToHost,
+        nearestDistance,
+        distanceLabels,
+        isHost: member.userId === hostId || member.isHost || member.role === "host",
+        hasValidLoc,
+      };
+    });
+
+    setMemberList(updatedMembers);
+  }, [locations, members, user, currentRoom?.hostId, calculateDistance, formatDistance, roomSettings]);
 
   // Listen for saved trip click to display on map
   useEffect(() => {
@@ -1050,6 +1109,15 @@ export default function HostRoomPage() {
   };
 
   const handleMapTarget = (latlng) => {
+    if (isAdjustingLocation) {
+      if (handleLocationUpdateRef.current) {
+        handleLocationUpdateRef.current(latlng.lat, latlng.lng, 10, 0);
+      }
+      setIsAdjustingLocation(false);
+      setLocationStatus("active");
+      setLocationError("");
+      return;
+    }
     updateRoomSettings({
       targetLocation: { lat: latlng.lat, lng: latlng.lng },
       targetLabel: "Pinned location",
@@ -1112,7 +1180,7 @@ export default function HostRoomPage() {
                   {roomSettings.mode === "tracking" ? "TRK" : roomSettings.mode === "trip" ? "TRP" : "CRW"}
                 </span>
               )}
-              <span className="mob-room-badge">{locations.length}</span>
+              <span className="mob-room-badge">{memberList.length}</span>
               <div className={`mob-room-arrow ${showMembersPanel ? 'open' : ''}`}>▼</div>
             </div>
 
@@ -1152,8 +1220,12 @@ export default function HostRoomPage() {
                               <span>{locationStatus === 'active' ? 'Live' : locationStatus === 'prompt' ? 'GPS…' : 'Off'}</span>
                             </div>
                           ) : (
-                            member.distance != null && (
+                            member.distance != null ? (
                               <div className="mob-member-sub">{formatDistance(member.distance)} away</div>
+                            ) : (
+                              <div className="mob-member-sub" style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.7rem' }}>
+                                {member.hasValidLoc ? 'Live' : 'Locating GPS…'}
+                              </div>
                             )
                           )}
                         </div>
@@ -1449,6 +1521,18 @@ export default function HostRoomPage() {
             </svg>
           </button>
 
+          {/* Adjust Pin / Laptop location fix */}
+          <button
+            className={`mob-icon-btn tool ${isAdjustingLocation ? 'active' : ''}`}
+            data-tooltip={isAdjustingLocation ? "Click map to set pin" : "Adjust My Pin"}
+            onClick={() => setIsAdjustingLocation(v => !v)}
+            style={{ color: isAdjustingLocation ? '#38bdf8' : undefined }}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+          </button>
+
           <div className="mob-toolbar-sep" />
 
           {/* Trip mode: Watches icon */}
@@ -1568,6 +1652,44 @@ export default function HostRoomPage() {
           </button>
         )}
 
+        {/* Pin Location Banner */}
+        {isAdjustingLocation && (
+          <div style={{
+            position: 'absolute',
+            top: '70px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+            background: 'rgba(15, 23, 42, 0.95)',
+            border: '1px solid #38bdf8',
+            borderRadius: '12px',
+            padding: '8px 16px',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+            fontSize: '0.82rem',
+            backdropFilter: 'blur(8px)',
+          }}>
+            <span>🎯 <b>Click anywhere on map</b> to set your location pin</span>
+            <button
+              onClick={() => setIsAdjustingLocation(false)}
+              style={{
+                background: 'rgba(255,255,255,0.15)',
+                border: 'none',
+                color: '#fff',
+                borderRadius: '6px',
+                padding: '4px 8px',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+
         {/* Map */}
         <div className="room-map-wrap">
           <MapView
@@ -1578,7 +1700,7 @@ export default function HostRoomPage() {
             centerOnUsers={true}
             targetLocation={roomSettings?.targetLocation?.lat != null ? roomSettings.targetLocation : null}
             onMapClick={handleMapTarget}
-            isTargeting={isTargeting}
+            isTargeting={isTargeting || isAdjustingLocation}
             roomSettings={roomSettings}
             tripPath={roomSettings?.mode === "trip" ? tripPath : null}
             savedTripPath={savedTripPath}
