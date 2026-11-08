@@ -4,44 +4,35 @@ import L from "leaflet";
 
 const createCleanMarkerIcon = (isHost, isCurrentUser, name = "", isWalking = false) => {
   const initial = (name || "?").charAt(0).toUpperCase();
-  const accentColor = isCurrentUser ? "#10b981" : isHost ? "#8b5cf6" : "#ec4899";
-  const bgGradient = isCurrentUser
-    ? "linear-gradient(135deg, #059669, #10b981)"
-    : isHost
-    ? "linear-gradient(135deg, #6d28d9, #8b5cf6)"
-    : "linear-gradient(135deg, #be185d, #ec4899)";
 
-  const glowColor = isCurrentUser
-    ? "rgba(16,185,129,0.55)"
-    : isHost
-    ? "rgba(139,92,246,0.55)"
-    : "rgba(236,72,153,0.45)";
+  // Host is always Red, all other joining users are Green
+  const color = isHost ? "#ef4444" : "#10b981";
+  const bgGradient = isHost
+    ? "linear-gradient(135deg, #dc2626, #ef4444)"
+    : "linear-gradient(135deg, #059669, #10b981)";
 
-  const ringColor = isCurrentUser ? "#10b981" : isHost ? "#8b5cf6" : "#ec4899";
+  const glowColor = isHost
+    ? "rgba(239, 68, 68, 0.35)"
+    : "rgba(16, 185, 129, 0.35)";
+
   const animClass = isWalking ? "cmk-walking" : "cmk-idle";
-
-  // Crown svg for host, dot for current user
-  const badge = isHost
-    ? `<div class="cmk-crown">👑</div>`
-    : isCurrentUser
-    ? `<div class="cmk-you-dot"></div>`
-    : "";
+  const userIndicator = isCurrentUser ? `<div class="cmk-you-dot" title="You"></div>` : "";
 
   return new L.DivIcon({
     html: `
       <div class="cmk-root ${animClass}">
-        ${badge}
-        <div class="cmk-avatar" style="background:${bgGradient}; box-shadow: 0 0 0 2.5px ${ringColor}, 0 4px 14px ${glowColor};">
+        ${userIndicator}
+        <div class="cmk-avatar" style="background:${bgGradient}; box-shadow: 0 0 0 2px ${color}, 0 3px 8px ${glowColor};">
           <span class="cmk-initial">${initial}</span>
         </div>
-        <div class="cmk-tail" style="border-top-color: ${ringColor};"></div>
+        <div class="cmk-tail" style="border-top-color: ${color};"></div>
         <div class="cmk-shadow"></div>
       </div>
     `,
     className: "custom-sticker-marker",
-    iconSize: [44, 58],
-    iconAnchor: [22, 54],
-    popupAnchor: [0, -56],
+    iconSize: [26, 36],
+    iconAnchor: [13, 29],
+    popupAnchor: [0, -30],
   });
 };
 
@@ -77,8 +68,8 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
         /* ===== Root wrapper ===== */
         .cmk-root {
           position: relative;
-          width: 44px;
-          height: 58px;
+          width: 26px;
+          height: 36px;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -88,24 +79,24 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
 
         /* ===== Avatar circle ===== */
         .cmk-avatar {
-          width: 36px;
-          height: 36px;
+          width: 24px;
+          height: 24px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           position: relative;
           z-index: 2;
-          border: 2.5px solid rgba(255,255,255,0.9);
+          border: 2px solid rgba(255,255,255,0.95);
         }
 
         .cmk-initial {
-          font-family: 'Inter', sans-serif;
-          font-size: 14px;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+          font-size: 11px;
           font-weight: 800;
           color: #ffffff;
           line-height: 1;
-          letter-spacing: -0.5px;
+          letter-spacing: -0.3px;
           user-select: none;
         }
 
@@ -113,56 +104,43 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
         .cmk-tail {
           width: 0;
           height: 0;
-          border-left: 6px solid transparent;
-          border-right: 6px solid transparent;
-          border-top-width: 9px;
+          border-left: 4px solid transparent;
+          border-right: 4px solid transparent;
+          border-top-width: 6px;
           border-top-style: solid;
-          margin-top: -2px;
+          margin-top: -1px;
           z-index: 2;
           position: relative;
         }
 
         /* ===== Drop shadow ellipse ===== */
         .cmk-shadow {
-          width: 20px;
-          height: 5px;
+          width: 14px;
+          height: 3px;
           background: rgba(0,0,0,0.3);
           border-radius: 50%;
-          margin-top: 2px;
+          margin-top: 1px;
           z-index: 1;
         }
 
-        /* ===== Crown badge (host) ===== */
-        .cmk-crown {
-          position: absolute;
-          top: -10px;
-          left: 50%;
-          transform: translateX(-50%);
-          font-size: 13px;
-          line-height: 1;
-          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
-          z-index: 3;
-          pointer-events: none;
-        }
-
-        /* ===== You dot (current user) ===== */
+        /* ===== You indicator dot ===== */
         .cmk-you-dot {
           position: absolute;
-          top: -6px;
-          right: 4px;
-          width: 9px;
-          height: 9px;
-          background: #10b981;
-          border: 2px solid #fff;
+          top: -3px;
+          right: 0px;
+          width: 7px;
+          height: 7px;
+          background: #ffffff;
+          border: 1.5px solid #2563eb;
           border-radius: 50%;
-          box-shadow: 0 0 6px rgba(16,185,129,0.7);
+          box-shadow: 0 0 5px rgba(37,99,235,0.8);
           z-index: 3;
           animation: youDotPulse 2s ease-in-out infinite;
         }
 
         @keyframes youDotPulse {
-          0%, 100% { box-shadow: 0 0 4px rgba(16,185,129,0.5); }
-          50%       { box-shadow: 0 0 10px rgba(16,185,129,0.9); }
+          0%, 100% { transform: scale(1); box-shadow: 0 0 3px rgba(37,99,235,0.5); }
+          50%       { transform: scale(1.15); box-shadow: 0 0 7px rgba(37,99,235,0.9); }
         }
 
         /* ===== Walking animation ===== */
@@ -174,12 +152,12 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
         }
 
         @keyframes cmkBobWalk {
-          from { transform: translateY(0) rotate(-3deg); }
-          to   { transform: translateY(-5px) rotate(3deg); }
+          from { transform: translateY(0) rotate(-2deg); }
+          to   { transform: translateY(-3px) rotate(2deg); }
         }
         @keyframes cmkShadowWalk {
           from { transform: scaleX(1); opacity: 0.35; }
-          to   { transform: scaleX(0.7); opacity: 0.12; }
+          to   { transform: scaleX(0.7); opacity: 0.15; }
         }
 
         /* ===== Idle float animation ===== */
@@ -189,7 +167,7 @@ const StickerMarker = ({ position, isHost, isCurrentUser, name, isWalking }) => 
 
         @keyframes cmkFloat {
           0%, 100% { transform: translateY(0); }
-          50%       { transform: translateY(-4px); }
+          50%       { transform: translateY(-2px); }
         }
 
         /* ===== Popup ===== */

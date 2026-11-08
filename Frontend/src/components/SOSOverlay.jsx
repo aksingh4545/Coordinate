@@ -93,23 +93,13 @@ export default function SOSOverlay({ currentLocation }) {
     );
   }
 
-  // SOS Button (always visible when no SOS active)
+  // Hidden trigger for toolbar SOS button (replaces old floating SOS button)
   return (
-    <>
-      <button 
-        className="sos-fab-btn"
-        onClick={handleSOSClick}
-        title="Emergency SOS"
-      >
-        <span className="sos-fab-icon">🆘</span>
-      </button>
-      {/* Hidden trigger for mobile toolbar SOS button */}
-      <button
-        className="sos-fab-btn-hidden"
-        onClick={handleSOSClick}
-        style={{ display: 'none' }}
-        aria-hidden="true"
-      />
-    </>
+    <button
+      className="sos-fab-btn-hidden"
+      onClick={handleSOSClick}
+      style={{ display: 'none' }}
+      aria-hidden="true"
+    />
   );
 }

@@ -5,20 +5,23 @@ Backend/node_modules/
 
 # Environment variables
 .env
-.env.local
-.env.production
+.env.*
+*.env
+*.env.*
+**/.env
+**/.env.*
+!**/.env.example
 
 # Build output
 dist/
 build/
+Frontend/dist/
 
-# IDE
+# IDE & OS
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# OS files
 .DS_Store
 Thumbs.db
 
@@ -26,10 +29,13 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# Test files
+# Test & scratch files
+Backend/mongodb-test.js
+Backend/render.js
 mongodb-test.js
 render.js
-
 about.md
+docs/
 
-docs
+# Analysis & Cache
+graphify-out/

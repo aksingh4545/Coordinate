@@ -872,9 +872,12 @@ app.get('/api/admin/ping', (req, res) => {
 // Admin auth middleware (simple key-based)
 const requireAdminAuth = (req, res, next) => {
   const adminKey = req.headers['x-admin-key'];
-  const validKey = process.env.ADMIN_KEY || 'admin_secret_key_2024';
+  const validKey = process.env.ADMIN_KEY;
   
-  console.log('Admin auth check:', { received: adminKey, expected: validKey });
+  if (!validKey) {
+    console.error('Admin auth check failed: ADMIN_KEY is not configured on the server');
+    return res.status(500).json({ error: 'Admin access is not configured on the server' });
+  }
   
   if (adminKey !== validKey) {
     return res.status(401).json({ error: 'Unauthorized' });

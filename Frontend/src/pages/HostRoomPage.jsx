@@ -67,10 +67,11 @@ export default function HostRoomPage() {
   const [locationError, setLocationError] = useState("");
   const [debugMode, setDebugMode] = useState(false);
   const [plannedRoutePoints, setPlannedRoutePoints] = useState([]); // Store calculated route path
-  // New mobile UI state
+  // UI panel states
   const [showMembersPanel, setShowMembersPanel] = useState(false);
   const [showLayersPanel, setShowLayersPanel] = useState(false);
   const [showSharePanel, setShowSharePanel] = useState(false);
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [isTalkingMobile, setIsTalkingMobile] = useState(false);
   const [urlCopied, setUrlCopied] = useState(false);
   const suppressTripSearchRef = useRef(false);
@@ -80,7 +81,7 @@ export default function HostRoomPage() {
   const wakeLockRef = useRef(null);
   const retryTimeoutRef = useRef(null);
   const warningRef = useRef({ signature: null, sentAt: 0 });
-  const locationSmootherRef = useRef(new LocationSmoother({ minAccuracy: 50 }));
+  const locationSmootherRef = useRef(new LocationSmoother({ minAccuracy: 400 }));
   const accuracyManagerRef = useRef(new GpsAccuracyManager());
   const handleLocationUpdateRef = useRef(null);
   const updateRoomSettingsRef = useRef(null);
@@ -462,17 +463,47 @@ export default function HostRoomPage() {
         });
       }, 20000);
     } else {
-      // ⚡ High Accuracy Mode: Quick first fix then continuous precise tracking
+      // ⚡ High Accuracy Mode: Force browser to perform high-accuracy Wi-Fi/GPS triangulation immediately
       navigator.geolocation.getCurrentPosition(
-        (pos) => { onSuccess(pos); },
-        () => { /* ignore, watchPosition will handle */ },
-        { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
+        onSuccess,
+        (err) => {
+          console.warn("High-accuracy initial fix failed, falling back to standard:", err);
+          navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+            enableHighAccuracy: false,
+            timeout: 10000,
+            maximumAge: 5000,
+          });
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
+
       watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
         enableHighAccuracy: true,
-        timeout: 60000,
-        maximumAge: 3000,
+        timeout: 30000,
+        maximumAge: 0,
       });
+    }
+  };
+
+  const handleLocateMe = () => {
+    const myLoc = locations.find(l => l.userId === user?.userId);
+    if (myLoc?.lat && myLoc?.lng && mapRef.current?.getMap) {
+      mapRef.current.getMap().setView([myLoc.lat, myLoc.lng], 16, { animate: true });
+    }
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude, accuracy, speed } = pos.coords;
+          if (handleLocationUpdateRef.current) {
+            handleLocationUpdateRef.current(latitude, longitude, accuracy, speed);
+          }
+          if (mapRef.current?.getMap) {
+            mapRef.current.getMap().setView([latitude, longitude], 16, { animate: true });
+          }
+        },
+        (err) => console.warn("Locate me error:", err),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
     }
   };
 
@@ -1055,43 +1086,44 @@ export default function HostRoomPage() {
       <div className="room-earth-bg"></div>
       <div className="room-shell">
 
-        {/* ======= NEW MOBILE UI ======= */}
-        {isMobile ? (
-          <>
-            {/* Mobile Topbar */}
-            <div className="mob-topbar">
-              <span className="mob-topbar-logo">Coordinator</span>
-              {/* Room chip + dropdown wrapper — keeps panel same width as chip */}
-              <div className="mob-room-dropdown-wrap">
-                <div
-                  className="mob-topbar-room"
-                  onClick={() => {
-                    setShowMembersPanel(v => !v);
-                    setShowLayersPanel(false);
-                    setShowSharePanel(false);
-                  }}
-                >
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <span className="mob-room-label">Room ID</span>
-                    <span className="mob-room-id">{roomId}</span>
-                  </div>
-                  {roomSettings?.mode && (
-                    <span className={`mob-mode-chip ${roomSettings.mode}`}>
-                      {roomSettings.mode === "tracking" ? "TRK" : roomSettings.mode === "trip" ? "TRP" : "CRW"}
-                    </span>
-                  )}
-                  <span className="mob-room-badge">{locations.length}</span>
-                  <div className={`mob-room-arrow ${showMembersPanel ? 'open' : ''}`}>▼</div>
-                </div>
+        {/* ======= UNIFIED DESKTOP & MOBILE TOPBAR ======= */}
+        <div className="mob-topbar">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', pointerEvents: 'auto' }}>
+            <span className="mob-topbar-logo">Coordinator</span>
+          </div>
 
-                {/* Members Dropdown Panel — inside wrapper = same width */}
-                {showMembersPanel && (
-                  <div className="mob-members-panel mob-members-panel--docked">
-                    <div className="mob-members-header">
-                      <span className="mob-members-header-icon">👥</span>
-                      <span className="mob-members-header-title">Members</span>
-                      <span className="mob-members-header-count">{memberList.length}</span>
-                    </div>
+          {/* Room chip + dropdown wrapper */}
+          <div className="mob-room-dropdown-wrap">
+            <div
+              className="mob-topbar-room"
+              onClick={() => {
+                setShowMembersPanel(v => !v);
+                setShowLayersPanel(false);
+                setShowSharePanel(false);
+                setShowSettingsPanel(false);
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <span className="mob-room-label">Room ID</span>
+                <span className="mob-room-id">{roomId}</span>
+              </div>
+              {roomSettings?.mode && (
+                <span className={`mob-mode-chip ${roomSettings.mode}`}>
+                  {roomSettings.mode === "tracking" ? "TRK" : roomSettings.mode === "trip" ? "TRP" : "CRW"}
+                </span>
+              )}
+              <span className="mob-room-badge">{locations.length}</span>
+              <div className={`mob-room-arrow ${showMembersPanel ? 'open' : ''}`}>▼</div>
+            </div>
+
+            {/* Members Dropdown Panel */}
+            {showMembersPanel && (
+              <div className="mob-members-panel mob-members-panel--docked">
+                <div className="mob-members-header">
+                  <span className="mob-members-header-icon">👥</span>
+                  <span className="mob-members-header-title">Members</span>
+                  <span className="mob-members-header-count">{memberList.length}</span>
+                </div>
                 <div className="mob-members-list">
                   {memberList.length === 0 ? (
                     <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: '0.72rem', padding: '12px 0' }}>
@@ -1100,7 +1132,6 @@ export default function HostRoomPage() {
                   ) : memberList.map((member) => {
                     const isCurrentUser = member.userId === user?.userId;
                     const avatarClass = member.isHost ? 'host' : isCurrentUser ? 'self' : 'member';
-                    // Determine single role badge to avoid duplication
                     const roleBadge = member.isHost && isCurrentUser
                       ? <span className="mob-member-role host">HOST · YOU</span>
                       : member.isHost
@@ -1131,545 +1162,410 @@ export default function HostRoomPage() {
                     );
                   })}
                 </div>
-                  </div>
-              )}
               </div>
-            </div>
+            )}
+          </div>
 
-            {/* Trip Mode - destination search bar */}
-            {roomSettings?.mode === "trip" && (
-              showTripSearch ? (
-                <div className="mob-trip-bar">
-                  <div className="mob-trip-bar-row">
-                    <input
-                      type="text"
-                      value={tripQuery}
-                      onChange={(e) => setTripQuery(e.target.value)}
-                      placeholder="🗺️ Search destination..."
-                      className="mob-trip-input"
-                    />
-                    <button
-                      type="button"
-                      className="mob-trip-go-btn"
-                      onClick={handleMobileTripSearch}
-                      disabled={isTripSearching}
-                    >
-                      {isTripSearching ? "..." : "Go"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowTripSearch(false)}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: 'rgba(255,255,255,0.6)',
-                        fontSize: '1rem',
-                        cursor: 'pointer',
-                        padding: '0 4px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                      title="Collapse"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  {tripSearchError && <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.65rem', marginTop: 4 }}>{tripSearchError}</div>}
-                  {tripSuggestions.length > 0 && (
-                    <div className="trip-suggestions" style={{ marginTop: 6 }}>
-                      {tripSuggestions.map((place) => (
-                        <button
-                          key={place.placeId}
-                          type="button"
-                          className="trip-suggestion"
-                          onClick={() => {
-                            handleSelectTripPlace(place);
-                            setShowTripSearch(false);
-                          }}
-                        >
-                          <span className="trip-suggestion-name">{place.name}</span>
-                          <span className="trip-suggestion-address">{place.address}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+          {/* User Account Menu Pill */}
+          <div className="menu-wrap" style={{ pointerEvents: 'auto', position: 'relative' }}>
+            <button
+              type="button"
+              className="user-pill-btn"
+              onClick={() => setShowMenu(prev => !prev)}
+              aria-label="Open account menu"
+            >
+              {user?.picture ? (
+                <img className="user-pill-avatar" src={user.picture} alt="" />
               ) : (
+                <span className="user-pill-avatar-placeholder">👤</span>
+              )}
+              <span className="user-pill-name">
+                {user ? (user.name?.split(' ')[0] || 'Host') : 'Host'}
+              </span>
+              <span className="user-pill-arrow">▼</span>
+            </button>
+            {showMenu && <AuthMenu />}
+          </div>
+        </div>
+
+        {/* Trip Mode - destination search bar */}
+        {roomSettings?.mode === "trip" && (
+          showTripSearch ? (
+            <div className="mob-trip-bar">
+              <div className="mob-trip-bar-row">
+                <input
+                  type="text"
+                  value={tripQuery}
+                  onChange={(e) => setTripQuery(e.target.value)}
+                  placeholder="🗺️ Search destination..."
+                  className="mob-trip-input"
+                />
                 <button
-                  className="mob-trip-search-toggle-btn"
-                  onClick={() => setShowTripSearch(true)}
+                  type="button"
+                  className="mob-trip-go-btn"
+                  onClick={handleMobileTripSearch}
+                  disabled={isTripSearching}
+                >
+                  {isTripSearching ? "..." : "Go"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowTripSearch(false)}
                   style={{
-                    position: 'absolute',
-                    top: '60px',
-                    left: '10px',
-                    zIndex: 150,
-                    width: '42px',
-                    height: '42px',
-                    borderRadius: '50%',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    background: 'rgba(13, 17, 35, 0.85)',
-                    backdropFilter: 'blur(10px)',
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'rgba(255,255,255,0.6)',
+                    fontSize: '1rem',
+                    cursor: 'pointer',
+                    padding: '0 4px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#ffffff',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
-                    cursor: 'pointer',
-                    animation: 'panelSlideDown 0.2s ease-out'
+                    justifyContent: 'center'
                   }}
-                  title="Search Destination"
+                  title="Collapse"
                 >
-                  <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: '20px', height: '20px' }}>
-                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                  </svg>
+                  ✕
                 </button>
-              )
-            )}
-
-            {/* Left Vertical Icon Toolbar */}
-            <div className="mob-icon-toolbar" onClick={() => setShowMembersPanel(false)}>
-
-              {/* SOS */}
-              {roomSettings?.mode !== "trip" && (
-                <button
-                  className="mob-icon-btn sos"
-                  data-tooltip="Emergency SOS"
-                  onClick={() => {
-                    if (locations.find(l => l.userId === user?.userId)) {
-                      const loc = locations.find(l => l.userId === user?.userId);
-                      if (loc?.lat && loc?.lng) {
-                        import('../context/MapContext').then(() => {});
-                        // trigger SOS through SOSOverlay's startSOSTimer by simulating click on sos-fab-btn
-                        document.querySelector('.sos-fab-btn-hidden')?.click();
-                      }
-                    }
-                  }}
-                >
-                  <span className="mob-sos-label">SOS</span>
-                </button>
-              )}
-
-              {/* Set Target */}
-              {roomSettings?.mode !== "trip" && (
-                <button
-                  className={`mob-icon-btn tool ${roomSettings?.targetLocation?.lat != null ? 'active' : ''}`}
-                  data-tooltip={roomSettings?.targetLocation?.lat != null ? "Clear Target" : "Set Target"}
-                  onClick={() => {
-                    if (roomSettings?.targetLocation?.lat != null) {
-                      handleClearTarget();
-                    } else {
-                      handleSetTarget();
-                    }
-                  }}
-                >
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                  </svg>
-                </button>
-              )}
-
-              {/* Layers */}
-              <div style={{ position: 'relative' }}>
-                <button
-                  className={`mob-icon-btn tool ${showLayersPanel ? 'active' : ''}`}
-                  data-tooltip="Map Layers"
-                  onClick={() => { setShowLayersPanel(v => !v); setShowSharePanel(false); setShowMembersPanel(false); }}
-                >
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/>
-                  </svg>
-                </button>
-                {showLayersPanel && (
-                  <div className="mob-layers-panel">
-                    <button
-                      className={`mob-layer-option ${(roomSettings?.mapStyle || 'osm') === 'osm' ? 'active' : ''}`}
-                      onClick={() => { updateRoomSettings({ mapStyle: 'osm' }); setShowLayersPanel(false); }}
-                    >
-                      <span className="mob-layer-icon">🗺️</span> Standard
-                    </button>
-                    <button
-                      className={`mob-layer-option ${roomSettings?.mapStyle === 'satellite' ? 'active' : ''}`}
-                      onClick={() => { updateRoomSettings({ mapStyle: 'satellite' }); setShowLayersPanel(false); }}
-                    >
-                      <span className="mob-layer-icon">🛰️</span> Satellite
-                    </button>
-                  </div>
-                )}
               </div>
-
-              {/* Share */}
-              <div style={{ position: 'relative' }}>
-                <button
-                  className={`mob-icon-btn tool ${showSharePanel ? 'active' : ''}`}
-                  data-tooltip="Share"
-                  onClick={() => { setShowSharePanel(v => !v); setShowLayersPanel(false); setShowMembersPanel(false); }}
-                >
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
-                  </svg>
-                </button>
-                {showSharePanel && (
-                  <div className="mob-share-panel">
+              {tripSearchError && <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.65rem', marginTop: 4 }}>{tripSearchError}</div>}
+              {tripSuggestions.length > 0 && (
+                <div className="trip-suggestions" style={{ marginTop: 6 }}>
+                  {tripSuggestions.map((place) => (
                     <button
-                      className={`mob-share-option ${urlCopied ? 'copied' : ''}`}
-                      onClick={() => { copyToClipboard(); setShowSharePanel(false); }}
-                    >
-                      📋 {urlCopied ? 'Copied!' : 'Copy URL'}
-                    </button>
-                    <button
-                      className="mob-share-option"
-                      onClick={() => { setShowQR(true); setShowSharePanel(false); }}
-                    >
-                      📱 Show QR Code
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Battery Saver */}
-              <button
-                className={`mob-icon-btn tool ${batterySaver ? 'active' : ''}`}
-                data-tooltip={batterySaver ? "Saver ON" : "Battery Saver"}
-                onClick={() => setBatterySaver(v => !v)}
-              >
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4zm-1.67 8h-2v2h-1v-2H9v-1h2V9h1v2h2v1z"/>
-                </svg>
-              </button>
-
-              <div className="mob-toolbar-sep" />
-
-              {/* Trip mode: Watches icon */}
-              {roomSettings?.mode === "trip" && (
-                <button
-                  className="mob-icon-btn watches"
-                  data-tooltip={`Watchers (${watchers.length})`}
-                  onClick={() => setShowWatchPanel(true)}
-                >
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                  </svg>
-                  {watchers.length > 0 && (
-                    <span style={{ position: 'absolute', top: -4, right: -4, background: '#8b5cf6', color: '#fff', fontSize: '0.5rem', fontWeight: 900, borderRadius: '50%', width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {watchers.length}
-                    </span>
-                  )}
-                </button>
-              )}
-
-              {/* Leave */}
-              <button
-                className="mob-icon-btn leave"
-                data-tooltip="Leave Room"
-                onClick={handleLeaveRoom}
-              >
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
-                </svg>
-              </button>
-
-            </div>
-
-            {/* Walkie-talkie active badge */}
-            {isTalkingMobile && <div className="mob-walkie-talking">🎙️ Transmitting...</div>}
-
-            {/* Target navigation mini bar */}
-            {roomSettings?.targetLocation?.lat != null && targetInfo && (
-              <div className="mob-target-mini">
-                <div className="mob-target-chip">
-                  <span className="mob-target-chip-label">Dist</span>
-                  <span className="mob-target-chip-val">{formatDistance(targetInfo.distance)}</span>
-                </div>
-                <div className="mob-target-sep" />
-                <div className="mob-target-chip">
-                  <span className="mob-target-chip-label">Bear</span>
-                  <span className="mob-target-chip-val">{targetInfo.bearingLabel}</span>
-                </div>
-                <div className="mob-target-sep" />
-                <div className="mob-target-chip">
-                  <span className="mob-target-chip-label">ETA</span>
-                  <span className="mob-target-chip-val">~{targetInfo.etaMinutes}m</span>
-                </div>
-                {roomSettings?.mode === "trip" && (
-                  <>
-                    <div className="mob-target-sep" />
-                    <button
+                      key={place.placeId}
                       type="button"
-                      style={{ background: 'rgba(139,92,246,0.3)', border: '1px solid rgba(139,92,246,0.5)', borderRadius: 8, color: '#c4b5fd', fontSize: '0.62rem', fontWeight: 800, padding: '4px 8px', cursor: 'pointer' }}
-                      onClick={handleEndTripManually}
+                      className="trip-suggestion"
+                      onClick={() => {
+                        handleSelectTripPlace(place);
+                        setShowTripSearch(false);
+                      }}
                     >
-                      🏁 End
+                      <span className="trip-suggestion-name">{place.name}</span>
+                      <span className="trip-suggestion-address">{place.address}</span>
                     </button>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* GPS Status Banners (Mobile) */}
-            {locationStatus === 'prompt' && (
-              <div className="mob-gps-acquiring">
-                <span className="mob-gps-spin">⏳</span>
-                <span>Acquiring GPS signal…</span>
-              </div>
-            )}
-            {locationStatus === 'error' && (
-              <div className="mob-gps-error-bar">
-                <span>⚠️ {locationError || 'GPS unavailable'}</span>
-                <button onClick={startLocationTracking}>Retry</button>
-              </div>
-            )}
-
-            {/* Mobile Walkie-Talkie FAB (right bottom) */}
-            {roomSettings?.mode !== "trip" && (
-              <button
-                className={`mob-walkie-fab ${isTalkingMobile ? 'talking' : ''}`}
-                onMouseDown={handleMobileWalkieStart}
-                onMouseUp={handleMobileWalkieStop}
-                onTouchStart={(e) => { e.preventDefault(); handleMobileWalkieStart(); }}
-                onTouchEnd={(e) => { e.preventDefault(); handleMobileWalkieStop(); }}
-              >
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1 1.93c-3.94-.49-7-3.85-7-7.93h2c0 3.31 2.69 6 6 6s6-2.69 6-6h2c0 4.08-3.06 7.44-7 7.93V19h4v2H8v-2h4v-3.07z"/>
-                </svg>
-              </button>
-            )}
-
-          </>
-        ) : (
-          /* ======= DESKTOP UI (unchanged) ======= */
-          <>
-            {/* Top Bar */}
-            <div className="room-topbar">
-              <div className="room-topbar-left">
-                <span>Group: {roomId}</span>
-                <span className="muted">{locations.length} member{locations.length !== 1 ? 's' : ''}</span>
-                <span className="room-mode-pill">
-                  Mode: {modeLabel}
-                </span>
-              </div>
-
-              <div className="room-topbar-right">
-                {console.log("Mode:", roomSettings?.mode) || null}
-                <button 
-                  className={`soft-pill-btn battery ${batterySaver ? 'active' : ''}`}
-                  onClick={() => setBatterySaver(!batterySaver)}
-                  title={batterySaver ? "Disable Battery Saver" : "Enable Battery Saver"}
-                >
-                  {batterySaver ? "🔋 Saver On" : "🪫 Saver Off"}
-                </button>
-                {roomSettings?.mode === "trip" && (
-                  <button className="soft-pill-btn watch" onClick={() => setShowWatchPanel(true)}>
-                    Watchers {watchers.length > 0 ? `(${watchers.length})` : ''}
-                  </button>
-                )}
-                <button className="soft-pill-btn qr" onClick={() => setShowQR(true)}>Show QR</button>
-                <button className="soft-pill-btn leave" onClick={handleLeaveRoom}>LEAVE</button>
-                <button className="soft-pill-btn account" onClick={() => { console.log("Account button clicked, showMenu:", !showMenu); setShowMenu(!showMenu); }}>
-                  {user?.picture ? <img src={user.picture} alt="" className="account-avatar" /> : "👤"}
-                </button>
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </>
+          ) : (
+            <button
+              className="mob-trip-search-toggle-btn"
+              onClick={() => setShowTripSearch(true)}
+              style={{
+                position: 'absolute',
+                top: '60px',
+                left: '10px',
+                zIndex: 150,
+                width: '42px',
+                height: '42px',
+                borderRadius: '50%',
+                border: '1px solid rgba(255,255,255,0.15)',
+                background: 'rgba(13, 17, 35, 0.85)',
+                backdropFilter: 'blur(10px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ffffff',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+                cursor: 'pointer',
+                animation: 'panelSlideDown 0.2s ease-out'
+              }}
+              title="Search Destination"
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: '20px', height: '20px' }}>
+                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+              </svg>
+            </button>
+          )
         )}
 
-        {/* Account Menu (desktop) */}
-        {!isMobile && showMenu && <AuthMenu />}
+        {/* Left Vertical Icon Toolbar */}
+        <div className="mob-icon-toolbar" onClick={() => setShowMembersPanel(false)}>
 
-        {/* Desktop location banner */}
-        {!isMobile && locationStatus !== "active" && (
-          <div className="location-banner">
-            <span className="location-banner-text">
-              {locationStatus === "prompt"
-                ? "Waiting for location permission..."
-                : "Location is off. Enable to share your position."}
-            </span>
-            <button type="button" className="location-banner-btn" onClick={startLocationTracking}>
-              Enable location
+          {/* SOS */}
+          {roomSettings?.mode !== "trip" && (
+            <button
+              className="mob-icon-btn sos"
+              data-tooltip="Emergency SOS"
+              onClick={() => {
+                if (locations.find(l => l.userId === user?.userId)) {
+                  const loc = locations.find(l => l.userId === user?.userId);
+                  if (loc?.lat && loc?.lng) {
+                    import('../context/MapContext').then(() => {});
+                    document.querySelector('.sos-fab-btn-hidden')?.click();
+                  }
+                }
+              }}
+            >
+              <span className="mob-sos-label">SOS</span>
             </button>
-            {locationError && <span className="location-banner-error">{locationError}</span>}
+          )}
+
+          {/* Locate Me */}
+          <button
+            className="mob-icon-btn tool"
+            data-tooltip="Locate Me (GPS)"
+            onClick={handleLocateMe}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
+            </svg>
+          </button>
+
+          {/* Set Target */}
+          {roomSettings?.mode !== "trip" && (
+            <button
+              className={`mob-icon-btn tool ${roomSettings?.targetLocation?.lat != null ? 'active' : ''}`}
+              data-tooltip={roomSettings?.targetLocation?.lat != null ? "Clear Target" : "Set Target"}
+              onClick={() => {
+                if (roomSettings?.targetLocation?.lat != null) {
+                  handleClearTarget();
+                } else {
+                  handleSetTarget();
+                }
+              }}
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+            </button>
+          )}
+
+          {/* Room Settings (Host only) */}
+          <div style={{ position: 'relative' }}>
+            <button
+              className={`mob-icon-btn tool ${showSettingsPanel ? 'active' : ''}`}
+              data-tooltip="Room Settings"
+              onClick={() => {
+                setShowSettingsPanel(v => !v);
+                setShowLayersPanel(false);
+                setShowSharePanel(false);
+                setShowMembersPanel(false);
+              }}
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+              </svg>
+            </button>
+            {showSettingsPanel && (
+              <div className="mob-settings-panel">
+                <div className="mob-settings-header">
+                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#ffffff' }}>⚙️ Room Settings</span>
+                  <span className={`mob-mode-chip ${roomSettings?.mode || 'tracking'}`}>
+                    {modeLabel}
+                  </span>
+                </div>
+                {(roomSettings?.mode === "tracking" || roomSettings?.mode === "trip") && (
+                  <div className="mob-settings-row">
+                    <label style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
+                      {roomSettings?.mode === "trip" ? "Arrival Radius" : "Tracking Range"}: <strong style={{ color: '#ffffff' }}>{roomSettings?.trackingRange ?? 30}m</strong>
+                    </label>
+                    <input
+                      type="range"
+                      min={5}
+                      max={200}
+                      step={5}
+                      value={roomSettings?.trackingRange ?? 30}
+                      onChange={handleRangeChange}
+                      style={{ width: '100%', accentColor: '#8b5cf6', cursor: 'pointer' }}
+                    />
+                  </div>
+                )}
+                <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.3 }}>
+                  {roomSettings?.mode === "trip"
+                    ? "Triggers destination arrival when within this distance."
+                    : "Warns members when exceeding distance from host."}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Layers */}
+          <div style={{ position: 'relative' }}>
+            <button
+              className={`mob-icon-btn tool ${showLayersPanel ? 'active' : ''}`}
+              data-tooltip="Map Layers"
+              onClick={() => { setShowLayersPanel(v => !v); setShowSharePanel(false); setShowMembersPanel(false); setShowSettingsPanel(false); }}
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/>
+              </svg>
+            </button>
+            {showLayersPanel && (
+              <div className="mob-layers-panel">
+                <button
+                  className={`mob-layer-option ${(roomSettings?.mapStyle || 'osm') === 'osm' ? 'active' : ''}`}
+                  onClick={() => { updateRoomSettings({ mapStyle: 'osm' }); setShowLayersPanel(false); }}
+                >
+                  <span className="mob-layer-icon">🗺️</span> Standard
+                </button>
+                <button
+                  className={`mob-layer-option ${roomSettings?.mapStyle === 'satellite' ? 'active' : ''}`}
+                  onClick={() => { updateRoomSettings({ mapStyle: 'satellite' }); setShowLayersPanel(false); }}
+                >
+                  <span className="mob-layer-icon">🛰️</span> Satellite
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Share */}
+          <div style={{ position: 'relative' }}>
+            <button
+              className={`mob-icon-btn tool ${showSharePanel ? 'active' : ''}`}
+              data-tooltip="Share"
+              onClick={() => { setShowSharePanel(v => !v); setShowLayersPanel(false); setShowMembersPanel(false); setShowSettingsPanel(false); }}
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+              </svg>
+            </button>
+            {showSharePanel && (
+              <div className="mob-share-panel">
+                <button
+                  className={`mob-share-option ${urlCopied ? 'copied' : ''}`}
+                  onClick={() => { copyToClipboard(); setShowSharePanel(false); }}
+                >
+                  📋 {urlCopied ? 'Copied!' : 'Copy URL'}
+                </button>
+                <button
+                  className="mob-share-option"
+                  onClick={() => { setShowQR(true); setShowSharePanel(false); }}
+                >
+                  📱 Show QR Code
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Battery Saver */}
+          <button
+            className={`mob-icon-btn tool ${batterySaver ? 'active' : ''}`}
+            data-tooltip={batterySaver ? "Saver ON" : "Battery Saver"}
+            onClick={() => setBatterySaver(v => !v)}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4zm-1.67 8h-2v2h-1v-2H9v-1h2V9h1v2h2v1z"/>
+            </svg>
+          </button>
+
+          <div className="mob-toolbar-sep" />
+
+          {/* Trip mode: Watches icon */}
+          {roomSettings?.mode === "trip" && (
+            <button
+              className="mob-icon-btn watches"
+              data-tooltip={`Watchers (${watchers.length})`}
+              onClick={() => setShowWatchPanel(true)}
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+              </svg>
+              {watchers.length > 0 && (
+                <span style={{ position: 'absolute', top: -4, right: -4, background: '#8b5cf6', color: '#fff', fontSize: '0.5rem', fontWeight: 900, borderRadius: '50%', width: 14, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {watchers.length}
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* Leave */}
+          <button
+            className="mob-icon-btn leave"
+            data-tooltip="Leave Room"
+            onClick={handleLeaveRoom}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+            </svg>
+          </button>
+
+        </div>
+
+        {/* Walkie-talkie active badge */}
+        {isTalkingMobile && <div className="mob-walkie-talking">🎙️ Transmitting...</div>}
+
+        {/* Target navigation mini bar */}
+        {roomSettings?.targetLocation?.lat != null && targetInfo && (
+          <div className="mob-target-mini">
+            <div className="mob-target-chip">
+              <span className="mob-target-chip-label">Dist</span>
+              <span className="mob-target-chip-val">{formatDistance(targetInfo.distance)}</span>
+            </div>
+            <div className="mob-target-sep" />
+            <div className="mob-target-chip">
+              <span className="mob-target-chip-label">Bear</span>
+              <span className="mob-target-chip-val">{targetInfo.bearingLabel}</span>
+            </div>
+            <div className="mob-target-sep" />
+            <div className="mob-target-chip">
+              <span className="mob-target-chip-label">ETA</span>
+              <span className="mob-target-chip-val">~{targetInfo.etaMinutes}m</span>
+            </div>
+            {roomSettings?.mode === "trip" && (
+              <>
+                <div className="mob-target-sep" />
+                <button
+                  type="button"
+                  style={{ background: 'rgba(139,92,246,0.3)', border: '1px solid rgba(139,92,246,0.5)', borderRadius: 8, color: '#c4b5fd', fontSize: '0.62rem', fontWeight: 800, padding: '4px 8px', cursor: 'pointer' }}
+                  onClick={handleEndTripManually}
+                >
+                  🏁 End
+                </button>
+              </>
+            )}
           </div>
         )}
 
-        {/* Desktop warning banner */}
-        {!isMobile && roomWarning && (
-          <div className="room-warning-banner" onClick={clearWarning}>
+        {/* GPS Status Banners */}
+        {locationStatus === 'prompt' && (
+          <div className="mob-gps-acquiring">
+            <span className="mob-gps-spin">⏳</span>
+            <span>Acquiring GPS signal…</span>
+          </div>
+        )}
+        {locationStatus === 'error' && (
+          <div className="mob-gps-error-bar">
+            <span>⚠️ {locationError || 'GPS unavailable'}</span>
+            <button onClick={startLocationTracking}>Retry</button>
+          </div>
+        )}
+
+        {/* Room Warning Banner (Floating) */}
+        {roomWarning && (
+          <div
+            className="room-warning-banner"
+            onClick={clearWarning}
+            style={{
+              position: 'absolute',
+              top: '65px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 250,
+              cursor: 'pointer',
+            }}
+          >
             <span className="warning-title">Warning</span>
             <span className="warning-text">
-              {roomWarning.message} ({'>'}{roomWarning.range}m from nearest member)
+              {roomWarning.message} ({'>'}{roomWarning.range}m away)
             </span>
             <span className="warning-close">Dismiss</span>
           </div>
         )}
 
-        {/* Desktop controls wrapper */}
-        {!isMobile && (
-          <>
-            <div className="panels-wrapper">
-              <div className={`room-controls-panel ${controlsPanelOpen ? "" : "collapsed"}`}>
-                <div
-                  className="controls-panel-toggle"
-                  onClick={() => setControlsPanelOpen(!controlsPanelOpen)}
-                >
-                  <span className="control-label">{controlsPanelOpen ? "▼" : "▶"} Room Controls</span>
-                </div>
-                {controlsPanelOpen && (
-                  <>
-                    <div className="control-row">
-                      <span className="control-label">Mode</span>
-                      <span className="control-hint">{modeLabel}</span>
-                    </div>
-
-                    {(roomSettings?.mode === "tracking" || roomSettings?.mode === "trip") && (
-                      <div className="control-row">
-                        <label className="control-label" htmlFor="trackingRange">Range (m)</label>
-                        <input
-                          id="trackingRange"
-                          type="number"
-                          min={5}
-                          max={200}
-                          step={1}
-                          value={roomSettings.trackingRange ?? 30}
-                          onChange={handleRangeChange}
-                          className="control-input"
-                        />
-                        <span className="control-hint">{roomSettings?.mode === "trip" ? "Arrival check range" : "Nearest member rule"}</span>
-                      </div>
-                    )}
-
-                    {roomSettings?.mode !== "trip" && (
-                      <>
-                        <div className="control-row">
-                          <button type="button" className="soft-pill-btn target" onClick={handleSetTarget}>
-                            Set Target
-                          </button>
-                          {roomSettings?.targetLocation && (
-                            <button type="button" className="soft-pill-btn target-clear" onClick={handleClearTarget}>
-                              Clear
-                            </button>
-                          )}
-                        </div>
-
-                        {isTargeting && (
-                          <div className="control-hint">Click on map to place the target pin.</div>
-                        )}
-                      </>
-                    )}
-
-                    {roomSettings?.mode === "trip" && (
-                      <div className="control-row trip-search">
-                        <label className="control-label">Trip Destination</label>
-                        <div className="trip-search-row">
-                          <input
-                            type="text"
-                            className="control-input"
-                            value={tripQuery}
-                            onChange={(e) => setTripQuery(e.target.value)}
-                            placeholder="Type a place or address"
-                          />
-                          <button
-                            type="button"
-                            className="soft-pill-btn target"
-                            onClick={handleTripSearch}
-                            disabled={isTripSearching}
-                          >
-                            {isTripSearching ? "Searching" : "Search"}
-                          </button>
-                        </div>
-                        {tripSearchError && <span className="control-hint">{tripSearchError}</span>}
-                        {tripSuggestions.length > 0 && (
-                          <div className="trip-suggestions">
-                            {tripSuggestions.map((place) => (
-                              <button
-                                key={place.placeId}
-                                type="button"
-                                className="trip-suggestion"
-                                onClick={() => handleSelectTripPlace(place)}
-                              >
-                                <span className="trip-suggestion-name">{place.name}</span>
-                                <span className="trip-suggestion-address">{place.address}</span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="control-divider"></div>
-
-                    <div className="control-row map-row">
-                      <span className="control-label">Map</span>
-                      <button
-                        className={`map-btn ${roomSettings?.mapStyle === "osm" ? "active" : ""}`}
-                        onClick={() => updateRoomSettings({ mapStyle: "osm" })}
-                      >
-                        OSM Standard
-                      </button>
-                      <button
-                        className={`map-btn ${roomSettings?.mapStyle === "satellite" ? "active" : ""}`}
-                        onClick={() => updateRoomSettings({ mapStyle: "satellite" })}
-                      >
-                        Satellite
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Target Navigation Panel */}
-              {roomSettings?.targetLocation && targetInfo && (
-                <div className={`target-nav-panel ${targetNavPanelOpen ? "" : "collapsed"}`}>
-                  <div
-                    className="target-nav-panel-toggle"
-                    onClick={() => setTargetNavPanelOpen(!targetNavPanelOpen)}
-                  >
-                    <span className="control-label">
-                      {targetNavPanelOpen ? "▼" : "▶"} Target Navigation
-                    </span>
-                  </div>
-                  {targetNavPanelOpen && (
-                    <>
-                      <div className="target-nav-head">
-                        <span className="control-hint">Live direction to destination</span>
-                      </div>
-                      <div className="target-nav-grid target-nav-desktop">
-                        <div>
-                          <div className="target-nav-label">Distance</div>
-                          <div className="target-nav-value">{formatDistance(targetInfo.distance)}</div>
-                        </div>
-                        <div>
-                          <div className="target-nav-label">Bearing</div>
-                          <div className="target-nav-value">{targetInfo.bearingLabel}</div>
-                        </div>
-                        <div>
-                          <div className="target-nav-label">ETA</div>
-                          <div className="target-nav-value">~{targetInfo.etaMinutes} min</div>
-                        </div>
-                      </div>
-                      <div className="target-nav-mini">
-                        <span>Target</span>
-                        <span>{formatDistance(targetInfo.distance)}</span>
-                        <span>{targetInfo.bearingLabel}</span>
-                        <span>~{targetInfo.etaMinutes} min</span>
-                      </div>
-                      {roomSettings?.mode === "trip" && (
-                        <div className="control-row" style={{ marginTop: '12px' }}>
-                          <button
-                            type="button"
-                            className="soft-pill-btn target"
-                            style={{ width: '100%', padding: '8px 16px', fontSize: '12px' }}
-                            onClick={handleEndTripManually}
-                          >
-                            🏁 End & Save Route
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          </>
+        {/* Mobile Walkie-Talkie FAB (right bottom) */}
+        {roomSettings?.mode !== "trip" && (
+          <button
+            className={`mob-walkie-fab ${isTalkingMobile ? 'talking' : ''}`}
+            onMouseDown={handleMobileWalkieStart}
+            onMouseUp={handleMobileWalkieStop}
+            onTouchStart={(e) => { e.preventDefault(); handleMobileWalkieStart(); }}
+            onTouchEnd={(e) => { e.preventDefault(); handleMobileWalkieStop(); }}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1 1.93c-3.94-.49-7-3.85-7-7.93h2c0 3.31 2.69 6 6 6s6-2.69 6-6h2c0 4.08-3.06 7.44-7 7.93V19h4v2H8v-2h4v-3.07z"/>
+            </svg>
+          </button>
         )}
 
         {/* Map */}
@@ -1689,36 +1585,6 @@ export default function HostRoomPage() {
             onRouteUpdate={handlePlannedRouteUpdate}
           />
         </div>
-
-        {/* Members Panel */}
-        {!isMobile && memberList.length > 0 && (
-          <div className="room-members-panel">
-            <div className="room-members-title">Group Members ({memberList.length})</div>
-            <div style={{ maxHeight: "320px", overflowY: "auto" }}>
-              {memberList.map((member) => {
-                const isCurrentUser = member.userId === user?.userId;
-                return (
-                  <div key={member.userId + "_" + member.name} className="member-row">
-                    <div className="member-left-side">
-                      <span className="status-dot live"></span>
-                      <div className="member-name-wrap">
-                        <span className="member-name">
-                          {member.name} {isCurrentUser ? " (You)" : ""}
-                        </span>
-                        {member.distance !== null && (
-                          <span className="member-status-text">
-                            {formatDistance(member.distance)} from you
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {member.isHost && <span className="member-role-host">Host</span>}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
         {/* Walkie Talkie */}
         {currentRoom && user && roomSettings?.mode !== "trip" && (

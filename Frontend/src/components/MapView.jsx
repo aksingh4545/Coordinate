@@ -213,8 +213,8 @@ const create3DAvatarIcon = (isHost, isCurrentUser, name = "", movementState = 'w
 
   
   // Dynamic marker icons based on zoom level
-const createMarkerIcon = (isHost, isCurrentUser, baseSize = 32) => {
-  const color = isCurrentUser ? "#10b981" : isHost ? "#8b5cf6" : "#ec4899";
+const createMarkerIcon = (isHost, isCurrentUser, baseSize = 24) => {
+  const color = isHost ? "#ef4444" : "#10b981";
   const halfSize = baseSize / 2;
   const fontSize = Math.round(baseSize * 0.5);
 
@@ -232,7 +232,7 @@ const createMarkerIcon = (isHost, isCurrentUser, baseSize = 32) => {
         justify-content: center;
         font-size: ${fontSize}px;
       ">
-        ${isCurrentUser ? '📍' : isHost ? '🎯' : '👤'}
+        ${isHost ? '📍' : '👤'}
       </div>
     `,
     className: "custom-marker",

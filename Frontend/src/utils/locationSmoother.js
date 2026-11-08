@@ -34,24 +34,39 @@ export class LocationSmoother {
     this.enableHighAccuracy = options.enableHighAccuracy !== false;
     this.positionHistory = [];
     this.maxHistorySize = options.maxHistorySize || 10;
-    this.minAccuracy = options.minAccuracy || 120; // Increased default limit to prevent aggressive freezing
+    this.minAccuracy = options.minAccuracy || 400; // Allow laptop Wi-Fi positioning (typically 100-300m)
     this.lastSmoothed = null;
-    this.rejectedConsecutive = 0; // Track consecutive low-accuracy rejections
+    this.lastAccuracy = null;
+    this.rejectedConsecutive = 0;
     
     this.kalmanLat = new SimpleKalmanFilter(this.processNoise, this.measurementNoise);
     this.kalmanLng = new SimpleKalmanFilter(this.processNoise, this.measurementNoise);
   }
 
   filter(lat, lng, accuracy = null, speed = null) {
-    // If accuracy is extremely poor, handle it
+    // If we have an existing fix and receive a new coordinate that is far away (> 500m / ~0.005 deg),
+    // or if the new coordinate is much more accurate than a previous coarse fix,
+    // immediately reset the filter to snap to the real location rather than dragging across town.
+    if (this.lastSmoothed) {
+      const dLat = Math.abs(lat - this.lastSmoothed.lat);
+      const dLng = Math.abs(lng - this.lastSmoothed.lng);
+      const isLargeJump = dLat > 0.005 || dLng > 0.005;
+      const isSignificantAccuracyImprovement = accuracy && this.lastAccuracy && accuracy < this.lastAccuracy * 0.5;
+
+      if (isLargeJump || isSignificantAccuracyImprovement) {
+        console.log(`📍 Snap-recovering location (${isLargeJump ? 'large jump' : 'accuracy boost'}). Resetting smoother.`);
+        this.reset();
+      }
+    }
+
+    // If accuracy is extremely poor (beyond threshold), handle it
     if (accuracy && accuracy > this.minAccuracy) {
       this.rejectedConsecutive++;
-      console.log(`⚠️ Extremely low accuracy (${accuracy}m), consecutive rejections: ${this.rejectedConsecutive}`);
+      console.log(`⚠️ Low accuracy reading (${accuracy}m), consecutive: ${this.rejectedConsecutive}`);
       
-      // If we are locked in a low accuracy environment (e.g. indoors) for 4+ updates,
-      // force-accept the coordinate to prevent freezing the user miles away.
-      if (this.rejectedConsecutive >= 4) {
-        console.log(`🔄 Force-recovering from frozen state. Resetting Kalman filter to new location.`);
+      // If locked in low accuracy environment for 3+ updates, force-accept
+      if (this.rejectedConsecutive >= 3) {
+        console.log(`🔄 Force-accepting coordinate to prevent freezing.`);
         this.reset();
         this.rejectedConsecutive = 0;
       } else {
@@ -79,6 +94,7 @@ export class LocationSmoother {
     }
 
     this.lastSmoothed = { lat: smoothedLat, lng: smoothedLng };
+    this.lastAccuracy = accuracy;
     return this.lastSmoothed;
   }
 

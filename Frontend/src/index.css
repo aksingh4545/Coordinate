@@ -4016,6 +4016,41 @@ body {
   color: #6ee7b7;
 }
 
+/* ---- Settings sub-panel ---- */
+.mob-settings-panel {
+  position: absolute;
+  left: 60px;
+  top: 0;
+  background: rgba(13, 17, 35, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 12px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  animation: panelSlideRight 0.2s ease-out;
+}
+
+.mob-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.mob-settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 /* ---- Mobile Trip Mode ---- */
 .mob-trip-bar {
   position: absolute;
@@ -4085,19 +4120,13 @@ body {
   transform: none;
 }
 
-/* ---- Mobile SOS as part of toolbar (replaces old sos-fab-btn on mobile) ---- */
-@media (max-width: 640px) {
-  .sos-fab-btn {
-    display: none !important;
-  }
-  
-  .walkie-fab-container {
-    display: none !important;
-  }
+/* ---- Hide legacy floating SOS & PTT buttons (replaced by toolbar SOS and mob-walkie-fab) ---- */
+.sos-fab-btn {
+  display: none !important;
+}
 
-  .ptt-button-fab {
-    display: none !important;
-  }
+.ptt-button-fab {
+  display: none !important;
 }
 
 /* ---- Mode badge on topbar ---- */
