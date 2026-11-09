@@ -6,6 +6,7 @@ import AuthMenu from "../components/AuthMenu";
 import MapView from "../components/MapView";
 import { getAuthUser, isAuthTokenExpired, clearAuthUser } from "../utils/authStorage";
 import { LocationSmoother } from "../utils/locationSmoother";
+import { getSocketUrl } from "../utils/apiConfig";
 
 const normalizeTripPath = (path) => {
   if (!path || !Array.isArray(path)) return null;
@@ -205,7 +206,7 @@ export default function HomePage() {
 
     const fetchSharedTrip = async () => {
       try {
-        const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+        const API_URL = getSocketUrl();
         console.log("Fetching shared trip:", tripId);
         const response = await fetch(`${API_URL}/api/trips/${tripId}`);
         const data = await response.json();

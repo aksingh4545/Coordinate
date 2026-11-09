@@ -672,7 +672,22 @@ io.on('connection', (socket) => {
   // Update user location
   socket.on('location:update', async ({ userId, roomId, lat, lng, name }) => {
     const normalizedRoomId = (roomId || "").toUpperCase();
+    if (!normalizedRoomId || !userId) return;
+    if (lat === 0 && lng === 0) return;
+
     let room = rooms.get(normalizedRoomId);
+    if (!room) {
+      room = await safeMongoOperation(
+        async () => {
+          const roomsCollection = getRoomsCollection();
+          const found = await roomsCollection.findOne({ roomId: normalizedRoomId });
+          if (found) rooms.set(normalizedRoomId, found);
+          return found;
+        },
+        () => null
+      );
+    }
+
     if (room) {
       // Update in cache
       let member = room.members.find(m => m.userId === userId);
@@ -684,13 +699,14 @@ io.on('connection', (socket) => {
         member.lastUpdate = Date.now();
         if (name) member.name = name;
       } else {
-        room.members.push({
+        member = {
           userId,
           name: name || 'User',
           role: userId === room.hostId ? 'host' : 'member',
           location: { lat, lng },
           lastUpdate: Date.now(),
-        });
+        };
+        room.members.push(member);
       }
 
       // Update MongoDB asynchronously (don't wait)
@@ -773,17 +789,26 @@ io.on('connection', (socket) => {
   socket.on('room:settings:update', async ({ roomId, userId, settings }) => {
     const normalizedRoomId = (roomId || "").toUpperCase();
     let room = rooms.get(normalizedRoomId);
+    if (!room) {
+      room = await safeMongoOperation(
+        async () => {
+          const roomsCollection = getRoomsCollection();
+          const found = await roomsCollection.findOne({ roomId: normalizedRoomId });
+          if (found) rooms.set(normalizedRoomId, found);
+          return found;
+        },
+        () => null
+      );
+    }
     if (!room) return;
     const isHost = userId === room.hostId;
-    const isTripMode = room.settings?.mode === 'trip';
 
     if (settings && Object.prototype.hasOwnProperty.call(settings, 'mode')) {
       delete settings.mode;
     }
 
     if (!isHost) {
-      if (!isTripMode) return;
-      const allowedKeys = ['targetLocation', 'targetLabel'];
+      const allowedKeys = ['targetLocation', 'targetLabel', 'mapStyle'];
       const incomingKeys = Object.keys(settings || {});
       const hasInvalid = incomingKeys.some(key => !allowedKeys.includes(key));
       if (hasInvalid) return;

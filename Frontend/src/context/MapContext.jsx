@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 import io from "socket.io-client";
 import { getAuthHeaders, getAuthUser } from "../utils/authStorage";
+import { getSocketUrl } from "../utils/apiConfig";
 
 const MapContext = createContext(null);
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+const SOCKET_URL = getSocketUrl();
 
 export function MapProvider({ children }) {
   const [socket, setSocket] = useState(null);
@@ -18,12 +19,26 @@ export function MapProvider({ children }) {
         email: authUser.email || null,
       };
     }
-    const saved = localStorage.getItem("coordinator_user");
-    return saved ? JSON.parse(saved) : null;
+    const session = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("coordinator_user") : null;
+    if (session) {
+      try { return JSON.parse(session); } catch (e) {}
+    }
+    const saved = typeof localStorage !== "undefined" ? localStorage.getItem("coordinator_user") : null;
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return null;
   });
   const [currentRoom, setCurrentRoom] = useState(() => {
-    const saved = localStorage.getItem("coordinator_current_room");
-    return saved ? JSON.parse(saved) : null;
+    const session = typeof sessionStorage !== "undefined" ? sessionStorage.getItem("coordinator_current_room") : null;
+    if (session) {
+      try { return JSON.parse(session); } catch (e) {}
+    }
+    const saved = typeof localStorage !== "undefined" ? localStorage.getItem("coordinator_current_room") : null;
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return null;
   });
   const [locations, setLocations] = useState([]);
   const [members, setMembers] = useState([]);
@@ -66,12 +81,14 @@ export function MapProvider({ children }) {
 
     newSocket.on("location:updated", ({ userId, name, lat, lng, isHost }) => {
       console.log('📍 Received location update:', { userId, name, lat, lng, isHost });
-      setLocations((prev) => {
-        const filtered = prev.filter((loc) => loc.userId !== userId);
-        const updated = [...filtered, { userId, name, lat, lng, isHost: Boolean(isHost) }];
-        console.log('📍 Updated locations in context:', updated);
-        return updated;
-      });
+      if (lat != null && lng != null && (lat !== 0 || lng !== 0)) {
+        setLocations((prev) => {
+          const filtered = prev.filter((loc) => loc.userId !== userId);
+          const updated = [...filtered, { userId, name, lat, lng, isHost: Boolean(isHost) }];
+          console.log('📍 Updated locations in context:', updated);
+          return updated;
+        });
+      }
       setMembers((prev) => {
         const exists = prev.some((m) => m.userId === userId);
         if (exists) {
@@ -92,6 +109,21 @@ export function MapProvider({ children }) {
           ...m,
           isHost: m.userId === data.hostId || m.role === 'host',
         })));
+        setLocations(prev => {
+          const locMap = new Map(prev.map(l => [l.userId, l]));
+          data.members.forEach(m => {
+            if (m.location && m.location.lat !== 0 && m.location.lng !== 0) {
+              locMap.set(m.userId, {
+                userId: m.userId,
+                name: m.name,
+                lat: m.location.lat,
+                lng: m.location.lng,
+                isHost: m.userId === data.hostId || m.role === 'host',
+              });
+            }
+          });
+          return Array.from(locMap.values());
+        });
       }
     });
 
@@ -102,6 +134,21 @@ export function MapProvider({ children }) {
           ...m,
           isHost: m.userId === data.hostId || m.role === 'host',
         })));
+        setLocations(prev => {
+          const locMap = new Map(prev.map(l => [l.userId, l]));
+          data.members.forEach(m => {
+            if (m.location && m.location.lat !== 0 && m.location.lng !== 0) {
+              locMap.set(m.userId, {
+                userId: m.userId,
+                name: m.name,
+                lat: m.location.lat,
+                lng: m.location.lng,
+                isHost: m.userId === data.hostId || m.role === 'host',
+              });
+            }
+          });
+          return Array.from(locMap.values());
+        });
       }
     });
 
@@ -159,11 +206,19 @@ export function MapProvider({ children }) {
 
   useEffect(() => {
     if (!currentRoom) {
-      localStorage.removeItem("coordinator_current_room");
+      if (typeof sessionStorage !== "undefined") sessionStorage.removeItem("coordinator_current_room");
+      if (typeof localStorage !== "undefined") localStorage.removeItem("coordinator_current_room");
       return;
     }
-    localStorage.setItem("coordinator_current_room", JSON.stringify(currentRoom));
+    if (typeof sessionStorage !== "undefined") sessionStorage.setItem("coordinator_current_room", JSON.stringify(currentRoom));
+    if (typeof localStorage !== "undefined") localStorage.setItem("coordinator_current_room", JSON.stringify(currentRoom));
   }, [currentRoom]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (typeof sessionStorage !== "undefined") sessionStorage.setItem("coordinator_user", JSON.stringify(user));
+    if (typeof localStorage !== "undefined") localStorage.setItem("coordinator_user", JSON.stringify(user));
+  }, [user]);
 
   useEffect(() => {
     if (!socket || !currentRoom || !user) return;
@@ -188,7 +243,7 @@ export function MapProvider({ children }) {
 
   // Generate or get user ID
   const getOrCreateUser = useCallback(() => {
-    if (user) return user;
+    if (user?.userId) return user;
 
     const authUser = getAuthUser();
     if (authUser?.id) {
@@ -198,11 +253,8 @@ export function MapProvider({ children }) {
         picture: authUser.picture || null,
         email: authUser.email || null,
       };
-      try {
-        localStorage.setItem("coordinator_user", JSON.stringify(authedUser));
-      } catch (err) {
-        console.error("LocalStorage error:", err);
-      }
+      if (typeof sessionStorage !== "undefined") sessionStorage.setItem("coordinator_user", JSON.stringify(authedUser));
+      if (typeof localStorage !== "undefined") localStorage.setItem("coordinator_user", JSON.stringify(authedUser));
       setUser(authedUser);
       return authedUser;
     }
@@ -212,11 +264,8 @@ export function MapProvider({ children }) {
       name: "User",
     };
 
-    try {
-      localStorage.setItem("coordinator_user", JSON.stringify(newUser));
-    } catch (err) {
-      console.error("LocalStorage error:", err);
-    }
+    if (typeof sessionStorage !== "undefined") sessionStorage.setItem("coordinator_user", JSON.stringify(newUser));
+    if (typeof localStorage !== "undefined") localStorage.setItem("coordinator_user", JSON.stringify(newUser));
 
     setUser(newUser);
     return newUser;
@@ -231,7 +280,8 @@ export function MapProvider({ children }) {
       const currentUser = getOrCreateUser();
       const updatedUser = { ...currentUser, name: hostName };
       setUser(updatedUser);
-      localStorage.setItem("coordinator_user", JSON.stringify(updatedUser));
+      if (typeof sessionStorage !== "undefined") sessionStorage.setItem("coordinator_user", JSON.stringify(updatedUser));
+      if (typeof localStorage !== "undefined") localStorage.setItem("coordinator_user", JSON.stringify(updatedUser));
 
       const response = await fetch(`${SOCKET_URL}/api/rooms/create`, {
         method: "POST",
@@ -293,10 +343,22 @@ export function MapProvider({ children }) {
     setError(null);
 
     try {
-      const currentUser = getOrCreateUser();
-      const updatedUser = { ...currentUser, name: userName };
-      setUser(updatedUser);
-      localStorage.setItem("coordinator_user", JSON.stringify(updatedUser));
+      // Ensure the joining user has a distinct, valid userId that doesn't collide with host
+      let currentUser = user;
+      const isHostOfThisRoom = currentUser?.userId && currentRoom?.hostId === currentUser.userId;
+
+      if (!currentUser?.userId || isHostOfThisRoom) {
+        currentUser = {
+          userId: "user_" + Math.random().toString(36).substring(2, 10),
+          name: userName,
+        };
+      } else {
+        currentUser = { ...currentUser, name: userName };
+      }
+
+      setUser(currentUser);
+      if (typeof sessionStorage !== "undefined") sessionStorage.setItem("coordinator_user", JSON.stringify(currentUser));
+      if (typeof localStorage !== "undefined") localStorage.setItem("coordinator_user", JSON.stringify(currentUser));
 
       const response = await fetch(`${SOCKET_URL}/api/rooms/join`, {
         method: "POST",
@@ -318,8 +380,10 @@ export function MapProvider({ children }) {
       const effectiveUserId = data.room.userId || currentUser.userId;
       if (effectiveUserId !== currentUser.userId) {
         const adjustedUser = { ...currentUser, userId: effectiveUserId, name: userName };
+        currentUser = adjustedUser;
         setUser(adjustedUser);
-        localStorage.setItem("coordinator_user", JSON.stringify(adjustedUser));
+        if (typeof sessionStorage !== "undefined") sessionStorage.setItem("coordinator_user", JSON.stringify(adjustedUser));
+        if (typeof localStorage !== "undefined") localStorage.setItem("coordinator_user", JSON.stringify(adjustedUser));
       }
 
       setCurrentRoom({
@@ -335,6 +399,23 @@ export function MapProvider({ children }) {
           ...m,
           isHost: m.userId === data.room.hostId || m.role === 'host',
         })));
+
+        // Extract any members with valid coordinates and populate locations immediately!
+        setLocations(prev => {
+          const locMap = new Map(prev.map(l => [l.userId, l]));
+          data.room.members.forEach(m => {
+            if (m.location && m.location.lat !== 0 && m.location.lng !== 0) {
+              locMap.set(m.userId, {
+                userId: m.userId,
+                name: m.name,
+                lat: m.location.lat,
+                lng: m.location.lng,
+                isHost: m.userId === data.room.hostId || m.role === 'host',
+              });
+            }
+          });
+          return Array.from(locMap.values());
+        });
       }
 
       if (data.room.settings) {
@@ -356,7 +437,7 @@ export function MapProvider({ children }) {
       setIsLoading(false);
       throw err;
     }
-  }, [socket, getOrCreateUser]);
+  }, [socket, user, currentRoom]);
 
   // Update location
   const updateLocation = useCallback((lat, lng) => {
@@ -372,7 +453,7 @@ export function MapProvider({ children }) {
 
     setLocations((prev) => {
       const filtered = prev.filter((loc) => loc.userId !== user.userId);
-      return [...filtered, { userId: user.userId, name: user.name, lat, lng }];
+      return [...filtered, { userId: user.userId, name: user.name, lat, lng, isHost: Boolean(currentRoom.isHost) }];
     });
   }, [socket, currentRoom, user]);
 
@@ -385,7 +466,7 @@ export function MapProvider({ children }) {
       }
 
       socket.emit("room:sync", { roomId: currentRoom.roomId }, (response) => {
-        if (response.success) {
+        if (response && response.success) {
           if (response.members && Array.isArray(response.members)) {
             setMembers(response.members.map(m => ({
               ...m,
@@ -393,44 +474,50 @@ export function MapProvider({ children }) {
             })));
           }
 
-          // Merge: use server data but keep local positions for users not yet on server
+          // Merge: use server data as authority for all remote users,
+          // but preserve current user's local position if more recent or not yet on server
           setLocations(prev => {
-            const serverMap = new Map(response.locations.map(l => [l.userId, l]));
+            const serverLocs = Array.isArray(response.locations) ? response.locations : [];
+            const serverMap = new Map(serverLocs.map(l => [l.userId, l]));
             const localMap = new Map(prev.map(l => [l.userId, l]));
-            // Build merged list: server locations take priority, but preserve local positions
             const merged = [];
-            // Add all server locations, preserving isHost flag from local if available
-            response.locations.forEach(serverLoc => {
+
+            serverLocs.forEach(serverLoc => {
               const local = localMap.get(serverLoc.userId);
+              const isCurrentUser = user && serverLoc.userId === user.userId;
+
               merged.push({
                 ...serverLoc,
-                // If local has a more recent/accurate position (non-zero), prefer it
-                lat: local && local.lat !== 0 && local.lat != null ? local.lat : serverLoc.lat,
-                lng: local && local.lng !== 0 && local.lng != null ? local.lng : serverLoc.lng,
+                // Only prefer local coordinate for the local user if they have a non-zero local position
+                lat: isCurrentUser && local && local.lat !== 0 && local.lat != null ? local.lat : serverLoc.lat,
+                lng: isCurrentUser && local && local.lng !== 0 && local.lng != null ? local.lng : serverLoc.lng,
                 isHost: serverLoc.isHost || (local && local.isHost) || serverLoc.userId === response.hostId,
               });
             });
-            // Add local-only locations not yet synced to server
+
+            // Preserve local-only locations (e.g. current user before server has synced it)
             prev.forEach(localLoc => {
-              if (!serverMap.has(localLoc.userId)) {
+              if (!serverMap.has(localLoc.userId) && localLoc.lat !== 0 && localLoc.lat != null) {
                 merged.push({
                   ...localLoc,
                   isHost: localLoc.isHost || localLoc.userId === response.hostId,
                 });
               }
             });
+
             return merged;
           });
+
           if (response.settings) {
             setRoomSettings(response.settings);
           }
-          resolve(response.locations);
+          resolve(response.locations || []);
         } else {
           resolve([]);
         }
       });
     });
-  }, [socket, currentRoom]);
+  }, [socket, currentRoom, user]);
 
   // Leave room
   const leaveRoom = useCallback(async () => {
@@ -449,6 +536,8 @@ export function MapProvider({ children }) {
     setCurrentRoom(null);
     setLocations([]);
     setMembers([]);
+    if (typeof sessionStorage !== "undefined") sessionStorage.removeItem("coordinator_current_room");
+    if (typeof localStorage !== "undefined") localStorage.removeItem("coordinator_current_room");
     setRoomSettings({
       mode: "crowd",
       trackingRange: 30,

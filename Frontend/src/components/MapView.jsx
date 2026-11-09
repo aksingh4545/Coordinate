@@ -4,6 +4,7 @@ import { DivIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useMap } from "../context/MapContext";
 import { getAuthHeaders } from "../utils/authStorage";
+import { getSocketUrl } from "../utils/apiConfig";
 import StickerMarker from "./StickerMarker";
 
 // Component to update map view when locations change
@@ -344,7 +345,7 @@ const MapView = forwardRef(({
 
     const fetchRoute = async () => {
       try {
-        const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+        const API_URL = getSocketUrl();
         const url = `${API_URL}/api/places/directions?originLat=${currentLoc.lat}&originLng=${currentLoc.lng}&destLat=${targetLocation.lat}&destLng=${targetLocation.lng}`;
         console.log('🛣️ Fetching route from:', url);
         const response = await fetch(url, { headers: { ...getAuthHeaders() } });

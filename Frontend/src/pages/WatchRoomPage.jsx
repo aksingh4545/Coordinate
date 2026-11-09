@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useMap } from "../context/MapContext";
 import MapView from "../components/MapView";
 import { getAuthHeaders } from "../utils/authStorage";
+import { getSocketUrl } from "../utils/apiConfig";
 import QRCode from "qrcode";
 import "./MemberRoomPage.css";
 
@@ -36,7 +37,7 @@ export default function WatchRoomPage() {
 
   // Fetch room info
   useEffect(() => {
-    const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+    const API_URL = getSocketUrl();
     const fetchRoomInfo = async () => {
       try {
         const response = await fetch(`${API_URL}/api/rooms/${roomId.toUpperCase()}`, {

@@ -7,6 +7,7 @@ import SOSOverlay from "../components/SOSOverlay";
 import { LocationSmoother } from "../utils/locationSmoother";
 import { placesService } from "../utils/placesService";
 import { getAuthUser } from "../utils/authStorage";
+import { getSocketUrl } from "../utils/apiConfig";
 import "./MemberRoomPage.css";
 
 export default function MemberRoomPage() {
@@ -37,6 +38,7 @@ export default function MemberRoomPage() {
   } = useMap();
   const [memberList, setMemberList] = useState([]);
   const [isAdjustingLocation, setIsAdjustingLocation] = useState(false);
+  const [isTargeting, setIsTargeting] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showTargetNav, setShowTargetNav] = useState(false);
   const [showTripHeader, setShowTripHeader] = useState(true);
@@ -104,6 +106,7 @@ export default function MemberRoomPage() {
     return normalized.length > 1 ? normalized : null;
   };
 
+  const hasRejoinedRef = useRef(false);
   useEffect(() => {
     if (!roomId) return;
     
@@ -113,12 +116,14 @@ export default function MemberRoomPage() {
       return;
     }
 
-    // Always rejoin the room on mount to fetch the latest room details and settings (e.g. active trip mode)
-    joinRoom(roomId.toUpperCase(), user.name).catch((err) => {
-      console.error("Failed to rejoin room:", err);
-      navigate(`/join/${roomId}`);
-    });
-  }, [roomId, user?.userId, user?.name, joinRoom, navigate]);
+    if (!hasRejoinedRef.current) {
+      hasRejoinedRef.current = true;
+      joinRoom(roomId.toUpperCase(), user.name).catch((err) => {
+        console.error("Failed to rejoin room:", err);
+        navigate(`/join/${roomId}`);
+      });
+    }
+  }, [roomId, user?.name, navigate]);
 
   const targetInfo = (() => {
     if (roomSettings?.targetLocation?.lat == null) return null;
@@ -146,7 +151,8 @@ export default function MemberRoomPage() {
   const currentUserLocation = locations.find((loc) => loc.userId === user?.userId) || null;
 
   useEffect(() => {
-    // Sync locations periodically - throttled in battery saver mode
+    // Sync locations immediately on mount, then periodically - throttled in battery saver mode
+    syncRoomLocations();
     const interval = batterySaver ? 15000 : 8000;
     const syncInterval = setInterval(() => {
       syncRoomLocations();
@@ -578,7 +584,7 @@ export default function MemberRoomPage() {
 
   const saveTripRequest = async (tripData, name) => {
     try {
-      const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+      const API_URL = getSocketUrl();
       const response = await fetch(`${API_URL}/api/trips`, {
         method: "POST",
         headers: {
@@ -841,6 +847,12 @@ export default function MemberRoomPage() {
       setIsAdjustingLocation(false);
       setLocationStatus("active");
       setLocationError("");
+    } else if (isTargeting) {
+      updateRoomSettings({
+        targetLocation: { lat: latlng.lat, lng: latlng.lng },
+        targetLabel: "Pinned location",
+      });
+      setIsTargeting(false);
     }
   };
 
@@ -1080,11 +1092,39 @@ export default function MemberRoomPage() {
             </svg>
           </button>
 
+          {/* Set Target */}
+          {roomSettings?.mode !== "trip" && (
+            <button
+              className={`mob-icon-btn tool ${roomSettings?.targetLocation?.lat != null || isTargeting ? 'active' : ''}`}
+              data-tooltip={roomSettings?.targetLocation?.lat != null ? "Clear Target" : isTargeting ? "Click map to set target" : "Set Target (Meeting Point)"}
+              onClick={() => {
+                if (roomSettings?.targetLocation?.lat != null) {
+                  updateRoomSettings({ targetLocation: null, targetLabel: null });
+                  setIsTargeting(false);
+                } else if (isTargeting) {
+                  setIsTargeting(false);
+                } else {
+                  setIsTargeting(true);
+                  setIsAdjustingLocation(false);
+                }
+              }}
+              style={{ color: (roomSettings?.targetLocation?.lat != null || isTargeting) ? '#f59e0b' : undefined }}
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6z"/>
+              </svg>
+            </button>
+          )}
+
           {/* Adjust Pin / Laptop location fix */}
           <button
             className={`mob-icon-btn tool ${isAdjustingLocation ? 'active' : ''}`}
             data-tooltip={isAdjustingLocation ? "Click map to set pin" : "Adjust My Pin"}
-            onClick={() => setIsAdjustingLocation(v => !v)}
+            onClick={() => {
+              setIsAdjustingLocation(v => !v);
+              setIsTargeting(false);
+            }}
             style={{ color: isAdjustingLocation ? '#38bdf8' : undefined }}
           >
             <svg viewBox="0 0 24 24" fill="currentColor">
@@ -1240,6 +1280,44 @@ export default function MemberRoomPage() {
           </button>
         )}
 
+        {/* Target Location Setting Banner */}
+        {isTargeting && (
+          <div style={{
+            position: 'absolute',
+            top: '70px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+            background: 'rgba(15, 23, 42, 0.95)',
+            border: '1px solid #f59e0b',
+            borderRadius: '12px',
+            padding: '8px 16px',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+            fontSize: '0.82rem',
+            backdropFilter: 'blur(8px)',
+          }}>
+            <span>🎯 <b>Click anywhere on map</b> to set group target point</span>
+            <button
+              onClick={() => setIsTargeting(false)}
+              style={{
+                background: 'rgba(255,255,255,0.15)',
+                border: 'none',
+                color: '#fff',
+                borderRadius: '6px',
+                padding: '4px 8px',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+
         {/* Pin Location Banner */}
         {isAdjustingLocation && (
           <div style={{
@@ -1260,7 +1338,7 @@ export default function MemberRoomPage() {
             fontSize: '0.82rem',
             backdropFilter: 'blur(8px)',
           }}>
-            <span>🎯 <b>Click anywhere on map</b> to set your location pin</span>
+            <span>📍 <b>Click anywhere on map</b> to set your location pin</span>
             <button
               onClick={() => setIsAdjustingLocation(false)}
               style={{
@@ -1288,7 +1366,7 @@ export default function MemberRoomPage() {
             centerOnUsers={true}
             targetLocation={roomSettings?.targetLocation?.lat != null ? roomSettings.targetLocation : null}
             onMapClick={handleMapClick}
-            isTargeting={isAdjustingLocation}
+            isTargeting={isTargeting || isAdjustingLocation}
             roomSettings={roomSettings}
             tripPath={roomSettings?.mode === "trip" ? tripPath : null}
             savedTripPath={savedTripPath}

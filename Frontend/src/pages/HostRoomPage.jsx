@@ -8,6 +8,7 @@ import AuthMenu from "../components/AuthMenu";
 import { LocationSmoother, GpsAccuracyManager } from "../utils/locationSmoother";
 import { placesService } from "../utils/placesService";
 import { getAuthHeaders, getAuthUser } from "../utils/authStorage";
+import { getSocketUrl } from "../utils/apiConfig";
 import QRCode from "qrcode";
 import "./MemberRoomPage.css";
 
@@ -248,7 +249,7 @@ export default function HostRoomPage() {
     if (!roomId) return;
     if (!user) return;
 
-    const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+    const API_URL = getSocketUrl();
 
     const restoreRoom = async () => {
       try {
@@ -270,6 +271,24 @@ export default function HostRoomPage() {
             ...m,
             isHost: m.userId === data.room.hostId || m.role === 'host',
           })));
+
+          if (setLocations) {
+            setLocations(prev => {
+              const locMap = new Map(prev.map(l => [l.userId, l]));
+              data.room.members.forEach(m => {
+                if (m.location && m.location.lat !== 0 && m.location.lng !== 0) {
+                  locMap.set(m.userId, {
+                    userId: m.userId,
+                    name: m.name,
+                    lat: m.location.lat,
+                    lng: m.location.lng,
+                    isHost: m.userId === data.room.hostId || m.role === 'host',
+                  });
+                }
+              });
+              return Array.from(locMap.values());
+            });
+          }
         }
 
         if (data.room.settings && updateRoomSettingsRef.current) {
@@ -281,7 +300,7 @@ export default function HostRoomPage() {
     };
 
     restoreRoom();
-  }, [roomId, user?.userId, setCurrentRoom]);
+  }, [roomId, user?.userId, setCurrentRoom, setLocations, setMembers]);
 
   useEffect(() => {
     // Generate QR code
@@ -303,7 +322,7 @@ export default function HostRoomPage() {
     
     const fetchWatchers = async () => {
       try {
-        const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+        const API_URL = getSocketUrl();
         const response = await fetch(`${API_URL}/api/rooms/${roomId.toUpperCase()}`, {
           headers: { ...getAuthHeaders() },
         });
@@ -323,7 +342,8 @@ export default function HostRoomPage() {
   }, [roomId, roomSettings?.mode]);
 
   useEffect(() => {
-    // Sync locations periodically - throttled in battery saver mode
+    // Sync locations immediately on mount, then periodically - throttled in battery saver mode
+    syncRoomLocations();
     const interval = batterySaver ? 15000 : 8000;
     const syncInterval = setInterval(() => {
       syncRoomLocations();
@@ -737,7 +757,7 @@ export default function HostRoomPage() {
 
   const saveTripRequest = async (tripData, name) => {
     try {
-      const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+      const API_URL = getSocketUrl();
       const response = await fetch(`${API_URL}/api/trips`, {
         method: "POST",
         headers: {
@@ -1387,18 +1407,22 @@ export default function HostRoomPage() {
           {/* Set Target */}
           {roomSettings?.mode !== "trip" && (
             <button
-              className={`mob-icon-btn tool ${roomSettings?.targetLocation?.lat != null ? 'active' : ''}`}
-              data-tooltip={roomSettings?.targetLocation?.lat != null ? "Clear Target" : "Set Target"}
+              className={`mob-icon-btn tool ${roomSettings?.targetLocation?.lat != null || isTargeting ? 'active' : ''}`}
+              data-tooltip={roomSettings?.targetLocation?.lat != null ? "Clear Target" : isTargeting ? "Click map to set target" : "Set Target (Meeting Point)"}
               onClick={() => {
                 if (roomSettings?.targetLocation?.lat != null) {
                   handleClearTarget();
+                } else if (isTargeting) {
+                  setIsTargeting(false);
                 } else {
                   handleSetTarget();
                 }
               }}
+              style={{ color: (roomSettings?.targetLocation?.lat != null || isTargeting) ? '#f59e0b' : undefined }}
             >
               <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6z"/>
               </svg>
             </button>
           )}
@@ -1652,6 +1676,44 @@ export default function HostRoomPage() {
           </button>
         )}
 
+        {/* Target Location Setting Banner */}
+        {isTargeting && (
+          <div style={{
+            position: 'absolute',
+            top: '70px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+            background: 'rgba(15, 23, 42, 0.95)',
+            border: '1px solid #f59e0b',
+            borderRadius: '12px',
+            padding: '8px 16px',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+            fontSize: '0.82rem',
+            backdropFilter: 'blur(8px)',
+          }}>
+            <span>🎯 <b>Click anywhere on map</b> to set group target point</span>
+            <button
+              onClick={() => setIsTargeting(false)}
+              style={{
+                background: 'rgba(255,255,255,0.15)',
+                border: 'none',
+                color: '#fff',
+                borderRadius: '6px',
+                padding: '4px 8px',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+
         {/* Pin Location Banner */}
         {isAdjustingLocation && (
           <div style={{
@@ -1672,7 +1734,7 @@ export default function HostRoomPage() {
             fontSize: '0.82rem',
             backdropFilter: 'blur(8px)',
           }}>
-            <span>🎯 <b>Click anywhere on map</b> to set your location pin</span>
+            <span>📍 <b>Click anywhere on map</b> to set your location pin</span>
             <button
               onClick={() => setIsAdjustingLocation(false)}
               style={{
@@ -1897,6 +1959,22 @@ export default function HostRoomPage() {
                     <p className="qr-link-text">{joinUrl}</p>
                   </div>
                 </>
+              )}
+
+              {typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && (
+                <div style={{
+                  marginTop: "12px",
+                  padding: "8px 12px",
+                  background: "rgba(245, 158, 11, 0.15)",
+                  border: "1px solid rgba(245, 158, 11, 0.35)",
+                  borderRadius: "8px",
+                  fontSize: "0.78rem",
+                  color: "#fcd34d",
+                  textAlign: "left",
+                  lineHeight: "1.35"
+                }}>
+                  💡 <strong>Mobile Wi-Fi Note:</strong> Scanning on mobile? Open this page on your laptop using your local Wi-Fi IP (e.g. <code>http://192.168.x.x:5174</code>) rather than <code>localhost</code> so mobile devices can connect.
+                </div>
               )}
             </div>
           </div>

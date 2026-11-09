@@ -22,7 +22,7 @@ export const getAuthToken = () => {
 
 export const getAuthHeaders = () => {
   try {
-    const raw = localStorage.getItem("coordinator_user");
+    const raw = sessionStorage.getItem("coordinator_user") || localStorage.getItem("coordinator_user");
     const user = raw ? JSON.parse(raw) : null;
     if (user?.userId) {
       return { Authorization: `Bearer ${user.userId}` };

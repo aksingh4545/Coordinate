@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useMap } from "../context/MapContext";
 import "./LiveChat.css";
 import { getAuthHeaders } from "../utils/authStorage";
+import { getSocketUrl } from "../utils/apiConfig";
 
 export default function LiveChat({ roomId, members, currentUserId, onClose }) {
   const { socket, currentRoom } = useMap();
@@ -167,7 +168,7 @@ export default function LiveChat({ roomId, members, currentUserId, onClose }) {
   useEffect(() => {
     const fetchTurnServers = async () => {
       try {
-        const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+        const API_URL = getSocketUrl();
         const response = await fetch(`${API_URL}/api/turn`, {
           headers: { ...getAuthHeaders() },
         });

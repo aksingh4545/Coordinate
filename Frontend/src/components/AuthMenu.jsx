@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getAuthHeaders } from "../utils/authStorage";
+import { getSocketUrl } from "../utils/apiConfig";
 
 export default function AuthMenu() {
   const [guestUser, setGuestUser] = useState(null);
@@ -22,7 +23,7 @@ export default function AuthMenu() {
       if (!headers.Authorization) return;
 
       try {
-        const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+        const API_URL = getSocketUrl();
         const response = await fetch(`${API_URL}/api/trips`, {
           headers
         });
