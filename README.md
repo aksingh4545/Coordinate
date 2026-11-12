@@ -1,7 +1,7 @@
 # Coordinator
 
 A real-time location sharing and group coordination application that helps people find each other in crowded places. Built with the MERN stack (MongoDB, Express, React, Node.js) and Socket.io for real-time communication.
-
+<img src="./Screenshot 2026-11-12 091306.png" alt="App Screenshot" width="600">
 ---
 ## Features
 
